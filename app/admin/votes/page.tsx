@@ -1,9 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import axios from 'axios';
+import { useAxios } from '@/hooks/useAxios';
 
 // 투표 데이터 타입 정의
-interface VoteForm {
+interface VoteReservation {
+    id?: string;
+    type: 'regular' | 'extra';
     day: string;
     title: string;
     date: string;
@@ -15,84 +19,85 @@ interface VoteForm {
 }
 
 export default function VoteReservationPage() {
-  // 1. 정기활동 및 기타활동 폼 상태 관리
-    const [regularForm, setRegularForm] = useState<VoteForm>({
-        day: '', title: '정기활동', date: '', startTime: '', endTime: '', location: '', voteStart: '', voteEnd: ''
+    // 1. 커스텀 훅으로 대기열 데이터 가져오기 (GET)
+    const { data: queue, loading, error, refetch } = useAxios<VoteReservation[]>('/api/admin/votes/queue');
+
+    // 2. 폼 상태 관리
+    const [regularForm, setRegularForm] = useState<VoteReservation>({
+        type: 'regular', day: '', title: '정기활동', date: '', startTime: '', endTime: '', location: '', voteStart: '', voteEnd: ''
     });
-    const [extraForm, setExtraForm] = useState<VoteForm>({
-        day: '', title: '', date: '', startTime: '', endTime: '', location: '', voteStart: '', voteEnd: ''
+    const [extraForm, setExtraForm] = useState<VoteReservation>({
+        type: 'extra', day: '', title: '', date: '', startTime: '', endTime: '', location: '', voteStart: '', voteEnd: ''
     });
 
-    // 2. 예약 대기열 상태 (백엔드 연동용)
-    const [reservationQueue, setReservationQueue] = useState<any[]>([]);
-
-    // 3. 백엔드로 데이터 전송 함수
+    // 3. 투표 예약 전송 (POST)
     const handleReserve = async (type: 'regular' | 'extra') => {
-        const data = type === 'regular' ? regularForm : extraForm;
-        
-        // 유효성 검사 예시
-        if (!data.date || !data.title) {
-        alert('날짜와 제목은 필수 입력 사항입니다.');
-        return;
-        }
+        const payload = type === 'regular' ? regularForm : extraForm;
 
         try {
-        // 실제 구현 시 백엔드 엔드포인트 주소로 변경 필요
-        const response = await fetch('/api/admin/votes/reserve', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...data, type }),
-        });
-
-        if (response.ok) {
-            alert(`${type === 'regular' ? '정기활동' : '기타활동'} 투표 예약이 성공했습니다!`);
-            // 성공 시 폼 초기화 로직 등을 추가할 수 있습니다.
+        const response = await axios.post('/api/admin/votes/reserve', payload);
+        if (response.status === 200 || response.status === 201) {
+            alert('투표 예약이 완료되었습니다!');
+            refetch(); // 예약 성공 후 대기열 목록 새로고침
         }
-        } catch (error) {
-        console.error('서버 전송 오류:', error);
+        } catch (err) {
+        alert('예약 중 오류가 발생했습니다.');
         }
     };
 
     return (
-        <div className="max-w-7xl mx-auto">
-        {/* 상단 헤더 */}
-        <div className="mb-8">
-            <h1 className="text-2xl font-bold text-gray-800">투표 예약</h1>
-            <p className="text-gray-500 text-sm">정기활동 및 특별활동 투표를 예약하세요.</p>
-        </div>
-
-        {/* 폼 섹션 (좌우 배치) */}
-        <div className="grid grid-cols-2 gap-8 mb-10">
-            {/* 왼쪽: 정기활동 투표 예약 */}
-            <VoteFormCard 
-            title="정기활동 투표 예약" 
-            formData={regularForm} 
-            setFormData={setRegularForm} 
-            onSubmit={() => handleReserve('regular')}
-            buttonColor="bg-blue-600 hover:bg-blue-700"
-            />
-
-            {/* 오른쪽: 정기활동 외 다른날 투표 예약 */}
-            <VoteFormCard 
-            title="정기활동 외 다른날 투표 예약" 
-            formData={extraForm} 
-            setFormData={setExtraForm} 
-            onSubmit={() => handleReserve('extra')}
-            buttonColor="bg-green-600 hover:bg-green-700"
-            />
-        </div>
-
-        {/* 하단: 투표 예약 대기열 섹션 */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8">
-            <h3 className="text-lg font-bold mb-6">투표 예약 대기열</h3>
-            <div className="border border-dashed border-gray-200 rounded-lg p-10 text-center">
-            {/* 데이터가 없을 때의 UI */}
-            <div className="flex flex-col items-center text-gray-400">
-                <span className="text-3xl mb-2">📋</span>
-                <p className="text-sm italic">현재 예약된 투표가 없습니다. 백엔드 서버에서 정보를 불러올 예정입니다.</p>
+        <div className="max-w-7xl mx-auto p-4">
+            <div className="mb-8">
+                <h1 className="text-2xl font-bold text-gray-800">투표 예약</h1>
+                <p className="text-gray-500 text-sm">정기활동 및 특별활동 투표를 예약하세요.</p>
             </div>
+
+            {/* 입력 폼 섹션 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                <VoteFormCard 
+                title="정기활동 투표 예약" 
+                formData={regularForm} 
+                setFormData={setRegularForm} 
+                onSubmit={() => handleReserve('regular')}
+                buttonColor="bg-blue-600 hover:bg-blue-700"
+                />
+                <VoteFormCard 
+                title="특별활동 투표 예약" 
+                formData={extraForm} 
+                setFormData={setExtraForm} 
+                onSubmit={() => handleReserve('extra')}
+                buttonColor="bg-green-600 hover:bg-green-700"
+                />
             </div>
-        </div>
+
+            {/* 예약 대기열 섹션 */}
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8">
+                <h3 className="text-lg font-bold mb-6">투표 예약 대기열</h3>
+                
+                {loading && <p className="text-center text-blue-500">데이터를 불러오는 중입니다...</p>}
+                {error && <p className="text-center text-red-500 font-medium">에러 발생: {error}</p>}
+                
+                {!loading && !error && queue && queue.length > 0 ? (
+                <div className="space-y-4">
+                    {queue.map((item) => (
+                    <div key={item.id} className="flex justify-between items-center p-4 border rounded-lg hover:bg-gray-50">
+                        <div>
+                        <span className={`text-xs px-2 py-1 rounded-full font-bold mb-2 inline-block ${item.type === 'regular' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-green-600'}`}>
+                            {item.type === 'regular' ? '정기활동' : '특별활동'}
+                        </span>
+                        <p className="font-bold text-gray-800">{item.title}</p>
+                        <p className="text-sm text-gray-500">📅 {item.date} | 📍 {item.location}</p>
+                        </div>
+                        <div className="text-right text-xs text-gray-400">
+                        <p>운동 시간: {item.startTime} ~ {item.endTime}</p>
+                        </div>
+                    </div>
+                    ))}
+                </div>
+                ) : (
+                !loading && <p className="text-center text-gray-400 italic">현재 대기 중인 예약이 없습니다.</p>
+                )}
+            </div>
         </div>
     );
     }
