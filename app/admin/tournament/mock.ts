@@ -6,12 +6,12 @@ export const mockActivities = [
         date: '2026-03-18',
         location: '올림픽공원 체육관',
         participants: [
-        '박성재', '김철수', '이영희', '최지현', '정수민', 
-        '강하늘', '윤서준', '조예은', '한지민', '임재범',
-        '손흥민', '이강인', '김민재', '황희찬', '백승호',
-        '아이유', '카리나', '윈터', '장원영', '안유진',
-        '유재석', '강호동', '신동엽', '노홍철', '하하'
-        ], // 총 25명
+        {'name' : '박성재', gender: '남'}, {'name' : '김철수', gender: '남'}, {'name' : '이영희', gender: '여'}, {'name' : '최지현', gender: '여'}, {'name' : '정수민', gender: '여'}, 
+        {'name' : '강하늘', gender: '여'}, {'name' : '윤서준', gender: '남'}, {'name' : '조예은', gender: '여'}, {'name' : '한지민', gender: '여'}, {'name' : '임재범', gender: '남'},
+        {'name' : '손흥민', gender: '남'}, {'name' : '이강인', gender: '남'}, {'name' : '김민재', gender: '남'}, {'name' : '황희찬', gender: '남'}, {'name' : '백승호', gender: '남'},
+        {'name' : '아이유', gender: '여'}, {'name' : '카리나', gender: '여'}, {'name' : '윈터', gender: '여'}, {'name' : '장원영', gender: '여'}, {'name' : '안유진', gender: '여'},
+        {'name' : '유재석', gender: '남'}, {'name' : '강호동', gender: '남'}, {'name' : '신동엽', gender: '남'}, {'name' : '노홍철', gender: '남'}, {'name' : '하하', gender: '남'},
+        ], // 총 25명 (남자 15명, 여자 10명)
     },
     {
         id: 'act_02',
@@ -19,8 +19,8 @@ export const mockActivities = [
         date: '2026-03-20',
         location: '잠실 실내체육관',
         participants: [
-        '부원A', '부원B', '부원C', '부원D', '부원E', '부원F', 
-        '부원G', '부원H', '부원I', '부원J', '부원K', '부원L'
+        {'name' : '부원A', gender: '남'}, {'name' : '부원B', gender: '남'}, {'name' : '부원C', gender: '여'}, {'name' : '부원D', gender: '여'}, {'name' : '부원E', gender: '여'}, {'name' : '부원F', gender: '여'},
+        {'name' : '부원G', gender: '남'}, {'name' : '부원H', gender: '남'}, {'name' : '부원I', gender: '여'}, {'name' : '부원J', gender: '여'}, {'name' : '부원K', gender: '여'}, {'name' : '부원L', gender: '여'}
         ], // 총 12명
     }
 ];
