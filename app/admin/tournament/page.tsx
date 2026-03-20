@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { mockActivities } from './mock';
+import html2canvas from 'html2canvas'; // 이미지 저장용
 
 // 1. 데이터 구조 정의
 interface Participant {
@@ -20,6 +21,11 @@ interface Activity {
 export default function TournamentPage() {
     const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
     const [currentCourt, setCurrentCourt] = useState('1코트');
+    //완료된 활동 ID들을 관리하는 상태 (실제 서비스에서는 DB 데이터 기반)
+    const [completedActivityIds, setCompletedActivityIds] = useState<string[]>([]);
+    
+    // 이미지 캡처를 위한 Ref
+    const printRef = useRef<HTMLDivElement>(null);
 
     // 2. 코트별 배치 인원 관리 (Participant 객체 배열로 관리)
     const [assignments, setAssignments] = useState<Record<string, Participant[]>>({
@@ -186,8 +192,33 @@ export default function TournamentPage() {
             [currentCourt]: newBracket
         }));
     };
-    
 
+    // --- 대진 확정 및 백엔드 전송 핸들러 ---
+    const handleSaveTournament = async () => {
+        if (!selectedActivity) return;
+
+        try {
+            // 1. 백엔드 전송 데이터 구성
+            const payload = {
+                activityId: selectedActivity.id,
+                brackets: courtBrackets, // 코트별 대진 정보
+                timestamp: new Date().toISOString()
+            };
+
+            console.log("백엔드로 전송될 데이터:", payload);
+            // const response = await axios.post('/api/tournament/save', payload);
+            
+            // 2. 전송 완료 처리 (Mock)
+            alert('대진 정보가 백엔드로 성공적으로 전송되었습니다.');
+            setCompletedActivityIds(prev => [...prev, selectedActivity.id]);
+            
+            // 3. 목록으로 돌아가기
+            setSelectedActivity(null);
+        } catch (error) {
+            alert('전송 중 오류가 발생했습니다.');
+        }
+    };
+    
     return (
         <div className="max-w-6xl mx-auto p-4 space-y-6 text-left">
             {!selectedActivity ? (
@@ -197,22 +228,29 @@ export default function TournamentPage() {
                         <p className="text-gray-500 font-medium">투표가 완료된 운동을 선택하세요.</p>
                     </header>
                     <div className="grid grid-cols-1 gap-6">
-                        {mockActivities.map((activity) => (
-                            <div 
-                                key={activity.id}
-                                onClick={() => handleSelectActivity(activity as Activity)}
-                                className="bg-white p-10 rounded-[24px] border border-gray-100 shadow-sm hover:border-blue-500 cursor-pointer transition-all group"
-                            >
-                                <h3 className="text-2xl font-bold text-gray-800 mb-4 group-hover:text-blue-600 transition">
-                                    {activity.title}
-                                </h3>
-                                <div className="text-[15px] text-gray-500 space-y-2 leading-relaxed font-medium">
-                                    <p>날짜: {activity.date}</p>
-                                    <p>장소: {activity.location}</p>
-                                    <p>참가 인원: {activity.participants.length}명</p>
+                        {mockActivities.map((activity) => {
+                            const isCompleted = completedActivityIds.includes(activity.id);
+                            return (
+                                <div 
+                                    key={activity.id}
+                                    onClick={() => handleSelectActivity(activity as Activity)}
+                                    className={`bg-white p-10 rounded-[24px] border ${isCompleted ? 'border-green-500 bg-green-50/30' : 'border-gray-100'} shadow-sm hover:border-blue-500 cursor-pointer transition-all group relative`}
+                                >
+                                    {isCompleted && (
+                                        <span className="absolute top-6 right-10 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                                            대진 작성 완료
+                                        </span>
+                                    )}
+                                    <h3 className={`text-2xl font-bold ${isCompleted ? 'text-green-700' : 'text-gray-800'} mb-4 group-hover:text-blue-600 transition`}>
+                                        {activity.title}
+                                    </h3>
+                                    <div className="text-[15px] text-gray-500 space-y-2 leading-relaxed font-medium">
+                                        <p>날짜: {activity.date}</p>
+                                        <p>참가 인원: {activity.participants.length}명</p>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             ) : (
@@ -279,38 +317,46 @@ export default function TournamentPage() {
                     </section>
 
                     {currentCourt === '전체' ? (
-                        <section className="animate-in fade-in duration-500">
+                        <section className="animate-in fade-in duration-500 space-y-6">
                             <div className="flex justify-between items-center mb-6">
                                 <h3 className="text-xl font-bold text-blue-600">전체 코트 대진 현황</h3>
-                                <div className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full font-bold">
-                                    총 {Object.values(courtBrackets).flat(2).filter(n => n !== null).length}명 배치됨
+                                
+                                <div className="flex gap-3">
+                                    {/* [핵심] 진행도 100%일 때만 전송 버튼 노출 */}
+                                    {progress === 100 && (
+                                        <button 
+                                            onClick={handleSaveTournament}
+                                            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded-xl text-sm font-bold animate-bounce shadow-lg"
+                                        >
+                                            ✅ 대진 확정 및 전송
+                                        </button>
+                                    )}
                                 </div>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            
+                            {/* 캡처할 영역 지정 (ref 추가) */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-gray-50 rounded-3xl">
                                 {Object.entries(courtBrackets).map(([courtName, rows]) => (
                                     <div key={courtName} className="bg-white border border-gray-100 rounded-[24px] p-6 shadow-sm">
                                         <div className="flex justify-between items-center mb-4 border-b pb-3">
                                             <span className="text-lg font-bold text-gray-800">{courtName}</span>
                                         </div>
                                         <div className="space-y-3">
-                                            {rows.map((row, idx) => {
-                                                const isRowEmpty = row.every(cell => cell === null);
-                                                return (
-                                                    <div key={idx} className={`flex items-center justify-between p-2 rounded-lg ${isRowEmpty ? 'bg-gray-50/50' : 'bg-gray-50'}`}>
-                                                        <div className="flex flex-1 justify-center gap-2">
-                                                            <span className="text-xs font-bold text-gray-700">{row[0]?.name || '미정'}</span>
-                                                            <span className="text-gray-300">:</span>
-                                                            <span className="text-xs font-bold text-gray-700">{row[1]?.name || '미정'}</span>
-                                                        </div>
-                                                        <span className="text-[10px] font-black text-gray-200 mx-2">VS</span>
-                                                        <div className="flex flex-1 justify-center gap-2">
-                                                            <span className="text-xs font-bold text-gray-700">{row[2]?.name || '미정'}</span>
-                                                            <span className="text-gray-300">:</span>
-                                                            <span className="text-xs font-bold text-gray-700">{row[3]?.name || '미정'}</span>
-                                                        </div>
+                                            {rows.map((row, idx) => (
+                                                <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-gray-50">
+                                                    <div className="flex flex-1 justify-center gap-2">
+                                                        <span className="text-xs font-bold text-gray-700">{row[0]?.name || '미정'}</span>
+                                                        <span className="text-gray-300">:</span>
+                                                        <span className="text-xs font-bold text-gray-700">{row[1]?.name || '미정'}</span>
                                                     </div>
-                                                );
-                                            })}
+                                                    <span className="text-[10px] font-black text-gray-200 mx-2">VS</span>
+                                                    <div className="flex flex-1 justify-center gap-2">
+                                                        <span className="text-xs font-bold text-gray-700">{row[2]?.name || '미정'}</span>
+                                                        <span className="text-gray-300">:</span>
+                                                        <span className="text-xs font-bold text-gray-700">{row[3]?.name || '미정'}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
                                 ))}
