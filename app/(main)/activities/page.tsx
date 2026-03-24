@@ -1,6 +1,6 @@
 'use client';
 
-import CreateLightningModal from '../../components/ui/CreateLightningModal';
+import CreateLightningModal from '../../../components/ui/CreateLightningModal';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 

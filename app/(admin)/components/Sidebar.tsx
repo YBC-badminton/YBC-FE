@@ -5,12 +5,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const menuItems = [
-    { name: '지원자 조회', href: '/admin/applicants', icon: '👥' },
-    { name: '면접 관리', href: '/admin/interviews', icon: '📅' },
-    { name: '부원 명단', href: '/admin/members', icon: '👤' },
-    { name: '투표 예약', href: '/admin/votes', icon: '🗳️' },
-    { name: '투표 예약 현황', href: '/admin/votes/status', icon: '✅' },
-    { name: '대진 관리', href: '/admin/tournament', icon: '📊' },
+    { name: '지원자 조회', href: '/applicants', icon: '👥' },
+    { name: '면접 관리', href: '/interviews', icon: '📅' },
+    { name: '부원 명단', href: '/members', icon: '👤' },
+    { name: '투표 예약', href: '/votes', icon: '🗳️' },
+    { name: '투표 예약 현황', href: '/votes/status', icon: '✅' },
+    { name: '대진 관리', href: '/tournament', icon: '📊' },
 ];
 
 export default function Sidebar() {
