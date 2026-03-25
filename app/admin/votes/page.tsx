@@ -1,157 +1,293 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import axios from 'axios';
-import { useAxios } from '@/hooks/useAxios';
+import React, { useState } from "react";
 
-// 투표 데이터 타입 정의
-interface VoteReservation {
-    id?: string;
-    type: 'regular' | 'extra';
-    day: string;
-    title: string;
-    date: string;
-    startTime: string;
-    endTime: string;
-    location: string;
-    voteStart: string;
-    voteEnd: string;
+interface VoteStatus {
+  id: string;
+  type: "regular" | "extra";
+  title: string;
+  day: string;
+  date: string;
+  location: string;
+  participantCount: number;
+  startTime: string;
+  endTime: string;
+  voteStart: string;
+  voteEnd: string;
+  status: "pending" | "ongoing" | "completed";
+  memo?: string;
 }
 
-export default function VoteReservationPage() {
-    // 1. 커스텀 훅으로 대기열 데이터 가져오기 (GET)
-    const { data: queue, loading, error, refetch } = useAxios<VoteReservation[]>('/api/admin/votes/queue');
+// TODO: API 연동 시 useAxios로 교체
+const MOCK_VOTES: VoteStatus[] = [
+  {
+    id: "1",
+    type: "regular",
+    title: "정기활동",
+    day: "화요일",
+    date: "2026-03-17",
+    location: "올림픽공원 체육관",
+    participantCount: 12,
+    startTime: "19:00",
+    endTime: "21:00",
+    voteStart: "2026-03-15 13:00",
+    voteEnd: "2026-03-17 23:59",
+    status: "ongoing",
+  },
+  {
+    id: "2",
+    type: "extra",
+    title: "번개모임",
+    day: "토요일",
+    date: "2026-03-20",
+    location: "잠실 체육관",
+    participantCount: 8,
+    startTime: "14:00",
+    endTime: "17:00",
+    voteStart: "2026-03-15 09:00",
+    voteEnd: "2026-03-19 23:59",
+    status: "pending",
+    memo: "장비 지참 필수",
+  },
+  {
+    id: "3",
+    type: "regular",
+    title: "정기활동",
+    day: "목요일",
+    date: "2026-03-12",
+    location: "강남 스포츠센터",
+    participantCount: 15,
+    startTime: "19:00",
+    endTime: "21:00",
+    voteStart: "2026-03-10 09:00",
+    voteEnd: "2026-03-12 18:00",
+    status: "completed",
+  },
+];
 
-    // 2. 폼 상태 관리
-    const [regularForm, setRegularForm] = useState<VoteReservation>({
-        type: 'regular', day: '', title: '정기활동', date: '', startTime: '', endTime: '', location: '', voteStart: '', voteEnd: ''
-    });
-    const [extraForm, setExtraForm] = useState<VoteReservation>({
-        type: 'extra', day: '', title: '', date: '', startTime: '', endTime: '', location: '', voteStart: '', voteEnd: ''
-    });
+type FilterType = "all" | "pending" | "ongoing" | "completed";
 
-    // 3. 투표 예약 전송 (POST)
-    const handleReserve = async (type: 'regular' | 'extra') => {
-        const payload = type === 'regular' ? regularForm : extraForm;
+export default function VoteStatusPage() {
+  const voteList = MOCK_VOTES;
+  const loading = false;
+  const error = null;
+  const [filter, setFilter] = useState<FilterType>("all");
 
-        try {
-        const response = await axios.post('/api/admin/votes/reserve', payload);
-        if (response.status === 200 || response.status === 201) {
-            alert('투표 예약이 완료되었습니다!');
-            refetch(); // 예약 성공 후 대기열 목록 새로고침
-        }
-        } catch (err) {
-        alert('예약 중 오류가 발생했습니다.');
-        }
-    };
+  const filteredList = voteList?.filter((vote) => {
+    if (filter === "all") return true;
+    return vote.status === filter;
+  });
 
-    return (
-        <div className="max-w-7xl mx-auto p-4">
-            <div className="mb-8">
-                <h1 className="text-2xl font-bold text-gray-800">투표 예약</h1>
-                <p className="text-gray-500 text-sm">정기활동 및 특별활동 투표를 예약하세요.</p>
-            </div>
+  const stats = {
+    total: voteList?.length ?? 0,
+    pending: voteList?.filter((v) => v.status === "pending").length ?? 0,
+    ongoing: voteList?.filter((v) => v.status === "ongoing").length ?? 0,
+    completed: voteList?.filter((v) => v.status === "completed").length ?? 0,
+  };
 
-            {/* 입력 폼 섹션 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-                <VoteFormCard 
-                title="정기활동 투표 예약" 
-                formData={regularForm} 
-                setFormData={setRegularForm} 
-                onSubmit={() => handleReserve('regular')}
-                buttonColor="bg-blue-600 hover:bg-blue-700"
-                />
-                <VoteFormCard 
-                title="특별활동 투표 예약" 
-                formData={extraForm} 
-                setFormData={setExtraForm} 
-                onSubmit={() => handleReserve('extra')}
-                buttonColor="bg-green-600 hover:bg-green-700"
-                />
-            </div>
+  const filters: { key: FilterType; label: string }[] = [
+    { key: "all", label: "전체 활동" },
+    { key: "ongoing", label: "진행 중인 투표" },
+    { key: "completed", label: "종료된 투표" },
+  ];
 
-            {/* 예약 대기열 섹션 */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8">
-                <h3 className="text-lg font-bold mb-6">투표 예약 대기열</h3>
-                
-                {loading && <p className="text-center text-blue-500">데이터를 불러오는 중입니다...</p>}
-                {error && <p className="text-center text-red-500 font-medium">에러 발생: {error}</p>}
-                
-                {!loading && !error && queue && queue.length > 0 ? (
-                <div className="space-y-4">
-                    {queue.map((item) => (
-                    <div key={item.id} className="flex justify-between items-center p-4 border rounded-lg hover:bg-gray-50">
-                        <div>
-                        <span className={`text-xs px-2 py-1 rounded-full font-bold mb-2 inline-block ${item.type === 'regular' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-green-600'}`}>
-                            {item.type === 'regular' ? '정기활동' : '특별활동'}
-                        </span>
-                        <p className="font-bold text-gray-800">{item.title}</p>
-                        <p className="text-sm text-gray-500">📅 {item.date} | 📍 {item.location}</p>
-                        </div>
-                        <div className="text-right text-xs text-gray-400">
-                        <p>운동 시간: {item.startTime} ~ {item.endTime}</p>
-                        </div>
-                    </div>
-                    ))}
-                </div>
-                ) : (
-                !loading && <p className="text-center text-gray-400 italic">현재 대기 중인 예약이 없습니다.</p>
-                )}
-            </div>
-        </div>
-    );
-    }
+  return (
+    <div className="max-w-6xl mx-auto">
+      {/* 헤더 */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-800">투표 예약 현황</h1>
+        <p className="text-gray-500 text-sm mt-1">
+          예약된 투표 정보를 확인하고 관리하세요.
+        </p>
+      </div>
 
-    // 재사용 가능한 폼 카드 컴포넌트
-    function VoteFormCard({ title, formData, setFormData, onSubmit, buttonColor }: any) {
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
-
-    return (
-        <div className="bg-white p-8 rounded-xl border border-gray-100 shadow-sm">
-        <h2 className="text-lg font-bold mb-6 text-gray-800">{title}</h2>
-        <div className="space-y-4">
-            {/* 요일 및 제목 */}
-            <div className="flex gap-4">
-            <InputGroup label="요일" name="day" value={formData.day} onChange={handleChange} placeholder="예: 화요일" />
-            <InputGroup label="제목" name="title" value={formData.title} onChange={handleChange} placeholder="예: 정기활동" />
-            </div>
-            {/* 날짜 */}
-            <InputGroup label="날짜" name="date" type="date" value={formData.date} onChange={handleChange} />
-            {/* 운동 시간 */}
-            <div className="flex gap-4">
-            <InputGroup label="운동 시작 시간" name="startTime" type="time" value={formData.startTime} onChange={handleChange} />
-            <InputGroup label="운동 종료 시간" name="endTime" type="time" value={formData.endTime} onChange={handleChange} />
-            </div>
-            {/* 장소 */}
-            <InputGroup label="장소" name="location" value={formData.location} onChange={handleChange} placeholder="예: 올림픽공원 체육관" />
-            {/* 투표 기간 */}
-            <div className="flex gap-4 pt-2">
-            <InputGroup label="투표 시작" name="voteStart" type="datetime-local" value={formData.voteStart} onChange={handleChange} />
-            <InputGroup label="투표 종료" name="voteEnd" type="datetime-local" value={formData.voteEnd} onChange={handleChange} />
-            </div>
-            {/* 전송 버튼 */}
-            <button 
-            onClick={onSubmit}
-            className={`w-full py-3 mt-4 text-white rounded-lg font-bold transition ${buttonColor}`}
-            >
-            투표 예약하기
-            </button>
-        </div>
-        </div>
-    );
-    }
-
-    // 개별 입력 필드 그룹 컴포넌트
-    function InputGroup({ label, ...props }: any) {
-    return (
-        <div className="flex-1">
-        <label className="block text-xs font-medium text-gray-400 mb-1">{label}</label>
-        <input 
-            className="w-full p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
-            {...props}
+      {/* 통계 카드 */}
+      <div className="grid grid-cols-4 gap-4 mb-8">
+        <StatCard label="전체 투표" count={stats.total} color="text-gray-800" />
+        <StatCard
+          label="대기중"
+          count={stats.pending}
+          color="text-orange-500"
+          bgColor="bg-orange-50"
         />
+        <StatCard
+          label="진행중"
+          count={stats.ongoing}
+          color="text-green-500"
+          bgColor="bg-green-50"
+        />
+        <StatCard
+          label="완료"
+          count={stats.completed}
+          color="text-blue-500"
+          bgColor="bg-blue-50"
+        />
+      </div>
+
+      {/* 필터 탭 */}
+      <div className="flex gap-2 mb-6">
+        {filters.map((f) => (
+          <button
+            key={f.key}
+            onClick={() => setFilter(f.key)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              filter === f.key
+                ? "bg-blue-500 text-white"
+                : "bg-white text-gray-500 border border-gray-200 hover:bg-gray-50"
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {/* 투표 카드 목록 */}
+      <div className="space-y-6">
+        {loading && (
+          <p className="text-center py-10 text-gray-400">
+            현황을 불러오는 중입니다...
+          </p>
+        )}
+        {error && (
+          <p className="text-center py-10 text-red-500">
+            데이터 로드 실패: {error}
+          </p>
+        )}
+
+        {!loading &&
+          filteredList?.map((vote) => <VoteCard key={vote.id} vote={vote} />)}
+
+        {!loading && !error && filteredList?.length === 0 && (
+          <p className="text-center py-10 text-gray-400">
+            해당하는 투표가 없습니다.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function StatCard({
+  label,
+  count,
+  color,
+  bgColor,
+}: {
+  label: string;
+  count: number;
+  color: string;
+  bgColor?: string;
+}) {
+  return (
+    <div
+      className={`p-5 rounded-xl border border-gray-100 shadow-sm ${bgColor ?? "bg-white"}`}
+    >
+      <p className="text-sm text-gray-500 mb-1">{label}</p>
+      <p className={`text-2xl font-bold ${color}`}>{count}개</p>
+    </div>
+  );
+}
+
+function VoteCard({ vote }: { vote: VoteStatus }) {
+  const isRegular = vote.type === "regular";
+
+  const statusConfig = {
+    pending: { text: "대기중", color: "bg-orange-50 text-orange-500" },
+    ongoing: { text: "진행중", color: "bg-green-50 text-green-500" },
+    completed: { text: "완료", color: "bg-gray-100 text-gray-400" },
+  };
+
+  const status = statusConfig[vote.status];
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow">
+      {/* 상단: 타입 배지 + 제목 + 상태 */}
+      <div className="flex justify-between items-start mb-5">
+        <div className="flex items-center gap-3">
+          <span
+            className={`px-2.5 py-1 rounded text-xs font-bold ${
+              isRegular
+                ? "bg-blue-50 text-blue-600"
+                : "bg-purple-50 text-purple-600"
+            }`}
+          >
+            {isRegular ? "정기활동" : "번개모임"}
+          </span>
+          <h2 className="text-lg font-bold text-gray-800">{vote.title}</h2>
         </div>
-    );
+        <div className="flex items-center gap-2">
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-semibold ${status.color}`}
+          >
+            {status.text}
+          </span>
+          <button className="text-gray-400 hover:text-blue-500 hover:bg-blue-50 p-1.5 rounded-lg transition">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* 정보 그리드 */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5 text-sm">
+        <InfoField label="요일" value={vote.day} />
+        <InfoField label="날짜" value={vote.date} />
+        <InfoField label="장소" value={vote.location} />
+        <InfoField label="참가 확인수" value={`${vote.participantCount}명`} />
+      </div>
+
+      {/* 시간 정보 */}
+      <div className="border-t border-gray-100 pt-4 space-y-2 text-sm text-gray-500">
+        <div className="flex flex-wrap gap-x-8 gap-y-1">
+          <p>
+            운동 시간:{" "}
+            <span className="text-gray-800 font-medium">
+              {vote.startTime} - {vote.endTime}
+            </span>
+          </p>
+          <p>
+            투표 시작:{" "}
+            <span className="text-gray-800 font-medium">{vote.voteStart}</span>
+          </p>
+        </div>
+        <p>
+          투표 종료:{" "}
+          <span className="text-gray-800 font-medium">{vote.voteEnd}</span>
+        </p>
+      </div>
+
+      {/* 메모 */}
+      {vote.memo && (
+        <div className="border-t border-gray-100 pt-4 mt-4">
+          <p className="text-xs text-gray-400 mb-1">메모</p>
+          <p className="text-sm text-gray-600">{vote.memo}</p>
+        </div>
+      )}
+      {!vote.memo && (
+        <div className="border-t border-gray-100 pt-4 mt-4">
+          <p className="text-xs text-gray-400">메모</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function InfoField({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs text-gray-400 mb-0.5">{label}</p>
+      <p className="font-medium text-gray-700">{value}</p>
+    </div>
+  );
 }
