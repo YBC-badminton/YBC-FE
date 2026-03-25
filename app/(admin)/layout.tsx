@@ -1,5 +1,7 @@
-// app/admin/layout.tsx
-import Sidebar from './components/Sidebar';
+import React from 'react';
+import Link from 'next/link';
+
+import Sidebar from './components/Sidebar'; // 사이드바 컴포넌트 분리 추천
 
 export default function AdminLayout({
     children,
