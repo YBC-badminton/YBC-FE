@@ -280,22 +280,22 @@ export default function ApplicantsPage() {
 /** [컴포넌트] 지원서 상세 정보 디자인 **/
 function DetailContent({ applicant, isMobile = false }: { applicant: Applicant; isMobile?: boolean }) {
   return (
-    <div className={`space-y-8 text-slate-700 ${isMobile ? 'max-w-full' : 'max-w-4xl'}`}>
+    <div className={`space-y-3 text-slate-700 ${isMobile ? 'max-w-full' : 'max-w-4xl'}`}>
       <h4 className="text-base font-bold text-slate-900 mb-6">지원서 상세 정보</h4>
       
       {/* 상단 섹션 */}
-      <div className={`grid ${isMobile ? 'grid-cols-1 gap-6' : 'grid-cols-3 gap-8'}`}>
+      <div className={`grid ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-3 gap-8'}`}>
         <InfoItem label="타임스탬프" value={applicant.timestamp} />
         <InfoItem label="거주지" value={applicant.address} />
         <InfoItem label="면접 가능 시간" value={applicant.interviewTime} />
       </div>
 
-      <div className="border-t border-gray-200/60 pt-6 space-y-6">
+      <div className="border-t border-gray-200/60 pt-6 space-y-2">
         <InfoItem label="자기소개" value={applicant.intro} full />
         <InfoItem label="지원 동기" value={applicant.reason} full />
       </div>
 
-      <div className={`grid ${isMobile ? 'grid-cols-1 gap-6' : 'grid-cols-2 gap-8'} border-t border-gray-200/60 pt-6`}>
+      <div className={`grid ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-2 gap-8'} border-t border-gray-200/60 pt-6`}>
         <InfoItem label="보유 장비" value={applicant.equipment} />
         <InfoItem label="알게 된 경로" value={applicant.source} />
       </div>
