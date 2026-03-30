@@ -10,14 +10,15 @@ export default function Header() {
         <div className="max-w-screen-2xl mx-auto flex justify-between items-center px-12 py-5">
         
         {/* [좌측] YBC 로고 섹션 (이미지로 배치) */}
-                <Link href="/public/images/logo.png" className="flex items-center">
-                    {/* 실제 프로젝트에 로고 이미지가 있다면 src 경로를 수정해주세요. */}
-                    {/* Next/Image 또는 일반 img 태그 사용 가능 */}
+                <Link href="/" className="flex items-center gap-2 group">
+                    {/* 로고 이미지 또는 텍스트 */}
+                    <div className="flex items-center gap-2 transition-transform group-hover:scale-105 active:scale-95">
                     <img 
-                        src="/images/logo.png" // 실제 로고 이미지 경로로 수정 필요
-                        alt="YBC BADMINTON CLUB Logo"
-                        className="h-12 w-auto object-contain" // 시안 이미지 비율에 맞춘 크기 조절
+                        src="/images/logo.png" 
+                        alt="YBC Logo" 
+                        className="h-12 w-auto object-contain" 
                     />
+                    </div>
                 </Link>
                 {/* [우측] 메뉴 및 로그인 섹션 */}
                 <div className="flex items-center gap-10">

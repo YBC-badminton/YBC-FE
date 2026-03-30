@@ -5,9 +5,9 @@ import React from 'react';
 interface ModalProps {
     isOpen: boolean;
     onClose: () => void;
-    }
+}
 
-    export default function CreateLightningModal({ isOpen, onClose }: ModalProps) {
+export default function CreateLightningModal({ isOpen, onClose }: ModalProps) {
     if (!isOpen) return null;
 
     return (

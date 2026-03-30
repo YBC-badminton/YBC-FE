@@ -1,21 +1,43 @@
-import React from 'react';
-import Link from 'next/link';
+'use client';
 
-import Sidebar from './components/Sidebar'; // 사이드바 컴포넌트 분리 추천
+import React, { useState } from 'react';
+import Sidebar from './components/Sidebar'; // 경로에 맞춰 수정하세요
 
 export default function AdminLayout({
     children,
     }: {
     children: React.ReactNode;
     }) {
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
     return (
-        <div className="flex">
-        {/* 고정 사이드바 */}
-        <Sidebar />
+        <div className="flex min-h-screen bg-gray-50">
+        {/* 1. 사이드바 (isOpen, onClose 전달) */}
+        <Sidebar 
+            isOpen={isSidebarOpen} 
+            onClose={() => setIsSidebarOpen(false)} 
+        />
         
-        {/* 페이지 콘텐츠 영역 */}
-        <main className="flex-1 bg-gray-50 p-8">
+        {/* 2. 메인 콘텐츠 영역 */}
+        <main className="flex-1 flex flex-col w-full">
+            
+            {/* 모바일 상단 바 - lg(데스크탑) 이상에서는 숨김 */}
+            <header className="lg:hidden flex items-center justify-between p-4 bg-white border-b border-gray-200 sticky top-0 z-[40]">
+            <button 
+                onClick={() => setIsSidebarOpen(true)}
+                className="p-2 rounded-lg hover:bg-gray-50 text-gray-600"
+            >
+                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                </svg>
+            </button>
+            <span className="font-bold text-gray-800">관리자 페이지</span>
+            <div className="w-10"></div>
+            </header>
+
+            <div className="p-8">
             {children}
+            </div>
         </main>
         </div>
     );

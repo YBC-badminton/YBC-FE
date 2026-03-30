@@ -40,40 +40,39 @@ export default function InterviewsPage() {
   };
 
   const handleSave = () => {
-    // TODO: API call
     alert('저장되었습니다.');
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 font-sans">
       {/* 헤더 */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-800">면접 관리</h1>
-        <p className="text-gray-500 mt-1">면접 시간을 배정하고 결과를 입력하세요.</p>
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">면접 관리</h1>
+        <p className="text-sm text-gray-500 mt-1 font-medium">면접 시간을 배정하고 결과를 입력하세요.</p>
       </div>
 
       {/* 현황 카드 */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
-        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-          <p className="text-sm text-gray-500 mb-1">전체 면접자</p>
-          <p className="text-3xl font-bold text-gray-800">{totalCount}명</p>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-100 shadow-sm">
+          <p className="text-xs sm:text-sm text-gray-500 mb-1">전체</p>
+          <p className="text-xl sm:text-3xl font-bold text-gray-800">{totalCount}명</p>
         </div>
-        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-          <p className="text-sm text-gray-500 mb-1">합격</p>
-          <p className="text-3xl font-bold text-blue-600">{passCount}명</p>
+        <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-100 shadow-sm">
+          <p className="text-xs sm:text-sm text-gray-500 mb-1">합격</p>
+          <p className="text-xl sm:text-3xl font-bold text-blue-600">{passCount}명</p>
         </div>
-        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-          <p className="text-sm text-gray-500 mb-1">불합격</p>
-          <p className="text-3xl font-bold text-red-600">{failCount}명</p>
+        <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-100 shadow-sm">
+          <p className="text-xs sm:text-sm text-gray-500 mb-1">불합격</p>
+          <p className="text-xl sm:text-3xl font-bold text-red-600">{failCount}명</p>
         </div>
-        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-          <p className="text-sm text-gray-500 mb-1">보류</p>
-          <p className="text-3xl font-bold text-orange-500">{holdCount}명</p>
+        <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-100 shadow-sm">
+          <p className="text-xs sm:text-sm text-gray-500 mb-1">보류</p>
+          <p className="text-xl sm:text-3xl font-bold text-orange-500">{holdCount}명</p>
         </div>
       </div>
 
-      {/* 면접자 테이블 */}
-      <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+      {/* 데스크탑 테이블 (lg 이상) */}
+      <div className="hidden lg:block bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
         <table className="w-full text-left">
           <thead className="bg-gray-50 text-gray-400 text-sm">
             <tr>
@@ -140,11 +139,84 @@ export default function InterviewsPage() {
         </table>
       </div>
 
+      {/* 모바일 전용 카드 리스트 (lg 미만) */}
+      <div className="lg:hidden space-y-4">
+        {interviewees.map((person) => (
+          <div key={person.id} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-bold text-gray-900">{person.name}</h3>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium border ${resultColor(person.result)}`}>
+                {person.result}
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <p className="text-xs text-gray-400 mb-2">가능 시간대</p>
+                <div className="flex flex-wrap gap-2">
+                  {person.availableTimes.map((time, idx) => (
+                    <span key={idx} className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-md">
+                      {time}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* [중요] 390x844 모바일 옵션 위치 오류 수정 영역 */}
+              <div className="grid grid-cols-2 gap-3 relative"> 
+                <div className="space-y-1.5">
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">배정 시간</p>
+                  <select
+                    value={person.assignedTime}
+                    onChange={(e) => updateField(person.id, 'assignedTime', e.target.value)}
+                    /* z-index와 appearance를 조절하여 옵션 창이 상자 바로 아래 뜨도록 수정 */
+                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold focus:ring-1 focus:ring-blue-500 outline-none cursor-pointer relative z-20"
+                    style={{ appearance: 'auto', WebkitAppearance: 'menulist' }} 
+                  >
+                    <option value="미정">미정</option>
+                    {person.availableTimes.map((time, idx) => (
+                      <option key={idx} value={time}>{time}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="space-y-1.5">
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">결과</p>
+                  <select
+                    value={person.result}
+                    onChange={(e) => updateField(person.id, 'result', e.target.value)}
+                    /* 기존 resultColor 디자인을 유지하면서 옵션 위치만 잡음 */
+                    className={`w-full px-3 py-2.5 border rounded-xl text-xs font-bold focus:ring-1 focus:ring-blue-500 outline-none cursor-pointer relative z-20 ${resultColor(person.result)}`}
+                    style={{ appearance: 'auto', WebkitAppearance: 'menulist' }}
+                  >
+                    <option value="미정">미정</option>
+                    <option value="합격">합격</option>
+                    <option value="불합격">불합격</option>
+                    <option value="보류">보류</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs text-gray-400 mb-1">비고</p>
+                <input
+                  type="text"
+                  value={person.note}
+                  onChange={(e) => updateField(person.id, 'note', e.target.value)}
+                  placeholder="비고 입력"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* 저장 버튼 */}
-      <div className="flex justify-end mt-6">
+      <div className="flex justify-end mt-8 pb-10">
         <button
           onClick={handleSave}
-          className="bg-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 transition"
+          className="w-full sm:w-auto bg-blue-600 text-white px-10 py-3.5 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-500/20"
         >
           저장하기
         </button>

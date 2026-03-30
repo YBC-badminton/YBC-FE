@@ -18,7 +18,6 @@ interface VoteStatus {
   memo?: string;
 }
 
-// TODO: API 연동 시 useAxios로 교체
 const MOCK_VOTES: VoteStatus[] = [
   {
     id: "1",
@@ -86,24 +85,28 @@ export default function VoteStatusPage() {
   };
 
   const filters: { key: FilterType; label: string }[] = [
-    { key: "all", label: "전체 활동" },
-    { key: "ongoing", label: "진행 중인 투표" },
-    { key: "completed", label: "종료된 투표" },
+    { key: "all", label: "전체" },
+    { key: "ongoing", label: "진행 중" },
+    { key: "completed", label: "종료됨" },
   ];
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* 헤더 */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-800">투표 예약 현황</h1>
-        <p className="text-gray-500 text-sm mt-1">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800 tracking-tight">투표 예약 현황</h1>
+        <p className="text-gray-500 text-xs sm:text-sm mt-1">
           예약된 투표 정보를 확인하고 관리하세요.
         </p>
       </div>
 
-      {/* 통계 카드 */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
-        <StatCard label="전체 투표" count={stats.total} color="text-gray-800" />
+      {/* 통계 카드 - 모바일 3열 배치 최적화 */}
+      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-4 mb-8">
+        {/* 전체 투표: 첫 줄 전체 차지 */}
+        <div className="col-span-3 sm:col-span-1">
+            <StatCard label="전체 투표" count={stats.total} color="text-gray-800" />
+        </div>
+        {/* 나머지 3개: 둘째 줄 3열 배치 */}
         <StatCard
           label="대기중"
           count={stats.pending}
@@ -125,12 +128,12 @@ export default function VoteStatusPage() {
       </div>
 
       {/* 필터 탭 */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
         {filters.map((f) => (
           <button
             key={f.key}
             onClick={() => setFilter(f.key)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
               filter === f.key
                 ? "bg-blue-500 text-white"
                 : "bg-white text-gray-500 border border-gray-200 hover:bg-gray-50"
@@ -142,7 +145,7 @@ export default function VoteStatusPage() {
       </div>
 
       {/* 투표 카드 목록 */}
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {loading && (
           <p className="text-center py-10 text-gray-400">
             현황을 불러오는 중입니다...
@@ -158,7 +161,7 @@ export default function VoteStatusPage() {
           filteredList?.map((vote) => <VoteCard key={vote.id} vote={vote} />)}
 
         {!loading && !error && filteredList?.length === 0 && (
-          <p className="text-center py-10 text-gray-400">
+          <p className="text-center py-10 text-gray-400 text-sm">
             해당하는 투표가 없습니다.
           </p>
         )}
@@ -180,10 +183,10 @@ function StatCard({
 }) {
   return (
     <div
-      className={`p-5 rounded-xl border border-gray-100 shadow-sm ${bgColor ?? "bg-white"}`}
+      className={`p-3 sm:p-5 rounded-xl border border-gray-100 shadow-sm ${bgColor ?? "bg-white"}`}
     >
-      <p className="text-sm text-gray-500 mb-1">{label}</p>
-      <p className={`text-2xl font-bold ${color}`}>{count}개</p>
+      <p className="text-[10px] sm:text-sm text-gray-500 mb-1 font-medium">{label}</p>
+      <p className={`text-base sm:text-2xl font-bold ${color}`}>{count}개</p>
     </div>
   );
 }
@@ -200,24 +203,23 @@ function VoteCard({ vote }: { vote: VoteStatus }) {
   const status = statusConfig[vote.status];
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow">
-      {/* 상단: 타입 배지 + 제목 + 상태 */}
-      <div className="flex justify-between items-start mb-5">
-        <div className="flex items-center gap-3">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 hover:shadow-md transition-shadow">
+      <div className="flex flex-col sm:flex-row justify-between items-start gap-3 mb-5">
+        <div className="flex items-center gap-2 sm:gap-3">
           <span
-            className={`px-2.5 py-1 rounded text-xs font-bold ${
+            className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded text-[10px] sm:text-xs font-bold whitespace-nowrap ${
               isRegular
                 ? "bg-blue-50 text-blue-600"
                 : "bg-purple-50 text-purple-600"
             }`}
           >
-            {isRegular ? "정기활동" : "번개모임"}
+            {isRegular ? "정기" : "번개"}
           </span>
-          <h2 className="text-lg font-bold text-gray-800">{vote.title}</h2>
+          <h2 className="text-base sm:text-lg font-bold text-gray-800 truncate">{vote.title}</h2>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between w-full sm:w-auto gap-2">
           <span
-            className={`px-3 py-1 rounded-full text-xs font-semibold ${status.color}`}
+            className={`px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold ${status.color}`}
           >
             {status.text}
           </span>
@@ -226,7 +228,7 @@ function VoteCard({ vote }: { vote: VoteStatus }) {
               className="w-4 h-4"
               fill="none"
               viewBox="0 0 24 24"
-              strokeWidth={1.5}
+              strokeWidth={2}
               stroke="currentColor"
             >
               <path
@@ -239,17 +241,15 @@ function VoteCard({ vote }: { vote: VoteStatus }) {
         </div>
       </div>
 
-      {/* 정보 그리드 */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5 text-sm">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5 text-[13px] sm:text-sm">
         <InfoField label="요일" value={vote.day} />
         <InfoField label="날짜" value={vote.date} />
         <InfoField label="장소" value={vote.location} />
         <InfoField label="참가 확인수" value={`${vote.participantCount}명`} />
       </div>
 
-      {/* 시간 정보 */}
-      <div className="border-t border-gray-100 pt-4 space-y-2 text-sm text-gray-500">
-        <div className="flex flex-wrap gap-x-8 gap-y-1">
+      <div className="border-t border-gray-100 pt-4 space-y-2 text-[12px] sm:text-sm text-gray-500">
+        <div className="flex flex-col sm:flex-row sm:gap-x-8 gap-y-1.5">
           <p>
             운동 시간:{" "}
             <span className="text-gray-800 font-medium">
@@ -267,27 +267,21 @@ function VoteCard({ vote }: { vote: VoteStatus }) {
         </p>
       </div>
 
-      {/* 메모 */}
-      {vote.memo && (
-        <div className="border-t border-gray-100 pt-4 mt-4">
-          <p className="text-xs text-gray-400 mb-1">메모</p>
-          <p className="text-sm text-gray-600">{vote.memo}</p>
-        </div>
-      )}
-      {!vote.memo && (
-        <div className="border-t border-gray-100 pt-4 mt-4">
-          <p className="text-xs text-gray-400">메모</p>
-        </div>
-      )}
+      <div className="border-t border-gray-100 pt-4 mt-4">
+        <p className="text-[10px] sm:text-xs text-gray-400 mb-1">메모</p>
+        <p className="text-[13px] sm:text-sm text-gray-600">
+          {vote.memo ? vote.memo : "등록된 메모가 없습니다."}
+        </p>
+      </div>
     </div>
   );
 }
 
 function InfoField({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <p className="text-xs text-gray-400 mb-0.5">{label}</p>
-      <p className="font-medium text-gray-700">{value}</p>
+    <div className="min-w-0">
+      <p className="text-[10px] sm:text-xs text-gray-400 mb-0.5">{label}</p>
+      <p className="font-medium text-gray-700 truncate">{value}</p>
     </div>
   );
 }

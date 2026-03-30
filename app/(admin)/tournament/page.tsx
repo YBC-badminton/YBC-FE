@@ -255,7 +255,7 @@ export default function TournamentPage() {
                 </div>
             ) : (
                 <div className="space-y-6">
-                    <section className="bg-white rounded-2xl shadow-sm border p-8">
+                    <section className="bg-white rounded-2xl shadow-sm p-8">
                         <header className="flex justify-between items-end mb-8">
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-800">{selectedActivity.title}</h1>
@@ -363,7 +363,7 @@ export default function TournamentPage() {
                             </div>
                         </section>
                     ) : (
-                        <section className="bg-white rounded-2xl shadow-sm border p-8">
+                        <section className="bg-white rounded-2xl shadow-sm p-8">
                             <div className="flex justify-between items-center mb-6">
                                 <div className="flex items-center gap-6">
                                     <h3 className="text-xl font-bold text-gray-800">{currentCourt} 대진표 구성</h3>
