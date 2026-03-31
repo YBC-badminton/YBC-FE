@@ -220,31 +220,31 @@ export default function TournamentPage() {
     };
     
     return (
-        <div className="max-w-6xl mx-auto p-4 space-y-6 text-left">
+        <div className="max-w-6xl mx-auto p-3 sm:p-4 space-y-4 sm:space-y-6 text-left">
             {!selectedActivity ? (
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                     <header>
-                        <h1 className="text-3xl font-bold text-gray-900 mb-2">대진 관리</h1>
-                        <p className="text-gray-500 font-medium">투표가 완료된 운동을 선택하세요.</p>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">대진 관리</h1>
+                        <p className="text-sm sm:text-base text-gray-500 font-medium">투표가 완료된 운동을 선택하세요.</p>
                     </header>
-                    <div className="grid grid-cols-1 gap-6">
+                    <div className="grid grid-cols-1 gap-4 sm:gap-6">
                         {mockActivities.map((activity) => {
                             const isCompleted = completedActivityIds.includes(activity.id);
                             return (
-                                <div 
+                                <div
                                     key={activity.id}
                                     onClick={() => handleSelectActivity(activity as Activity)}
-                                    className={`bg-white p-10 rounded-[24px] border ${isCompleted ? 'border-green-500 bg-green-50/30' : 'border-gray-100'} shadow-sm hover:border-blue-500 cursor-pointer transition-all group relative`}
+                                    className={`bg-white p-5 sm:p-10 rounded-2xl sm:rounded-[24px] border ${isCompleted ? 'border-green-500 bg-green-50/30' : 'border-gray-100'} shadow-sm hover:border-blue-500 cursor-pointer transition-all group relative`}
                                 >
                                     {isCompleted && (
-                                        <span className="absolute top-6 right-10 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                                        <span className="absolute top-4 right-4 sm:top-6 sm:right-10 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">
                                             대진 작성 완료
                                         </span>
                                     )}
-                                    <h3 className={`text-2xl font-bold ${isCompleted ? 'text-green-700' : 'text-gray-800'} mb-4 group-hover:text-blue-600 transition`}>
+                                    <h3 className={`text-lg sm:text-2xl font-bold ${isCompleted ? 'text-green-700' : 'text-gray-800'} mb-2 sm:mb-4 group-hover:text-blue-600 transition`}>
                                         {activity.title}
                                     </h3>
-                                    <div className="text-[15px] text-gray-500 space-y-2 leading-relaxed font-medium">
+                                    <div className="text-sm sm:text-[15px] text-gray-500 space-y-1 sm:space-y-2 leading-relaxed font-medium">
                                         <p>날짜: {activity.date}</p>
                                         <p>참가 인원: {activity.participants.length}명</p>
                                     </div>
@@ -254,44 +254,44 @@ export default function TournamentPage() {
                     </div>
                 </div>
             ) : (
-                <div className="space-y-6">
-                    <section className="bg-white rounded-2xl shadow-sm p-8">
-                        <header className="flex justify-between items-end mb-8">
+                <div className="space-y-4 sm:space-y-6">
+                    <section className="bg-white rounded-2xl shadow-sm p-4 sm:p-8">
+                        <header className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-6 sm:mb-8">
                             <div>
-                                <h1 className="text-2xl font-bold text-gray-800">{selectedActivity.title}</h1>
+                                <h1 className="text-xl sm:text-2xl font-bold text-gray-800">{selectedActivity.title}</h1>
                                 <button onClick={() => setSelectedActivity(null)} className="text-gray-400 text-sm font-bold mt-2 hover:text-gray-600">
                                     ← 목록으로
                                 </button>
                             </div>
-                            <div className="flex items-center gap-4 bg-white p-4 rounded-xl border border-[#dadada]">
-                                <span className="text-xs font-bold text-gray-600">전체 진행도</span>
-                                <div className="w-48 h-3 bg-gray-200 rounded-full overflow-hidden flex items-center">
+                            <div className="flex items-center gap-3 sm:gap-4 bg-white p-3 sm:p-4 rounded-xl border border-[#dadada]">
+                                <span className="text-xs font-bold text-gray-600 whitespace-nowrap">전체 진행도</span>
+                                <div className="w-24 sm:w-48 h-3 bg-gray-200 rounded-full overflow-hidden flex items-center">
                                     <div className="h-full bg-[#8DE45C] transition-all duration-500" style={{ width: `${progress}%` }} />
                                 </div>
-                                <span className="text-lg font-bold text-gray-800 w-12">{progress}%</span>
+                                <span className="text-base sm:text-lg font-bold text-gray-800 w-12">{progress}%</span>
                             </div>
                         </header>
 
-                        <div className="flex bg-gray-100 rounded-lg p-1 w-fit mb-8">
+                        <div className="flex bg-gray-100 rounded-lg p-1 w-full sm:w-fit mb-6 sm:mb-8 overflow-x-auto">
                             {['1코트', '2코트', '3코트', '4코트', '전체'].map(c => (
-                                <button key={c} onClick={() => setCurrentCourt(c)} className={`px-8 py-2 rounded-md text-sm font-bold ${currentCourt === c ? 'bg-white shadow-md text-blue-600' : 'text-gray-400'}`}>
+                                <button key={c} onClick={() => setCurrentCourt(c)} className={`flex-1 sm:flex-none px-4 sm:px-8 py-2 rounded-md text-xs sm:text-sm font-bold whitespace-nowrap ${currentCourt === c ? 'bg-white shadow-md text-blue-600' : 'text-gray-400'}`}>
                                     {c}
                                 </button>
                             ))}
                         </div>
 
                         {/* 미배치 인원 섹션 (성별 표시 추가) */}
-                        <div className="mb-8">
-                            <h3 className="text-xs font-bold text-gray-400 mb-4 uppercase tracking-wider">미배치 인원 ({unassigned.length})</h3>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2">
+                        <div className="mb-6 sm:mb-8">
+                            <h3 className="text-xs font-bold text-gray-400 mb-3 sm:mb-4 uppercase tracking-wider">미배치 인원 ({unassigned.length})</h3>
+                            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-1.5 sm:gap-2">
                                 {unassigned.map((p) => (
-                                    <button 
-                                        key={p.name} 
-                                        onClick={() => handleAssign(p)} 
-                                        className="bg-white border border-gray-200 px-3 py-2 rounded-lg text-xs flex justify-between items-center hover:border-blue-500 transition shadow-sm"
+                                    <button
+                                        key={p.name}
+                                        onClick={() => handleAssign(p)}
+                                        className="bg-white border border-gray-200 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs flex justify-between items-center hover:border-blue-500 transition shadow-sm"
                                     >
-                                        <span className="font-bold text-gray-700">{p.name}</span>
-                                        <span className={`text-[10px] font-medium ${p.gender === '남' ? 'text-blue-400' : 'text-red-400'}`}>
+                                        <span className="font-bold text-gray-700 truncate">{p.name}</span>
+                                        <span className={`text-[10px] font-medium ml-1 ${p.gender === '남' ? 'text-blue-400' : 'text-red-400'}`}>
                                             {p.gender}
                                         </span>
                                     </button>
@@ -301,11 +301,11 @@ export default function TournamentPage() {
 
                         {/* 현재 코트 멤버 섹션 */}
                         {currentCourt !== '전체' && (
-                            <div className="bg-blue-50/50 rounded-xl p-6 border-2 border-dashed border-blue-100">
-                                <p className="text-xs font-bold text-blue-500 mb-4">현재 코트 배치 멤버 (드래그하여 대진표에 배치)</p>
-                                <div className="flex flex-wrap gap-2">
+                            <div className="bg-blue-50/50 rounded-xl p-4 sm:p-6 border-2 border-dashed border-blue-100">
+                                <p className="text-xs font-bold text-blue-500 mb-3 sm:mb-4">현재 코트 배치 멤버 <span className="hidden sm:inline">(드래그하여 대진표에 배치)</span><span className="sm:hidden">(탭하여 배치)</span></p>
+                                <div className="flex flex-wrap gap-1.5 sm:gap-2">
                                     {assignments[currentCourt].map(p => (
-                                        <div key={p.name} draggable onDragStart={(e) => onDragStart(e, p)} className="bg-white border-2 border-blue-100 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 cursor-grab shadow-sm transition hover:scale-105">
+                                        <div key={p.name} draggable onDragStart={(e) => onDragStart(e, p)} className="bg-white border-2 border-blue-100 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 sm:gap-2 cursor-grab shadow-sm transition hover:scale-105">
                                             <span>{p.name}</span>
                                             <span className="text-[10px] opacity-40 font-medium">{p.gender}</span>
                                             <button onClick={() => handleRemoveMember(currentCourt, p)} className="text-gray-300 hover:text-red-500 font-bold ml-1">✕</button>
@@ -317,43 +317,42 @@ export default function TournamentPage() {
                     </section>
 
                     {currentCourt === '전체' ? (
-                        <section className="animate-in fade-in duration-500 space-y-6">
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-xl font-bold text-blue-600">전체 코트 대진 현황</h3>
-                                
+                        <section className="animate-in fade-in duration-500 space-y-4 sm:space-y-6">
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4 sm:mb-6">
+                                <h3 className="text-lg sm:text-xl font-bold text-blue-600">전체 코트 대진 현황</h3>
+
                                 <div className="flex gap-3">
-                                    {/* [핵심] 진행도 100%일 때만 전송 버튼 노출 */}
                                     {progress === 100 && (
-                                        <button 
+                                        <button
                                             onClick={handleSaveTournament}
-                                            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded-xl text-sm font-bold animate-bounce shadow-lg"
+                                            className="bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 py-2 rounded-xl text-sm font-bold animate-bounce shadow-lg w-full sm:w-auto"
                                         >
                                             ✅ 대진 확정 및 전송
                                         </button>
                                     )}
                                 </div>
                             </div>
-                            
+
                             {/* 캡처할 영역 지정 (ref 추가) */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-gray-50 rounded-3xl">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 p-3 sm:p-4 bg-gray-50 rounded-2xl sm:rounded-3xl">
                                 {Object.entries(courtBrackets).map(([courtName, rows]) => (
-                                    <div key={courtName} className="bg-white border border-gray-100 rounded-[24px] p-6 shadow-sm">
-                                        <div className="flex justify-between items-center mb-4 border-b pb-3">
-                                            <span className="text-lg font-bold text-gray-800">{courtName}</span>
+                                    <div key={courtName} className="bg-white border border-gray-100 rounded-2xl sm:rounded-[24px] p-4 sm:p-6 shadow-sm">
+                                        <div className="flex justify-between items-center mb-3 sm:mb-4 border-b pb-3">
+                                            <span className="text-base sm:text-lg font-bold text-gray-800">{courtName}</span>
                                         </div>
-                                        <div className="space-y-3">
+                                        <div className="space-y-2 sm:space-y-3">
                                             {rows.map((row, idx) => (
-                                                <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-gray-50">
-                                                    <div className="flex flex-1 justify-center gap-2">
-                                                        <span className="text-xs font-bold text-gray-700">{row[0]?.name || '미정'}</span>
+                                                <div key={idx} className="flex items-center justify-between p-1.5 sm:p-2 rounded-lg bg-gray-50">
+                                                    <div className="flex flex-1 justify-center gap-1 sm:gap-2">
+                                                        <span className="text-[11px] sm:text-xs font-bold text-gray-700 truncate">{row[0]?.name || '미정'}</span>
                                                         <span className="text-gray-300">:</span>
-                                                        <span className="text-xs font-bold text-gray-700">{row[1]?.name || '미정'}</span>
+                                                        <span className="text-[11px] sm:text-xs font-bold text-gray-700 truncate">{row[1]?.name || '미정'}</span>
                                                     </div>
-                                                    <span className="text-[10px] font-black text-gray-200 mx-2">VS</span>
-                                                    <div className="flex flex-1 justify-center gap-2">
-                                                        <span className="text-xs font-bold text-gray-700">{row[2]?.name || '미정'}</span>
+                                                    <span className="text-[10px] font-black text-gray-200 mx-1 sm:mx-2">VS</span>
+                                                    <div className="flex flex-1 justify-center gap-1 sm:gap-2">
+                                                        <span className="text-[11px] sm:text-xs font-bold text-gray-700 truncate">{row[2]?.name || '미정'}</span>
                                                         <span className="text-gray-300">:</span>
-                                                        <span className="text-xs font-bold text-gray-700">{row[3]?.name || '미정'}</span>
+                                                        <span className="text-[11px] sm:text-xs font-bold text-gray-700 truncate">{row[3]?.name || '미정'}</span>
                                                     </div>
                                                 </div>
                                             ))}
@@ -363,56 +362,60 @@ export default function TournamentPage() {
                             </div>
                         </section>
                     ) : (
-                        <section className="bg-white rounded-2xl shadow-sm p-8">
-                            <div className="flex justify-between items-center mb-6">
-                                <div className="flex items-center gap-6">
-                                    <h3 className="text-xl font-bold text-gray-800">{currentCourt} 대진표 구성</h3>
-                                    <div className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
-                                        <span className="text-xs font-bold text-gray-400">경기 수</span>
-                                        <button onClick={() => handleMatchCount('minus')} className="w-8 h-8 flex items-center justify-center bg-white border rounded-lg text-gray-600 hover:text-red-500">-</button>
-                                        <span className="text-lg font-bold text-gray-800 w-6 text-center">{courtBrackets[currentCourt].length}</span>
-                                        <button onClick={() => handleMatchCount('plus')} className="w-8 h-8 flex items-center justify-center bg-white border rounded-lg text-gray-600 hover:text-blue-500">+</button>
+                        <section className="bg-white rounded-2xl shadow-sm p-4 sm:p-8">
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-6 mb-4 sm:mb-6">
+                                <div className="flex items-center gap-3 sm:gap-6">
+                                    <h3 className="text-base sm:text-xl font-bold text-gray-800 whitespace-nowrap">{currentCourt} 대진표</h3>
+                                    <div className="flex items-center gap-2 sm:gap-3 bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl border border-gray-100">
+                                        <span className="text-[10px] sm:text-xs font-bold text-gray-400">경기 수</span>
+                                        <button onClick={() => handleMatchCount('minus')} className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-white border rounded-lg text-gray-600 hover:text-red-500">-</button>
+                                        <span className="text-base sm:text-lg font-bold text-gray-800 w-5 sm:w-6 text-center">{courtBrackets[currentCourt].length}</span>
+                                        <button onClick={() => handleMatchCount('plus')} className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-white border rounded-lg text-gray-600 hover:text-blue-500">+</button>
                                     </div>
                                 </div>
                                 {/* 버튼 그룹 */}
                                 <div className="flex gap-2">
-                                    {/* 랜덤 배치 버튼 */}
-                                    <button 
+                                    <button
                                         onClick={handleRandomAssign}
-                                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm flex items-center gap-2"
+                                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm flex-1 sm:flex-none"
                                     >
                                         랜덤 배치
                                     </button>
-                                    {/* 모두 비우기 버튼 */}
-                                    <button 
-                                        onClick={handleClearAll} 
-                                        className="bg-white border hover:bg-gray-50 text-red-700 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm"
+                                    <button
+                                        onClick={handleClearAll}
+                                        className="bg-white border hover:bg-gray-50 text-red-700 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm flex-1 sm:flex-none"
                                     >
                                         모두 비우기
                                     </button>
                                 </div>
                             </div>
-                            <div className="bg-white rounded-[24px] p-12 space-y-6 shadow-md border border-gray-50">
+                            <div className="bg-white rounded-2xl sm:rounded-[24px] p-3 sm:p-12 space-y-4 sm:space-y-6 shadow-md border border-gray-50">
                                 {courtBrackets[currentCourt].map((rowArr, rowIndex) => (
-                                    <div key={rowIndex} className="flex items-center justify-center gap-4 animate-in slide-in-from-top-2">
-                                        <span className="text-[10px] font-bold text-gray-300 w-8">G{rowIndex + 1}</span>
-                                        <BracketCell person={rowArr[0]} onDrop={(e: React.DragEvent) => onDrop(e, rowIndex, 0)} onClear={() => {
-                                            const nb = [...courtBrackets[currentCourt].map(r => [...r])]; nb[rowIndex][0] = null;
-                                            setCourtBrackets(prev => ({ ...prev, [currentCourt]: nb }));
-                                        }} />
-                                        <BracketCell person={rowArr[1]} onDrop={(e: React.DragEvent) => onDrop(e, rowIndex, 1)} onClear={() => {
-                                            const nb = [...courtBrackets[currentCourt].map(r => [...r])]; nb[rowIndex][1] = null;
-                                            setCourtBrackets(prev => ({ ...prev, [currentCourt]: nb }));
-                                        }} />
-                                        <span className="text-3xl font-bold text-gray-200 mx-2">:</span>
-                                        <BracketCell person={rowArr[2]} onDrop={(e: React.DragEvent) => onDrop(e, rowIndex, 2)} onClear={() => {
-                                            const nb = [...courtBrackets[currentCourt].map(r => [...r])]; nb[rowIndex][2] = null;
-                                            setCourtBrackets(prev => ({ ...prev, [currentCourt]: nb }));
-                                        }} />
-                                        <BracketCell person={rowArr[3]} onDrop={(e: React.DragEvent) => onDrop(e, rowIndex, 3)} onClear={() => {
-                                            const nb = [...courtBrackets[currentCourt].map(r => [...r])]; nb[rowIndex][3] = null;
-                                            setCourtBrackets(prev => ({ ...prev, [currentCourt]: nb }));
-                                        }} />
+                                    <div key={rowIndex} className="flex items-center justify-center gap-1.5 sm:gap-4 animate-in slide-in-from-top-2">
+                                        <span className="text-[10px] font-bold text-gray-300 w-6 sm:w-8 shrink-0">G{rowIndex + 1}</span>
+                                        <div className="flex items-center gap-1 sm:gap-4 flex-1 min-w-0">
+                                            <div className="flex items-center gap-1 sm:gap-4 flex-1 min-w-0">
+                                                <BracketCell person={rowArr[0]} onDrop={(e: React.DragEvent) => onDrop(e, rowIndex, 0)} onClear={() => {
+                                                    const nb = [...courtBrackets[currentCourt].map(r => [...r])]; nb[rowIndex][0] = null;
+                                                    setCourtBrackets(prev => ({ ...prev, [currentCourt]: nb }));
+                                                }} />
+                                                <BracketCell person={rowArr[1]} onDrop={(e: React.DragEvent) => onDrop(e, rowIndex, 1)} onClear={() => {
+                                                    const nb = [...courtBrackets[currentCourt].map(r => [...r])]; nb[rowIndex][1] = null;
+                                                    setCourtBrackets(prev => ({ ...prev, [currentCourt]: nb }));
+                                                }} />
+                                            </div>
+                                            <span className="text-xl sm:text-3xl font-bold text-gray-200 mx-0.5 sm:mx-2 shrink-0">:</span>
+                                            <div className="flex items-center gap-1 sm:gap-4 flex-1 min-w-0">
+                                                <BracketCell person={rowArr[2]} onDrop={(e: React.DragEvent) => onDrop(e, rowIndex, 2)} onClear={() => {
+                                                    const nb = [...courtBrackets[currentCourt].map(r => [...r])]; nb[rowIndex][2] = null;
+                                                    setCourtBrackets(prev => ({ ...prev, [currentCourt]: nb }));
+                                                }} />
+                                                <BracketCell person={rowArr[3]} onDrop={(e: React.DragEvent) => onDrop(e, rowIndex, 3)} onClear={() => {
+                                                    const nb = [...courtBrackets[currentCourt].map(r => [...r])]; nb[rowIndex][3] = null;
+                                                    setCourtBrackets(prev => ({ ...prev, [currentCourt]: nb }));
+                                                }} />
+                                            </div>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -426,24 +429,24 @@ export default function TournamentPage() {
 
 function BracketCell({ person, onDrop, onClear }: { person: Participant | null, onDrop: (e: React.DragEvent) => void, onClear: () => void }) {
     return (
-        <div 
-            onDragOver={(e) => e.preventDefault()} 
-            onDrop={onDrop} 
-            className={`w-32 h-14 rounded-xl border-2 flex items-center justify-center relative transition-all ${
+        <div
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={onDrop}
+            className={`w-full sm:w-32 h-11 sm:h-14 rounded-lg sm:rounded-xl border-2 flex items-center justify-center relative transition-all ${
                 person ? 'border-green-400 bg-green-50 shadow-sm' : 'border-gray-100 bg-gray-50 border-dashed'
             }`}
         >
             {person ? (
                 <>
                     <div className="flex flex-col items-center">
-                        <span className="text-sm font-bold text-gray-800">{person.name}</span>
-                        <span className={`text-[9px] font-bold ${person.gender === '남' ? 'text-blue-400' : 'text-red-400'}`}>
+                        <span className="text-xs sm:text-sm font-bold text-gray-800 truncate max-w-[60px] sm:max-w-none">{person.name}</span>
+                        <span className={`text-[8px] sm:text-[9px] font-bold ${person.gender === '남' ? 'text-blue-400' : 'text-red-400'}`}>
                             {person.gender}
                         </span>
                     </div>
-                    <button onClick={onClear} className="absolute -top-2 -right-2 bg-white border rounded-full w-5 h-5 flex items-center justify-center text-[10px] shadow-sm hover:text-red-500 font-bold transition">✕</button>
+                    <button onClick={onClear} className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 bg-white border rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[8px] sm:text-[10px] shadow-sm hover:text-red-500 font-bold transition">✕</button>
                 </>
-            ) : <span className="text-[10px] text-gray-300 font-bold uppercase tracking-tighter">Drag Here</span>}
+            ) : <span className="text-[9px] sm:text-[10px] text-gray-300 font-bold uppercase tracking-tighter">Drop</span>}
         </div>
     );
 }
