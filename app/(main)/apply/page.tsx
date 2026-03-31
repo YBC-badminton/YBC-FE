@@ -9,6 +9,7 @@ interface FormData {
     residence: string;
     age: string;
     phone: string;
+    email: string;
     school: string;
     major: string;
     introduction: string;
@@ -35,6 +36,7 @@ export default function ApplyPage() {
         residence: '',
         age: '',
         phone: '',
+        email: '',
         school: '',
         major: '',
         introduction: '',
@@ -66,7 +68,7 @@ export default function ApplyPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!form.name || !form.gender || !form.residence || !form.age || !form.phone || !form.school || !form.major || !form.introduction || !form.motivation || !form.equipment || form.interviewTimes.length === 0 || !form.referral) {
+        if (!form.name || !form.gender || !form.residence || !form.age || !form.phone || !form.email || !form.school || !form.major || !form.introduction || !form.motivation || !form.equipment || form.interviewTimes.length === 0 || !form.referral) {
             alert('모든 필수 항목을 입력해 주세요.');
             return;
         }
@@ -179,6 +181,15 @@ export default function ApplyPage() {
                                 description="합격 통지 및 카톡방 초대에 사용됩니다."
                             />
                         </div>
+
+                        <FormInput
+                            label="이메일"
+                            required
+                            value={form.email}
+                            onChange={v => handleChange('email', v)}
+                            placeholder="example@email.com"
+                            type="email"
+                        />
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                             <FormInput
