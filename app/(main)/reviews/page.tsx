@@ -90,25 +90,25 @@ interface Review {
     );
 
     return (
-        <div className="min-h-screen bg-[#F8F9FA] py-16 px-6 lg:px-24 font-sans select-none">
-        <div className="max-w-screen-xl mx-auto space-y-12">
-            
+        <div className="min-h-screen bg-[#F8F9FA] py-12 sm:py-16 px-6 lg:px-24 font-sans select-none">
+        <div className="max-w-screen-xl mx-auto space-y-8 sm:space-y-12">
+
             {/* --- [1] 헤더 섹션 --- */}
             <div className="space-y-2">
-            <h1 className="text-4xl font-black text-slate-800">장비 후기</h1>
-            <p className="text-slate-400 font-bold">클럽원들의 배드민턴 장비 사용 후기를 확인하고 공유해보세요</p>
+            <h1 className="text-3xl sm:text-4xl font-black text-slate-800">장비 후기</h1>
+            <p className="text-sm sm:text-base text-slate-400 font-bold">클럽원들의 배드민턴 장비 사용 후기를 확인하고 공유해보세요</p>
             </div>
 
             {/* --- [2] 필터 및 작성 버튼 섹션 --- */}
-            <div className="flex justify-between items-center">
-                <div className="flex bg-white p-1 rounded-xl shadow-sm border border-gray-100 flex-wrap gap-1">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                <div className="flex bg-white p-1 rounded-xl shadow-sm border border-gray-100 overflow-x-auto gap-1">
                     {categories.map((tab) => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
-                        className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
-                        activeTab === tab 
-                            ? 'bg-[#4B7332] text-white shadow-md' 
+                        className={`px-3 sm:px-6 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
+                        activeTab === tab
+                            ? 'bg-[#4B7332] text-white shadow-md'
                             : 'text-slate-400 hover:text-slate-600'
                         }`}
                     >
@@ -116,21 +116,20 @@ interface Review {
                     </button>
                     ))}
                 </div>
-                <button 
-                    className="bg-[#4B7332] text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-[#3d5d28] transition-all shadow-md"
+                <button
+                    className="bg-[#4B7332] text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#3d5d28] transition-all shadow-md text-sm sm:text-base"
                     onClick={() => setIsModalOpen(true)}
-                >   
-                    <span className="text-xl">+</span> 후기 작성하기
+                >
+                    <span className="text-lg sm:text-xl">+</span> 후기 작성하기
                 </button>
-                {/* 장비 후기 작성 모달 추가 */}
-                <CreateReviewModal 
-                    isOpen={isModalOpen} 
-                    onClose={() => setIsModalOpen(false)} 
+                <CreateReviewModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
                 />
             </div>
 
             {/* --- [3] 후기 카드 그리드 --- */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-8">
             {filteredReviews.map((review) => (
                 <ReviewCard key={review.id} review={review} />
             ))}
@@ -143,7 +142,7 @@ interface Review {
     /** 후기 카드 컴포넌트 **/
     function ReviewCard({ review }: { review: Review }) {
     return (
-        <div className="bg-white p-8 rounded-[32px] shadow-sm border border-gray-100 flex flex-col gap-5 hover:shadow-md transition-shadow">
+        <div className="bg-white p-5 sm:p-8 rounded-[24px] sm:rounded-[32px] shadow-sm border border-gray-100 flex flex-col gap-4 sm:gap-5 hover:shadow-md transition-shadow">
         {/* 카드 상단: 카테고리 & 별점 */}
         <div className="flex justify-between items-center">
             <span className="bg-slate-100 text-slate-500 text-[11px] font-black px-3 py-1 rounded-md uppercase">

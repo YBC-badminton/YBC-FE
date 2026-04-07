@@ -90,16 +90,16 @@ export default function ActivitiesPage() {
 
     return (
         <div className="min-h-screen bg-[#F8F9FA] py-12 px-6 lg:px-24 font-sans select-none">
-            <div className="max-w-screen-xl mx-auto space-y-16">
-                
+            <div className="max-w-screen-xl mx-auto space-y-10 sm:space-y-16">
+
                 {/* 상단 탭 및 버튼 바 */}
-                <div className="flex justify-between items-center">
-                    <div className="flex bg-white p-1 rounded-xl shadow-sm border border-gray-100">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                    <div className="flex bg-white p-1 rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
                         {['전체', '정기모임', '번개모임', '대회'].map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
-                                className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+                                className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
                                     activeTab === tab ? 'bg-[#4B7332] text-white shadow-md' : 'text-slate-400 hover:text-slate-600'
                                 }`}
                             >
@@ -107,7 +107,7 @@ export default function ActivitiesPage() {
                             </button>
                         ))}
                     </div>
-                    <button className="bg-[#2D5A27] text-white px-6 py-3 rounded-xl font-bold shadow-md hover:bg-[#1e3d1a] transition-all"
+                    <button className="bg-[#2D5A27] text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold shadow-md hover:bg-[#1e3d1a] transition-all text-sm sm:text-base"
                         onClick={() => setIsModalOpen(true)}>
                         + 번개 모임 만들기
                     </button>
@@ -171,26 +171,24 @@ function ActivityCard({ data, isPast }: { data: Activity; isPast: boolean }) {
 
     return (
         <div className="relative group">
-            {/* [변경포인트] Link 대신 div와 onClick 사용 (중첩 <a> 방지) */}
-            <div 
+            <div
                 onClick={handleCardClick}
-                className={`bg-white p-6 rounded-[24px] shadow-sm border border-gray-100 flex items-center gap-6 hover:shadow-md transition-all relative ${isPast ? 'cursor-default' : 'cursor-pointer hover:-translate-y-0.5'}`}
+                className={`bg-white p-5 sm:p-6 rounded-[24px] shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 hover:shadow-md transition-all relative ${isPast ? 'cursor-default' : 'cursor-pointer hover:-translate-y-0.5'}`}
             >
-                <div className={`w-16 h-16 rounded-xl flex-shrink-0 ${isPast ? 'bg-slate-300' : (data.type === '대회' ? 'bg-amber-500' : 'bg-[#3D6B2C]')}`} />
-                
-                <div className="flex-grow space-y-2">
-                    <div className="flex items-center gap-3">
+                <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl flex-shrink-0 ${isPast ? 'bg-slate-300' : (data.type === '대회' ? 'bg-amber-500' : 'bg-[#3D6B2C]')}`} />
+
+                <div className="flex-grow space-y-2 min-w-0">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                         <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-black uppercase">
                             {data.type}
                         </span>
-                        <h3 className="text-lg font-black text-slate-800">{data.title}</h3>
-                        
-                        {/* 대진 버튼 - 이제 중첩되지 않음 */}
+                        <h3 className="text-base sm:text-lg font-black text-slate-800">{data.title}</h3>
+
                         {!isPast && (
-                            <Link 
-                                href={`/activities/${data.id}/tournament`} 
+                            <Link
+                                href={`/activities/${data.id}/tournament`}
                                 onClick={(e) => {
-                                    e.stopPropagation(); // 카드 상세 페이지 이동 방지
+                                    e.stopPropagation();
                                 }}
                                 className="bg-[#4B7332] text-white text-[11px] font-bold px-3 py-1 rounded-full whitespace-nowrap drop-shadow-sm hover:bg-[#3d5d28] transition-colors z-20"
                             >
@@ -198,19 +196,19 @@ function ActivityCard({ data, isPast }: { data: Activity; isPast: boolean }) {
                             </Link>
                         )}
                     </div>
-                    <div className="flex flex-col gap-1 text-sm font-bold text-slate-400">
+                    <div className="flex flex-col gap-1 text-xs sm:text-sm font-bold text-slate-400">
                         <p>📍 {data.location}</p>
                         <p>📅 {data.date} {timeString}</p>
                     </div>
                 </div>
 
-                <div className="w-48 text-right space-y-3">
+                <div className="w-full sm:w-48 sm:text-right space-y-2 sm:space-y-3 pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-50 flex-shrink-0">
                     <div className="text-xs font-black text-slate-400 uppercase tracking-tighter">참여 인원</div>
-                    <div className="text-2xl font-black text-slate-800">
+                    <div className="text-xl sm:text-2xl font-black text-slate-800">
                         {data.currentParticipants} / <span className="text-slate-300">{data.maxParticipants}</span>
                     </div>
                     <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <div 
+                        <div
                             className={`h-full transition-all duration-500 ${isPast ? 'bg-slate-400' : 'bg-[#4B7332]'}`}
                             style={{ width: `${percentage}%` }}
                         />
