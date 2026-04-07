@@ -237,8 +237,7 @@ export default function InterviewsPage() {
       <div className="flex justify-end mt-8 pb-10">
         <button
           onClick={handleSave}
-          className="w-full sm:w-auto bg-blue-600 text-white px-10 py-4 rounded-2xl font-black text-sm shadow-lg shadow-blue-500/20 active:scale-95 transition-all"
-        >
+          className="w-full sm:w-auto bg-blue-600 text-white px-10 py-4 rounded-2xl font-black text-sm shadow-lg shadow-blue-500/20 active:scale-95 transition-all">
           저장하기
         </button>
       </div>
