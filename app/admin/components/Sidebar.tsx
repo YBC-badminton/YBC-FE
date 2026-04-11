@@ -5,13 +5,13 @@ import { usePathname } from 'next/navigation';
 
 // [수정 포인트] 성재님의 아이콘 파일 경로(예: /images/icons/...)로 이름을 맞춰주세요.
 const menuItems = [
-    { name: '지원자 조회', href: '/applicants', icon: 'applicants' },
-    { name: '면접 관리', href: '/interviews', icon: 'interviews' },
-    { name: '부원 명단', href: '/members', icon: 'members' },
-    { name: '투표 예약', href: '/reservations', icon: 'reservations' },
-    { name: '투표 예약 현황', href: '/votes', icon: 'votes_status' },
-    { name: '모집 일정', href: '/recruitment', icon: 'recruitment' },
-    { name: '대진 관리', href: '/tournament', icon: 'tournament' },
+    { name: '지원자 조회', href: '/admin/applicants', icon: 'applicants' },
+    { name: '면접 관리', href: '/admin/interviews', icon: 'interviews' },
+    { name: '부원 명단', href: '/admin/members', icon: 'members' },
+    { name: '투표 예약', href: '/admin/reservations', icon: 'reservations' },
+    { name: '투표 예약 현황', href: '/admin/votes', icon: 'votes_status' },
+    { name: '모집 일정', href: '/admin/recruitment', icon: 'recruitment' },
+    { name: '대진 관리', href: '/admin/tournament', icon: 'tournament' },
 ];
 
 export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
