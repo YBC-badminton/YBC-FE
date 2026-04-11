@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../../context/AuthContext';
 
 type LoginTab = 'member' | 'admin';
@@ -116,6 +116,7 @@ function MemberLogin() {
 function AdminLogin() {
     const { loginAdmin, isLoading } = useAuth();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [id, setId] = useState('');
     const [password, setPassword] = useState('');
 
@@ -124,7 +125,8 @@ function AdminLogin() {
         if (!id || !password) return;
         try {
             await loginAdmin(id, password);
-            router.push('/admin/applicants');
+            const redirect = searchParams.get('redirect') || '/admin/applicants';
+            router.push(redirect);
         } catch {
             // 에러는 AuthContext에서 처리
         }

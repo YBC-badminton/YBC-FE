@@ -3,16 +3,15 @@
 
 import { useEffect, useState } from 'react';
 import { VoteReservation } from '../types/vote';
+import api from '@/lib/axios';
 
 export default function ReservationQueue() {
     const [queue, setQueue] = useState<VoteReservation[]>([]);
 
     useEffect(() => {
-        // 백엔드에서 예약 대기열 정보 가져오기
         const fetchQueue = async () => {
-        const res = await fetch('/api/admin/votes/queue');
-        const data = await res.json();
-        setQueue(data);
+        const res = await api.get<VoteReservation[]>('/api/admin/votes/queue');
+        setQueue(res.data);
         };
         fetchQueue();
     }, []);

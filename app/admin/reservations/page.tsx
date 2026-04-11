@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '@/lib/axios';
 import { useAxios } from '@/hooks/useAxios';
 
 // 투표 데이터 타입 정의
@@ -35,7 +35,7 @@ export default function VoteReservationPage() {
         const payload = type === 'regular' ? regularForm : extraForm;
 
         try {
-        const response = await axios.post('/api/admin/votes/reserve', payload);
+        const response = await api.post('/api/admin/votes/reserve', payload);
         if (response.status === 200 || response.status === 201) {
             alert('투표 예약이 완료되었습니다!');
             refetch(); // 예약 성공 후 대기열 목록 새로고침
