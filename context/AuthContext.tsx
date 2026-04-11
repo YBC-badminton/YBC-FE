@@ -3,14 +3,15 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import api from '../lib/axios';
 
-// 계정 유형: 관리자 / 일반 회원 / 지원자
 type UserRole = 'admin' | 'member' | 'applicant';
 
 interface User {
+    id?: number;
     role: UserRole;
     name: string;
     email?: string;
     phone?: string;
+    provider?: string;
 }
 
 interface AuthContextType {
@@ -19,24 +20,30 @@ interface AuthContextType {
     error: string | null;
     loginAdmin: (id: string, password: string) => Promise<void>;
     loginKakao: () => Promise<void>;
+    handleKakaoCallback: (accessToken: string, refreshToken: string) => Promise<void>;
     loginApplicant: (name: string, phone: string) => Promise<void>;
-    logout: () => void;
+    logout: () => Promise<void>;
     clearError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// localStorage 헬퍼
-function saveAuth(user: User, token?: string) {
-    localStorage.setItem('user', JSON.stringify(user));
-    if (token) {
-        localStorage.setItem('accessToken', token);
+// --- localStorage 헬퍼 ---
+function saveTokens(accessToken: string, refreshToken?: string) {
+    localStorage.setItem('accessToken', accessToken);
+    if (refreshToken) {
+        localStorage.setItem('refreshToken', refreshToken);
     }
 }
 
+function saveUser(user: User) {
+    localStorage.setItem('user', JSON.stringify(user));
+}
+
 function clearAuth() {
-    localStorage.removeItem('user');
     localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
 }
 
 function loadUser(): User | null {
@@ -65,6 +72,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const clearError = useCallback(() => setError(null), []);
 
+    // 내 정보 조회 (카카오 로그인 후 유저 정보 가져오기)
+    const fetchMe = useCallback(async (): Promise<User> => {
+        const res = await api.get('/api/v1/auth/me');
+        const data = res.data;
+        return {
+            id: data.id,
+            role: 'member',
+            name: data.nickname,
+            email: data.email,
+            provider: data.provider,
+        };
+    }, []);
+
     // 1. 관리자 로그인
     const loginAdmin = useCallback(async (id: string, password: string) => {
         setIsLoading(true);
@@ -75,7 +95,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 role: 'admin',
                 name: res.data.name,
             };
-            saveAuth(newUser, res.data.accessToken);
+            saveTokens(res.data.accessToken, res.data.refreshToken);
+            saveUser(newUser);
             setUser(newUser);
         } catch (err: unknown) {
             const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
@@ -87,13 +108,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
 
-    // 2. 카카오 로그인 (회원)
+    // 2. 카카오 로그인 — 1단계: loginUrl 받아서 리다이렉트
     const loginKakao = useCallback(async () => {
         setIsLoading(true);
         setError(null);
         try {
-            const res = await api.get('/api/auth/kakao');
-            window.location.href = res.data.redirectUrl;
+            const res = await api.get('/api/v1/auth/kakao/login-url');
+            window.location.href = res.data.loginUrl;
         } catch (err: unknown) {
             const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
                 || '카카오 로그인 중 오류가 발생했습니다.';
@@ -103,6 +124,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setIsLoading(false);
         }
     }, []);
+
+    // 2. 카카오 로그인 — 2단계: 콜백에서 토큰 받은 후 유저 정보 조회
+    const handleKakaoCallback = useCallback(async (accessToken: string, refreshToken: string) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            saveTokens(accessToken, refreshToken);
+            const newUser = await fetchMe();
+            saveUser(newUser);
+            setUser(newUser);
+        } catch (err: unknown) {
+            clearAuth();
+            const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+                || '로그인 정보를 가져오는 중 오류가 발생했습니다.';
+            setError(message);
+            throw err;
+        } finally {
+            setIsLoading(false);
+        }
+    }, [fetchMe]);
 
     // 3. 지원자 조회
     const loginApplicant = useCallback(async (name: string, phone: string) => {
@@ -115,7 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 name: res.data.name,
                 phone,
             };
-            saveAuth(newUser);
+            saveUser(newUser);
             setUser(newUser);
         } catch (err: unknown) {
             const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
@@ -128,14 +169,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     // 로그아웃
-    const logout = useCallback(() => {
+    const logout = useCallback(async () => {
+        try {
+            await api.post('/api/v1/auth/logout');
+        } catch {
+            // 로그아웃 API 실패해도 클라이언트 측은 정리
+        }
         clearAuth();
         setUser(null);
         setError(null);
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, isLoading, error, loginAdmin, loginKakao, loginApplicant, logout, clearError }}>
+        <AuthContext.Provider value={{ user, isLoading, error, loginAdmin, loginKakao, handleKakaoCallback, loginApplicant, logout, clearError }}>
             {children}
         </AuthContext.Provider>
     );

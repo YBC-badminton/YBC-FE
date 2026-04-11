@@ -2,9 +2,19 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await logout();
+    setIsMenuOpen(false);
+    router.push("/");
+  };
 
   return (
     <header className="w-full bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50 transition-all duration-300">
@@ -25,26 +35,17 @@ export default function Header() {
           <nav>
             <ul className="flex items-center gap-10 text-[15px] font-medium text-slate-700 tracking-tight">
               <li>
-                <Link
-                  href="/activities"
-                  className="hover:text-green-700 transition"
-                >
+                <Link href="/activities" className="hover:text-green-700 transition">
                   정기 모임
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/reviews"
-                  className="hover:text-green-700 transition"
-                >
+                <Link href="/reviews" className="hover:text-green-700 transition">
                   장비 후기
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/past-activities"
-                  className="hover:text-green-700 transition"
-                >
+                <Link href="/past-activities" className="hover:text-green-700 transition">
                   지난 활동
                 </Link>
               </li>
@@ -60,12 +61,24 @@ export default function Header() {
               </li>
             </ul>
           </nav>
-          <Link
-            href="/login"
-            className="px-6 py-2 border-2 border-slate-300 rounded-full text-[15px] font-bold text-slate-800 hover:bg-slate-50 transition-colors"
-          >
-            로그인
-          </Link>
+          {user ? (
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-bold text-slate-600">{user.name}</span>
+              <button
+                onClick={handleLogout}
+                className="px-5 py-2 border-2 border-slate-300 rounded-full text-[14px] font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors"
+              >
+                로그아웃
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="px-6 py-2 border-2 border-slate-300 rounded-full text-[15px] font-bold text-slate-800 hover:bg-slate-50 transition-colors"
+            >
+              로그인
+            </Link>
+          )}
         </div>
 
         {/* [우측] 모바일 햄버거 */}
@@ -106,7 +119,7 @@ export default function Header() {
               { href: "/activities", label: "정기 모임" },
               { href: "/reviews", label: "장비 후기" },
               { href: "/past-activities", label: "지난 활동" },
-              { href: "/inquiry", label: "문의하기" },
+              { href: "/faq", label: "문의하기" },
               { href: "/apply", label: "지원하기" },
             ].map((item) => (
               <Link
@@ -118,13 +131,25 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
-            <Link
-              href="/login"
-              onClick={() => setIsMenuOpen(false)}
-              className="block mx-4 mt-3 mb-2 text-center px-6 py-2.5 border-2 border-slate-300 rounded-full text-[15px] font-bold text-slate-800 hover:bg-slate-50 transition-colors"
-            >
-              로그인
-            </Link>
+            {user ? (
+              <div className="mx-4 mt-3 mb-2 space-y-2">
+                <p className="text-center text-sm font-bold text-slate-600">{user.name}</p>
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-center px-6 py-2.5 border-2 border-slate-300 rounded-full text-[15px] font-bold text-slate-500 hover:bg-slate-50 transition-colors"
+                >
+                  로그아웃
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setIsMenuOpen(false)}
+                className="block mx-4 mt-3 mb-2 text-center px-6 py-2.5 border-2 border-slate-300 rounded-full text-[15px] font-bold text-slate-800 hover:bg-slate-50 transition-colors"
+              >
+                로그인
+              </Link>
+            )}
           </nav>
         </div>
       )}
