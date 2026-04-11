@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import api from '../../../lib/axios';
 
 interface FormData {
     name: string;
@@ -26,6 +27,20 @@ const INTERVIEW_OPTIONS = [
     '2월 21일(토) 13:30~14:30',
     '2월 21일(토) 14:30~15:30',
 ];
+
+// 면접 시간 라벨 → API enum 매핑
+const INTERVIEW_TIME_MAP: Record<string, string> = {
+    '2월 21일(토) 13:30~14:30': 'FIRST_SESSION',
+    '2월 21일(토) 14:30~15:30': 'SECOND_SESSION',
+};
+
+// 유입 경로 라벨 → API enum 매핑
+const DISCOVERY_SOURCE_MAP: Record<string, string> = {
+    '에브리타임': 'EVERYTIME',
+    '캠퍼스픽': 'CAMPUSPICK',
+    '인스타그램': 'INSTAGRAM',
+    '기타': 'ETC',
+};
 
 const REFERRAL_OPTIONS = ['에브리타임', '캠퍼스픽', '인스타그램', '기타'];
 
@@ -81,15 +96,31 @@ export default function ApplyPage() {
         setIsSubmitting(true);
         try {
             const payload = {
-                ...form,
-                timestamp: new Date().toISOString(),
+                name: form.name,
+                address: form.residence,
+                gender: form.gender === '남' ? 'MALE' : 'FEMALE',
+                age: Number(form.age),
+                phone: form.phone,
+                email: form.email,
+                university: form.school,
+                major: form.major,
+                introduction: form.introduction,
+                motivation: form.motivation,
+                equipment: form.equipment,
+                interviewTimes: form.interviewTimes.map(t => INTERVIEW_TIME_MAP[t]),
+                discoverySource: DISCOVERY_SOURCE_MAP[form.referral],
+                discoveryEtc: form.referral === '기타' ? form.referralDetail : '',
+                wantsStaff: form.operatorInterest,
+                finalComment: form.finalRemarks,
+                status: 'NONE',
             };
-            console.log('지원서 전송 데이터:', payload);
-            // await axios.post('/api/apply', payload);
 
+            await api.post('/applications', payload);
             setIsSubmitted(true);
-        } catch {
-            alert('제출 중 오류가 발생했습니다. 다시 시도해 주세요.');
+        } catch (err: unknown) {
+            const message = (err as { response?: { data?: { message?: string } } })
+                ?.response?.data?.message || '제출 중 오류가 발생했습니다. 다시 시도해 주세요.';
+            alert(message);
         } finally {
             setIsSubmitting(false);
         }
