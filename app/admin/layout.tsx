@@ -14,12 +14,12 @@ export default function AdminLayout({
     const { user } = useAuth();
     const router = useRouter();
 
-    // 클라이언트 사이드 인증 가드: admin 역할이 아니면 로그인 페이지로 리다이렉트
-    useEffect(() => {
-        if (user === null && typeof window !== 'undefined' && !localStorage.getItem('accessToken')) {
-            router.replace('/login?redirect=/admin');
-        }
-    }, [user, router]);
+    // TODO: 개발 완료 후 아래 주석 해제하여 인증 보호 활성화
+    // useEffect(() => {
+    //     if (user === null && typeof window !== 'undefined' && !localStorage.getItem('accessToken')) {
+    //         router.replace('/login?redirect=/admin');
+    //     }
+    // }, [user, router]);
 
     return (
         <div className="flex min-h-screen bg-gray-50">
