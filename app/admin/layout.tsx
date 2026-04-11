@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
-import Sidebar from './components/Sidebar'; // 경로에 맞춰 수정하세요
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../../context/AuthContext';
+import Sidebar from './components/Sidebar';
 
 export default function AdminLayout({
     children,
@@ -9,6 +11,15 @@ export default function AdminLayout({
     children: React.ReactNode;
     }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const { user } = useAuth();
+    const router = useRouter();
+
+    // 클라이언트 사이드 인증 가드: admin 역할이 아니면 로그인 페이지로 리다이렉트
+    useEffect(() => {
+        if (user === null && typeof window !== 'undefined' && !localStorage.getItem('accessToken')) {
+            router.replace('/login?redirect=/admin');
+        }
+    }, [user, router]);
 
     return (
         <div className="flex min-h-screen bg-gray-50">

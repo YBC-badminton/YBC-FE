@@ -1,7 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import axios from 'axios';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import api from '../lib/axios';
 
 // 계정 유형: 관리자 / 일반 회원 / 지원자
 type UserRole = 'admin' | 'member' | 'applicant';
@@ -9,36 +9,59 @@ type UserRole = 'admin' | 'member' | 'applicant';
 interface User {
     role: UserRole;
     name: string;
-    // admin: ID 기반 로그인
-    // member: 카카오 로그인 후 받는 정보
-    // applicant: 이름 + 전화번호로 조회
     email?: string;
     phone?: string;
-    accessToken?: string;
 }
 
 interface AuthContextType {
     user: User | null;
     isLoading: boolean;
     error: string | null;
-    // 관리자 로그인
     loginAdmin: (id: string, password: string) => Promise<void>;
-    // 카카오 로그인 (회원)
     loginKakao: () => Promise<void>;
-    // 지원자 조회
     loginApplicant: (name: string, phone: string) => Promise<void>;
-    // 로그아웃
     logout: () => void;
-    // 에러 초기화
     clearError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+// localStorage 헬퍼
+function saveAuth(user: User, token?: string) {
+    localStorage.setItem('user', JSON.stringify(user));
+    if (token) {
+        localStorage.setItem('accessToken', token);
+    }
+}
+
+function clearAuth() {
+    localStorage.removeItem('user');
+    localStorage.removeItem('accessToken');
+}
+
+function loadUser(): User | null {
+    if (typeof window === 'undefined') return null;
+    const stored = localStorage.getItem('user');
+    if (!stored) return null;
+    try {
+        return JSON.parse(stored);
+    } catch {
+        return null;
+    }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // 마운트 시 localStorage에서 유저 정보 복원
+    useEffect(() => {
+        const stored = loadUser();
+        if (stored) {
+            setUser(stored);
+        }
+    }, []);
 
     const clearError = useCallback(() => setError(null), []);
 
@@ -47,18 +70,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(true);
         setError(null);
         try {
-            const res = await axios.post('/api/auth/admin', { id, password });
-            setUser({
+            const res = await api.post('/api/auth/admin', { id, password });
+            const newUser: User = {
                 role: 'admin',
                 name: res.data.name,
-                accessToken: res.data.accessToken,
-            });
-        } catch (err) {
-            if (axios.isAxiosError(err)) {
-                setError(err.response?.data?.message || '아이디 또는 비밀번호가 올바르지 않습니다.');
-            } else {
-                setError('로그인 중 오류가 발생했습니다.');
-            }
+            };
+            saveAuth(newUser, res.data.accessToken);
+            setUser(newUser);
+        } catch (err: unknown) {
+            const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+                || '아이디 또는 비밀번호가 올바르지 않습니다.';
+            setError(message);
             throw err;
         } finally {
             setIsLoading(false);
@@ -70,15 +92,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(true);
         setError(null);
         try {
-            // 카카오 OAuth 리다이렉트 URL을 백엔드에서 받아오는 구조
-            const res = await axios.get('/api/auth/kakao');
+            const res = await api.get('/api/auth/kakao');
             window.location.href = res.data.redirectUrl;
-        } catch (err) {
-            if (axios.isAxiosError(err)) {
-                setError(err.response?.data?.message || '카카오 로그인 중 오류가 발생했습니다.');
-            } else {
-                setError('카카오 로그인 중 오류가 발생했습니다.');
-            }
+        } catch (err: unknown) {
+            const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+                || '카카오 로그인 중 오류가 발생했습니다.';
+            setError(message);
             throw err;
         } finally {
             setIsLoading(false);
@@ -90,18 +109,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(true);
         setError(null);
         try {
-            const res = await axios.post('/api/auth/applicant', { name, phone });
-            setUser({
+            const res = await api.post('/api/auth/applicant', { name, phone });
+            const newUser: User = {
                 role: 'applicant',
                 name: res.data.name,
                 phone,
-            });
-        } catch (err) {
-            if (axios.isAxiosError(err)) {
-                setError(err.response?.data?.message || '일치하는 지원 정보를 찾을 수 없습니다.');
-            } else {
-                setError('조회 중 오류가 발생했습니다.');
-            }
+            };
+            saveAuth(newUser);
+            setUser(newUser);
+        } catch (err: unknown) {
+            const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+                || '일치하는 지원 정보를 찾을 수 없습니다.';
+            setError(message);
             throw err;
         } finally {
             setIsLoading(false);
@@ -110,6 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // 로그아웃
     const logout = useCallback(() => {
+        clearAuth();
         setUser(null);
         setError(null);
     }, []);
