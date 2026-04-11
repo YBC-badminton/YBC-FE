@@ -5,18 +5,17 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../context/AuthContext';
 
+type LoginTab = 'member' | 'admin';
 // type LoginTab = 'member' | 'admin' | 'applicant';
 
 export default function LoginPage() {
-    const { error } = useAuth();
+    const [activeTab, setActiveTab] = useState<LoginTab>('member');
+    const { error, clearError } = useAuth();
 
-    // TODO: 관리자/지원자 로그인 탭이 필요할 경우 아래 주석 해제
-    // const [activeTab, setActiveTab] = useState<LoginTab>('member');
-    // const { clearError } = useAuth();
-    // const handleTabChange = (tab: LoginTab) => {
-    //     clearError();
-    //     setActiveTab(tab);
-    // };
+    const handleTabChange = (tab: LoginTab) => {
+        clearError();
+        setActiveTab(tab);
+    };
 
     return (
         <div className="min-h-screen bg-[#F8F9FA] py-12 px-6 lg:px-24 font-sans select-none">
@@ -31,13 +30,13 @@ export default function LoginPage() {
                 {/* 로그인 카드 */}
                 <div className="max-w-md mx-auto space-y-6">
 
-                    {/* TODO: 관리자/지원자 로그인 탭이 필요할 경우 아래 주석 해제 */}
-                    {/* <div className="flex bg-white p-1 rounded-xl shadow-sm border border-gray-100">
+                    {/* 탭 전환 */}
+                    <div className="flex bg-white p-1 rounded-xl shadow-sm border border-gray-100">
                         {([
-                            { key: 'member', label: '회원 로그인' },
-                            { key: 'admin', label: '관리자' },
-                            { key: 'applicant', label: '지원자 조회' },
-                        ] as const).map(tab => (
+                            { key: 'member' as const, label: '회원 로그인' },
+                            { key: 'admin' as const, label: '관리자' },
+                            // { key: 'applicant' as const, label: '지원자 조회' },
+                        ]).map(tab => (
                             <button
                                 key={tab.key}
                                 onClick={() => handleTabChange(tab.key)}
@@ -50,7 +49,7 @@ export default function LoginPage() {
                                 {tab.label}
                             </button>
                         ))}
-                    </div> */}
+                    </div>
 
                     {/* 에러 메시지 */}
                     {error && (
@@ -59,11 +58,9 @@ export default function LoginPage() {
                         </div>
                     )}
 
-                    {/* 회원 로그인만 활성화 */}
-                    <MemberLogin />
-
-                    {/* TODO: 관리자/지원자 로그인이 필요할 경우 아래 주석 해제 */}
-                    {/* {activeTab === 'admin' && <AdminLogin />} */}
+                    {/* 탭별 폼 */}
+                    {activeTab === 'member' && <MemberLogin />}
+                    {activeTab === 'admin' && <AdminLogin />}
                     {/* {activeTab === 'applicant' && <ApplicantLogin />} */}
                 </div>
             </div>
@@ -116,68 +113,67 @@ function MemberLogin() {
 }
 
 // --- 2. 관리자 로그인 ---
-// TODO: 관리자 로그인이 필요할 경우 주석 해제
-// function AdminLogin() {
-//     const { loginAdmin, isLoading } = useAuth();
-//     const router = useRouter();
-//     const [id, setId] = useState('');
-//     const [password, setPassword] = useState('');
-//
-//     const handleSubmit = async (e: React.FormEvent) => {
-//         e.preventDefault();
-//         if (!id || !password) return;
-//         try {
-//             await loginAdmin(id, password);
-//             router.push('/applicants');
-//         } catch {
-//             // 에러는 AuthContext에서 처리
-//         }
-//     };
-//
-//     return (
-//         <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-8 space-y-6">
-//             <div className="text-center space-y-2">
-//                 <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
-//                     <svg className="w-8 h-8 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-//                     </svg>
-//                 </div>
-//                 <h2 className="text-xl font-black text-slate-800">관리자 로그인</h2>
-//                 <p className="text-sm text-slate-400 font-medium">운영진 전용 계정으로 로그인해 주세요.</p>
-//             </div>
-//
-//             <form onSubmit={handleSubmit} className="space-y-4">
-//                 <div className="space-y-2">
-//                     <label className="text-sm font-bold text-slate-600">아이디</label>
-//                     <input
-//                         type="text"
-//                         value={id}
-//                         onChange={e => setId(e.target.value)}
-//                         placeholder="관리자 아이디"
-//                         className="w-full px-4 py-3.5 bg-slate-50 border border-gray-200 rounded-xl text-sm font-medium text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#4B7332]/20 focus:border-[#4B7332]/40 transition"
-//                     />
-//                 </div>
-//                 <div className="space-y-2">
-//                     <label className="text-sm font-bold text-slate-600">비밀번호</label>
-//                     <input
-//                         type="password"
-//                         value={password}
-//                         onChange={e => setPassword(e.target.value)}
-//                         placeholder="비밀번호"
-//                         className="w-full px-4 py-3.5 bg-slate-50 border border-gray-200 rounded-xl text-sm font-medium text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#4B7332]/20 focus:border-[#4B7332]/40 transition"
-//                     />
-//                 </div>
-//                 <button
-//                     type="submit"
-//                     disabled={isLoading || !id || !password}
-//                     className="w-full bg-slate-800 text-white font-bold py-4 rounded-2xl hover:bg-slate-900 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-//                 >
-//                     {isLoading ? '로그인 중...' : '로그인'}
-//                 </button>
-//             </form>
-//         </div>
-//     );
-// }
+function AdminLogin() {
+    const { loginAdmin, isLoading } = useAuth();
+    const router = useRouter();
+    const [id, setId] = useState('');
+    const [password, setPassword] = useState('');
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!id || !password) return;
+        try {
+            await loginAdmin(id, password);
+            router.push('/admin/applicants');
+        } catch {
+            // 에러는 AuthContext에서 처리
+        }
+    };
+
+    return (
+        <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-8 space-y-6">
+            <div className="text-center space-y-2">
+                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
+                    <svg className="w-8 h-8 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <h2 className="text-xl font-black text-slate-800">관리자 로그인</h2>
+                <p className="text-sm text-slate-400 font-medium">운영진 전용 계정으로 로그인해 주세요.</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-600">아이디</label>
+                    <input
+                        type="text"
+                        value={id}
+                        onChange={e => setId(e.target.value)}
+                        placeholder="관리자 아이디"
+                        className="w-full px-4 py-3.5 bg-slate-50 border border-gray-200 rounded-xl text-sm font-medium text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#4B7332]/20 focus:border-[#4B7332]/40 transition"
+                    />
+                </div>
+                <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-600">비밀번호</label>
+                    <input
+                        type="password"
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        placeholder="비밀번호"
+                        className="w-full px-4 py-3.5 bg-slate-50 border border-gray-200 rounded-xl text-sm font-medium text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#4B7332]/20 focus:border-[#4B7332]/40 transition"
+                    />
+                </div>
+                <button
+                    type="submit"
+                    disabled={isLoading || !id || !password}
+                    className="w-full bg-slate-800 text-white font-bold py-4 rounded-2xl hover:bg-slate-900 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {isLoading ? '로그인 중...' : '로그인'}
+                </button>
+            </form>
+        </div>
+    );
+}
 
 // --- 3. 지원자 조회 ---
 // TODO: 지원자 조회가 필요할 경우 주석 해제
