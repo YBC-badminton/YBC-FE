@@ -6,35 +6,35 @@ import Link from "next/link";
 // 하드코딩된 활동 데이터
 const HARDCODED_ACTIVITIES = [
     {
-        id: "1",
+        id: "regular", // regular (정식 복식 경기)
         subtitle: "매주 화, 토요일마다",
         title: "정기 복식 경기",
         imageUrl: "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?q=80&w=1200&auto=format&fit=crop", 
         heightClass: "h-[280px] sm:h-[320px]",
     },
     {
-        id: "2",
+        id: "tournament", // tournament (자체 경기)
         subtitle: "부원들끼리 실력을 판가름하는",
         title: "자체 경기",
         imageUrl: "https://images.unsplash.com/photo-1599474924187-334a4ae5bd3c?q=80&w=800&auto=format&fit=crop",
         heightClass: "h-[240px] sm:h-[260px]",
     },
     {
-        id: "3",
+        id: "cabbage-day", // cabbage-day (양배추의 날)
         subtitle: "부원들끼리 친목을 다지는",
         title: "양배추의 날",
         imageUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=800&auto=format&fit=crop",
         heightClass: "h-[240px] sm:h-[260px]",
     },
     {
-        id: "4",
+        id: "party", // party (뒷풀이)
         subtitle: "종종 정기 운동이 끝나고 난 후는",
         title: "뒷풀이",
         imageUrl: "https://images.unsplash.com/photo-1528605248644-14dd04022da1?q=80&w=800&auto=format&fit=crop",
         heightClass: "h-[240px] sm:h-[260px]",
     },
     {
-        id: "5",
+        id: "flash", // flash (번개 운동)
         subtitle: "마음이 맞는 부원끼리",
         title: "번개 운동",
         imageUrl: "https://images.unsplash.com/photo-1611250282006-4484dd3fba6b?q=80&w=800&auto=format&fit=crop",
@@ -64,17 +64,17 @@ export default function PastActivitiesPage() {
 
                 {/* 활동 카드 그리드 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-                    {HARDCODED_ACTIVITIES.map((activity, idx) => (
-                        <Link                 
-                            key={activity.id} 
-                            href={`/past-activities/${activity.id}`}
+                    {HARDCODED_ACTIVITIES.map((pastActivity, idx) => (
+                        <Link
+                            key={pastActivity.id} 
+                            href={`/past-activities/${pastActivity.id}`}
                             className={`block group relative overflow-hidden rounded-[20px] shadow-sm cursor-pointer ${idx === 0 ? "md:col-span-2" : "col-span-1"}`}
                         >
-                            <div className={`relative w-full ${activity.heightClass} bg-gray-100 overflow-hidden`}>
+                            <div className={`relative w-full ${pastActivity.heightClass} bg-gray-100 overflow-hidden`}>
                                 
                                 <img
-                                    src={activity.imageUrl}
-                                    alt={activity.title}
+                                    src={pastActivity.imageUrl}
+                                    alt={pastActivity.title}
                                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                 />
 
@@ -95,10 +95,10 @@ export default function PastActivitiesPage() {
                                     </div>
 
                                     <p className="text-white/90 text-[12px] sm:text-[13px] font-bold mb-1 tracking-tight">
-                                        {activity.subtitle}
+                                        {pastActivity.subtitle}
                                     </p>
                                     <h2 className="text-white text-2xl sm:text-3xl font-black tracking-tight">
-                                        {activity.title}
+                                        {pastActivity.title}
                                     </h2>
                                 </div>
                             </div>
