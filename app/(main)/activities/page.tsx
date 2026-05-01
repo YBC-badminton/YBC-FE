@@ -10,7 +10,7 @@ import CreateLightningModal from '../../../components/ui/CreateLightningModal';
 interface VoteItem {
     voteId: number;
     name: string;
-    type: 'REGULAR' | 'LIGHTNING';
+    type: 'REGULAR' | 'FLUSH' | 'EVENT';
     location: string;
     voteStartAt: string;
     voteEndAt: string;
@@ -34,7 +34,8 @@ interface VotesHistory {
 // API type → 한글 라벨
 const TYPE_LABEL: Record<string, string> = {
     'REGULAR': '정기모임',
-    'LIGHTNING': '번개모임',
+    'FLUSH': '번개모임',
+    'EVENT': '이벤트',
 };
 
 // 날짜 포맷: "2026-04-03T18:00:00" → "26.04.03 (목)"

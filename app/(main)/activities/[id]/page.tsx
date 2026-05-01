@@ -9,7 +9,7 @@ import api from '../../../../lib/axios';
 interface VoteDetail {
     voteId: number;
     name: string;
-    type: 'REGULAR' | 'LIGHTNING';
+    type: 'REGULAR' | 'FLUSH' | 'EVENT';
     activityDate: string;
     activityTime: string;
     location: string;
@@ -22,7 +22,8 @@ interface VoteDetail {
 
 const TYPE_LABEL: Record<string, string> = {
     'REGULAR': '정기모임',
-    'LIGHTNING': '번개모임',
+    'FLUSH': '번개모임',
+    'EVENT': '이벤트',
 };
 
 // "2026-04-10" → "2026.04.10 (목)"
