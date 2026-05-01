@@ -352,4 +352,6 @@ function BracketCell({ person, onDrop, onClear }: any) {
             ) : <span className="text-[9px] sm:text-[10px] text-gray-300 font-bold uppercase">Drop</span>}
         </div>
     );
-}
+} 
+
+
