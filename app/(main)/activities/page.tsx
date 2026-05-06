@@ -4,13 +4,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import api from '../../../lib/axios';
+import { useAuth } from '../../../context/AuthContext';
 import CreateLightningModal from '../../../components/ui/CreateLightningModal';
 
 // API 응답 타입
 interface VoteItem {
     voteId: number;
     name: string;
-    type: 'REGULAR' | 'LIGHTNING';
+    type: 'REGULAR' | 'FLUSH' | 'EVENT';
     location: string;
     voteStartAt: string;
     voteEndAt: string;
@@ -34,7 +35,8 @@ interface VotesHistory {
 // API type → 한글 라벨
 const TYPE_LABEL: Record<string, string> = {
     'REGULAR': '정기모임',
-    'LIGHTNING': '번개모임',
+    'FLUSH': '번개모임',
+    'EVENT': '이벤트',
 };
 
 // 날짜 포맷: "2026-04-03T18:00:00" → "26.04.03 (목)"
@@ -50,6 +52,16 @@ function formatDate(dateStr: string): string {
 export default function ActivitiesPage() {
     const [activeTab, setActiveTab] = useState('전체');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const { user } = useAuth();
+    const router = useRouter();
+
+    const handleCreateLightning = () => {
+        if (!user) {
+            router.push('/login');
+            return;
+        }
+        setIsModalOpen(true);
+    };
 
     const [availableActivities, setAvailableActivities] = useState<VoteItem[]>([]);
     const [pastActivities, setPastActivities] = useState<VoteItem[]>([]);
@@ -111,7 +123,7 @@ export default function ActivitiesPage() {
                         ))}
                     </div>
                     <button className="bg-[#2D5A27] text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold shadow-md hover:bg-[#1e3d1a] transition-all text-sm sm:text-base"
-                        onClick={() => setIsModalOpen(true)}>
+                        onClick={handleCreateLightning}>
                         + 번개 모임 만들기
                     </button>
                 </div>

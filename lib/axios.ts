@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL,
+    baseURL: typeof window !== 'undefined' ? '/proxy' : process.env.NEXT_PUBLIC_API_URL,
     timeout: 10000,
     headers: {
         'Content-Type': 'application/json',
@@ -69,10 +69,10 @@ api.interceptors.response.use(
             isRefreshing = true;
 
             try {
-                const res = await axios.post(
-                    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/refresh`,
-                    { refreshToken }
-                );
+                const refreshUrl = typeof window !== 'undefined'
+                    ? '/proxy/api/v1/auth/refresh'
+                    : `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/refresh`;
+                const res = await axios.post(refreshUrl, { refreshToken });
 
                 const { accessToken: newAccessToken, refreshToken: newRefreshToken } = res.data;
 

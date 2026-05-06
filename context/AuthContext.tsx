@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import api from '../lib/axios';
 
-type UserRole = 'admin' | 'member' | 'applicant';
+type UserRole = 'member' | 'applicant';
 
 interface User {
     id?: number;
@@ -18,7 +18,6 @@ interface AuthContextType {
     user: User | null;
     isLoading: boolean;
     error: string | null;
-    loginAdmin: (id: string, password: string) => Promise<void>;
     loginKakao: () => Promise<void>;
     handleKakaoCallback: (accessToken: string, refreshToken: string) => Promise<void>;
     loginApplicant: (name: string, phone: string) => Promise<void>;
@@ -85,30 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
     }, []);
 
-    // 1. 관리자 로그인
-    const loginAdmin = useCallback(async (id: string, password: string) => {
-        setIsLoading(true);
-        setError(null);
-        try {
-            const res = await api.post('/api/auth/admin', { id, password });
-            const newUser: User = {
-                role: 'admin',
-                name: res.data.name,
-            };
-            saveTokens(res.data.accessToken, res.data.refreshToken);
-            saveUser(newUser);
-            setUser(newUser);
-        } catch (err: unknown) {
-            const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-                || '아이디 또는 비밀번호가 올바르지 않습니다.';
-            setError(message);
-            throw err;
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
-
-    // 2. 카카오 로그인 — 1단계: loginUrl 받아서 리다이렉트
+    // 카카오 로그인 — 1단계: loginUrl 받아서 리다이렉트
     const loginKakao = useCallback(async () => {
         setIsLoading(true);
         setError(null);
@@ -125,7 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
 
-    // 2. 카카오 로그인 — 2단계: 콜백에서 토큰 받은 후 유저 정보 조회
+    // 카카오 로그인 — 2단계: 콜백에서 토큰 받은 후 유저 정보 조회
     const handleKakaoCallback = useCallback(async (accessToken: string, refreshToken: string) => {
         setIsLoading(true);
         setError(null);
@@ -145,7 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, [fetchMe]);
 
-    // 3. 지원자 조회
+    // 지원자 조회
     const loginApplicant = useCallback(async (name: string, phone: string) => {
         setIsLoading(true);
         setError(null);
@@ -181,7 +157,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, isLoading, error, loginAdmin, loginKakao, handleKakaoCallback, loginApplicant, logout, clearError }}>
+        <AuthContext.Provider value={{ user, isLoading, error, loginKakao, handleKakaoCallback, loginApplicant, logout, clearError }}>
             {children}
         </AuthContext.Provider>
     );

@@ -4,46 +4,74 @@ import React, { useState } from 'react';
 import api from '@/lib/axios';
 import { useAxios } from '@/hooks/useAxios';
 
-// 투표 데이터 타입 정의
-interface VoteReservation {
-    id?: string;
-    type: 'regular' | 'extra';
-    day: string;
+// API 응답 타입 (spec 기준)
+interface VoteQueueItem {
+    voteId: number;
+    activityType: 'REGULAR' | 'FLUSH' | 'EVENT';
     title: string;
-    date: string;
-    startTime: string;
-    endTime: string;
+    activityDate: string;
+    activityTime: string;
     location: string;
-    voteStart: string;
-    voteEnd: string;
+    voteStartAt: string;
+    voteEndAt: string;
+    createdAt: string;
 }
 
+interface VoteQueueResponse {
+    count: number;
+    data: VoteQueueItem[];
+}
+
+// 투표 예약 요청 타입 (spec 기준)
+interface VoteReserveRequest {
+    activityType: 'REGULAR' | 'FLUSH' | 'EVENT';
+    title: string;
+    activityDate: string;
+    activityTime: string;
+    location: string;
+    memo: string;
+    voteStartAt: string;
+    voteEndAt: string;
+}
+
+const ACTIVITY_TYPE_LABEL: Record<string, string> = {
+    'REGULAR': '정기 운동',
+    'FLUSH': '번개 운동',
+    'EVENT': '이벤트 운동',
+};
+
 export default function VoteReservationPage() {
-    // 1. 커스텀 훅으로 대기열 데이터 가져오기 (GET)
-    const { data: queue, loading, error, refetch } = useAxios<VoteReservation[]>('/api/admin/votes/queue');
+    // GET /admin/votes/queue
+    const { data: queueResponse, loading, error, refetch } = useAxios<VoteQueueResponse>('/admin/votes/queue');
 
-    // 2. 폼 상태 관리
-    const [regularForm, setRegularForm] = useState<VoteReservation>({
-        type: 'regular', day: '', title: '정기활동', date: '', startTime: '', endTime: '', location: '', voteStart: '', voteEnd: ''
+    const [regularForm, setRegularForm] = useState<VoteReserveRequest>({
+        activityType: 'REGULAR', title: '정기활동', activityDate: '', activityTime: '', location: '', memo: '', voteStartAt: '', voteEndAt: ''
     });
-    const [extraForm, setExtraForm] = useState<VoteReservation>({
-        type: 'extra', day: '', title: '', date: '', startTime: '', endTime: '', location: '', voteStart: '', voteEnd: ''
+    const [extraForm, setExtraForm] = useState<VoteReserveRequest>({
+        activityType: 'FLUSH', title: '', activityDate: '', activityTime: '', location: '', memo: '', voteStartAt: '', voteEndAt: ''
     });
 
-    // 3. 투표 예약 전송 (POST)
+    // POST /admin/votes
     const handleReserve = async (type: 'regular' | 'extra') => {
-        const payload = type === 'regular' ? regularForm : extraForm;
+        const form = type === 'regular' ? regularForm : extraForm;
+        const payload: VoteReserveRequest = {
+            ...form,
+            voteStartAt: form.voteStartAt ? form.voteStartAt + ':00' : '',
+            voteEndAt: form.voteEndAt ? form.voteEndAt + ':00' : '',
+        };
 
         try {
-        const response = await api.post('/api/admin/votes/reserve', payload);
-        if (response.status === 200 || response.status === 201) {
-            alert('투표 예약이 완료되었습니다!');
-            refetch(); // 예약 성공 후 대기열 목록 새로고침
-        }
-        } catch (err) {
-        alert('예약 중 오류가 발생했습니다.');
+            const response = await api.post('/admin/votes', payload);
+            if (response.status === 200 || response.status === 201) {
+                alert('투표 예약이 완료되었습니다!');
+                refetch();
+            }
+        } catch {
+            alert('예약 중 오류가 발생했습니다.');
         }
     };
+
+    const queue = queueResponse?.data ?? [];
 
     return (
         <div className="max-w-7xl mx-auto p-4">
@@ -54,104 +82,137 @@ export default function VoteReservationPage() {
 
             {/* 입력 폼 섹션 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-                <VoteFormCard 
-                title="정기활동 투표 예약" 
-                formData={regularForm} 
-                setFormData={setRegularForm} 
-                onSubmit={() => handleReserve('regular')}
-                buttonColor="bg-blue-600 hover:bg-blue-700"
+                <VoteFormCard
+                    title="정기활동 투표 예약"
+                    formData={regularForm}
+                    setFormData={setRegularForm}
+                    onSubmit={() => handleReserve('regular')}
+                    buttonColor="bg-blue-600 hover:bg-blue-700"
                 />
-                <VoteFormCard 
-                title="특별활동 투표 예약" 
-                formData={extraForm} 
-                setFormData={setExtraForm} 
-                onSubmit={() => handleReserve('extra')}
-                buttonColor="bg-green-600 hover:bg-green-700"
+                <VoteFormCard
+                    title="특별활동 투표 예약"
+                    formData={extraForm}
+                    setFormData={setExtraForm}
+                    onSubmit={() => handleReserve('extra')}
+                    buttonColor="bg-green-600 hover:bg-green-700"
                 />
             </div>
 
             {/* 예약 대기열 섹션 */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8">
-                <h3 className="text-lg font-bold mb-6">투표 예약 대기열</h3>
-                
+                <h3 className="text-lg font-bold mb-6">투표 예약 대기열 {queueResponse && `(${queueResponse.count}건)`}</h3>
+
                 {loading && <p className="text-center text-blue-500">데이터를 불러오는 중입니다...</p>}
                 {error && <p className="text-center text-red-500 font-medium">에러 발생: {error}</p>}
-                
-                {!loading && !error && queue && queue.length > 0 ? (
-                <div className="space-y-4">
-                    {queue.map((item) => (
-                    <div key={item.id} className="flex justify-between items-center p-4 border rounded-lg hover:bg-gray-50">
-                        <div>
-                        <span className={`text-xs px-2 py-1 rounded-full font-bold mb-2 inline-block ${item.type === 'regular' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-green-600'}`}>
-                            {item.type === 'regular' ? '정기활동' : '특별활동'}
-                        </span>
-                        <p className="font-bold text-gray-800">{item.title}</p>
-                        <p className="text-sm text-gray-500">📅 {item.date} | 📍 {item.location}</p>
-                        </div>
-                        <div className="text-right text-xs text-gray-400">
-                        <p>운동 시간: {item.startTime} ~ {item.endTime}</p>
-                        </div>
+
+                {!loading && !error && queue.length > 0 ? (
+                    <div className="space-y-4">
+                        {queue.map((item) => (
+                            <div key={item.voteId} className="flex justify-between items-center p-4 border rounded-lg hover:bg-gray-50">
+                                <div>
+                                    <span className={`text-xs px-2 py-1 rounded-full font-bold mb-2 inline-block ${
+                                        item.activityType === 'REGULAR' ? 'bg-blue-50 text-blue-600' :
+                                        item.activityType === 'FLUSH' ? 'bg-yellow-50 text-yellow-600' :
+                                        'bg-green-50 text-green-600'
+                                    }`}>
+                                        {ACTIVITY_TYPE_LABEL[item.activityType] || item.activityType}
+                                    </span>
+                                    <p className="font-bold text-gray-800">{item.title}</p>
+                                    <p className="text-sm text-gray-500">📅 {item.activityDate} | 📍 {item.location}</p>
+                                </div>
+                                <div className="text-right text-xs text-gray-400">
+                                    <p>운동 시간: {item.activityTime}</p>
+                                    <p>투표: {item.voteStartAt?.slice(0, 16)} ~ {item.voteEndAt?.slice(0, 16)}</p>
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                    ))}
-                </div>
                 ) : (
-                !loading && <p className="text-center text-gray-400 italic">현재 대기 중인 예약이 없습니다.</p>
+                    !loading && <p className="text-center text-gray-400 italic">현재 대기 중인 예약이 없습니다.</p>
                 )}
             </div>
         </div>
     );
-    }
+}
 
-    // 재사용 가능한 폼 카드 컴포넌트
-    function VoteFormCard({ title, formData, setFormData, onSubmit, buttonColor }: any) {
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+// 재사용 가능한 폼 카드 컴포넌트
+function VoteFormCard({ title, formData, setFormData, onSubmit, buttonColor }: {
+    title: string;
+    formData: VoteReserveRequest;
+    setFormData: React.Dispatch<React.SetStateAction<VoteReserveRequest>>;
+    onSubmit: () => void;
+    buttonColor: string;
+}) {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
     return (
         <div className="bg-white p-8 rounded-xl border border-gray-100 shadow-sm">
-        <h2 className="text-lg font-bold mb-6 text-gray-800">{title}</h2>
-        <div className="space-y-4">
-            {/* 요일 및 제목 */}
-            <div className="flex gap-4">
-            <InputGroup label="요일" name="day" value={formData.day} onChange={handleChange} placeholder="예: 화요일" />
-            <InputGroup label="제목" name="title" value={formData.title} onChange={handleChange} placeholder="예: 정기활동" />
+            <h2 className="text-lg font-bold mb-6 text-gray-800">{title}</h2>
+            <div className="space-y-4">
+                {/* 활동 유형 및 제목 */}
+                <div className="flex gap-4">
+                    <div className="flex-1 min-w-0">
+                        <label className="block text-xs font-medium text-gray-400 mb-1">활동 유형</label>
+                        <select
+                            name="activityType"
+                            value={formData.activityType}
+                            onChange={handleChange}
+                            className="w-full p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
+                        >
+                            <option value="REGULAR">정기 운동</option>
+                            <option value="FLUSH">번개 운동</option>
+                            <option value="EVENT">이벤트 운동</option>
+                        </select>
+                    </div>
+                    <InputGroup label="제목" name="title" value={formData.title} onChange={handleChange} placeholder="예: 4월 3주차 정기 배드민턴 투표" />
+                </div>
+                {/* 날짜 및 시간 */}
+                <div className="flex gap-4">
+                    <InputGroup label="활동 날짜" name="activityDate" type="date" value={formData.activityDate} onChange={handleChange} />
+                    <InputGroup label="활동 시간" name="activityTime" value={formData.activityTime} onChange={handleChange} placeholder="예: 14:00 ~ 17:00" />
+                </div>
+                {/* 장소 */}
+                <InputGroup label="장소" name="location" value={formData.location} onChange={handleChange} placeholder="예: 망원나들목체육관" />
+                {/* 메모 */}
+                <div className="flex-1 min-w-0">
+                    <label className="block text-xs font-medium text-gray-400 mb-1">메모</label>
+                    <textarea
+                        name="memo"
+                        value={formData.memo}
+                        onChange={handleChange}
+                        placeholder="예: 라켓 지참 필수"
+                        className="w-full p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
+                        rows={2}
+                    />
+                </div>
+                {/* 투표 기간 */}
+                <div className="flex gap-4 pt-2">
+                    <InputGroup label="투표 시작" name="voteStartAt" type="datetime-local" value={formData.voteStartAt} onChange={handleChange} />
+                    <InputGroup label="투표 종료" name="voteEndAt" type="datetime-local" value={formData.voteEndAt} onChange={handleChange} />
+                </div>
+                {/* 전송 버튼 */}
+                <button
+                    onClick={onSubmit}
+                    className={`w-full py-3 mt-4 text-white rounded-lg font-bold transition ${buttonColor}`}
+                >
+                    투표 예약하기
+                </button>
             </div>
-            {/* 날짜 */}
-            <InputGroup label="날짜" name="date" type="date" value={formData.date} onChange={handleChange} />
-            {/* 운동 시간 */}
-            <div className="flex gap-4">
-            <InputGroup label="운동 시작 시간" name="startTime" type="time" value={formData.startTime} onChange={handleChange} />
-            <InputGroup label="운동 종료 시간" name="endTime" type="time" value={formData.endTime} onChange={handleChange} />
-            </div>
-            {/* 장소 */}
-            <InputGroup label="장소" name="location" value={formData.location} onChange={handleChange} placeholder="예: 올림픽공원 체육관" />
-            {/* 투표 기간 */}
-            <div className="flex gap-4 pt-2">
-            <InputGroup label="투표 시작" name="voteStart" type="datetime-local" value={formData.voteStart} onChange={handleChange} />
-            <InputGroup label="투표 종료" name="voteEnd" type="datetime-local" value={formData.voteEnd} onChange={handleChange} />
-            </div>
-            {/* 전송 버튼 */}
-            <button 
-            onClick={onSubmit}
-            className={`w-full py-3 mt-4 text-white rounded-lg font-bold transition ${buttonColor}`}
-            >
-            투표 예약하기
-            </button>
-        </div>
         </div>
     );
-    }
+}
 
-    // 개별 입력 필드 그룹 컴포넌트
-    function InputGroup({ label, ...props }: any) {
+// 개별 입력 필드 그룹 컴포넌트
+function InputGroup({ label, ...props }: { label: string; [key: string]: unknown }) {
     return (
         <div className="flex-1 min-w-0">
-        <label className="block text-xs font-medium text-gray-400 mb-1">{label}</label>
-        <input
-            className="w-full p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
-            {...props}
-        />
+            <label className="block text-xs font-medium text-gray-400 mb-1">{label}</label>
+            <input
+                className="w-full p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
+                {...props}
+            />
         </div>
     );
 }

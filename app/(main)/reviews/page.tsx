@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../../../context/AuthContext';
 import CreateReviewModal from '../../../components/ui/CreateReviewModal';
 
 // 1. 후기 데이터 타입 정의
@@ -82,6 +84,16 @@ interface Review {
     export default function ReviewPage() {
     const [activeTab, setActiveTab] = useState('전체');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const { user } = useAuth();
+    const router = useRouter();
+
+    const handleWriteReview = () => {
+        if (!user) {
+            router.push('/login');
+            return;
+        }
+        setIsModalOpen(true);
+    };
 
     const categories = ['전체', '라켓', '의류', '신발', '가방', '셔틀콕', '악세서리'];
 
@@ -118,7 +130,7 @@ interface Review {
                 </div>
                 <button
                     className="bg-[#4B7332] text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#3d5d28] transition-all shadow-md text-sm sm:text-base"
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={handleWriteReview}
                 >
                     <span className="text-lg sm:text-xl">+</span> 후기 작성하기
                 </button>
