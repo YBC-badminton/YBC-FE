@@ -17,40 +17,39 @@ interface Activity {
     participants: Participant[];
 }
 
+// 대진표 한 줄에 대한 타입 정의
+type BracketRow = (Participant | null)[];
+
 export default function TournamentPage() {
     const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
     const [currentCourt, setCurrentCourt] = useState('1코트');
     const [completedActivityIds, setCompletedActivityIds] = useState<string[]>([]);
     
-    // 모바일 단계 및 반응형 상태
     const [mobileStep, setMobileStep] = useState(1);
     const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
         const checkMobile = () => {
-            const mobile = window.innerWidth < 768;
-            setIsMobile(mobile);
-            // 데스크탑으로 전환 시 step 강제 초기화 방지 및 최적화
+            setIsMobile(window.innerWidth < 768);
         };
         checkMobile();
         window.addEventListener('resize', checkMobile);
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
-    // 코트별 배치 인원 관리
     const [assignments, setAssignments] = useState<Record<string, Participant[]>>({
         '1코트': [], '2코트': [], '3코트': [], '4코트': []
     });
 
-    // 대진표 초기화 로직
-    const createEmptyRow = () => [null, null, null, null];
-    const initialBracket = () => [createEmptyRow(), createEmptyRow(), createEmptyRow(), createEmptyRow()];
+    const createEmptyRow = (): BracketRow => [null, null, null, null];
+    const initialBracket = (): BracketRow[] => [
+        createEmptyRow(), createEmptyRow(), createEmptyRow(), createEmptyRow()
+    ];
     
-    const [courtBrackets, setCourtBrackets] = useState<Record<string, (Participant | null)[][]>>({
+    const [courtBrackets, setCourtBrackets] = useState<Record<string, BracketRow[]>>({
         '1코트': initialBracket(), '2코트': initialBracket(), '3코트': initialBracket(), '4코트': initialBracket(),
     });
 
-    // 진행도 계산
     const progress = useMemo(() => {
         const totalSlots = Object.values(courtBrackets).flat(2).length;
         if (totalSlots === 0) return 0;
@@ -58,12 +57,13 @@ export default function TournamentPage() {
         return Math.floor((filledSlots / totalSlots) * 100);
     }, [courtBrackets]);
 
-    // --- 핸들러 로직 ---
-
     const handleSelectActivity = (activity: Activity) => {
         if (selectedActivity?.id !== activity.id) {
             setAssignments({ '1코트': [], '2코트': [], '3코트': [], '4코트': [] });
-            setCourtBrackets({ '1코트': initialBracket(), '2코트': initialBracket(), '3코트': initialBracket(), '4코트': initialBracket() });
+            setCourtBrackets({ 
+                '1코트': initialBracket(), '2코트': initialBracket(), 
+                '3코트': initialBracket(), '4코트': initialBracket() 
+            });
             setCurrentCourt('1코트');
             setMobileStep(1);
         }
@@ -97,10 +97,6 @@ export default function TournamentPage() {
         });
     };
 
-    const onDragStart = (e: React.DragEvent, person: Participant) => {
-        e.dataTransfer.setData('memberData', JSON.stringify(person));
-    };
-
     const onDrop = (e: React.DragEvent, row: number, col: number) => {
         e.preventDefault();
         const data = e.dataTransfer.getData('memberData');
@@ -118,18 +114,21 @@ export default function TournamentPage() {
         }
     };
 
+    // [수정 포인트] 에러가 발생한 랜덤 배치 함수 타입 보강
     const handleRandomAssign = () => {
         const currentMembers = assignments[currentCourt];
         if (currentMembers.length < 4) return alert('최소 4명의 멤버가 필요합니다.');
         
         const rowCount = courtBrackets[currentCourt].length;
-        const newBracket = [];
+        const newBracket: BracketRow[] = []; // 타입을 BracketRow[]로 명시
         let pool: Participant[] = [];
 
         for (let r = 0; r < rowCount; r++) {
-            const currentRow: any[] = [null, null, null, null];
+            const currentRow: BracketRow = [null, null, null, null];
             for (let c = 0; c < 4; c++) {
-                if (pool.length === 0) pool = [...currentMembers].sort(() => Math.random() - 0.5);
+                if (pool.length === 0) {
+                    pool = [...currentMembers].sort(() => Math.random() - 0.5);
+                }
                 let candidateIdx = pool.findIndex(p => !currentRow.some(cell => cell?.name === p.name));
                 if (candidateIdx === -1) {
                     pool = [...currentMembers].sort(() => Math.random() - 0.5);
@@ -155,7 +154,6 @@ export default function TournamentPage() {
     return (
         <div className="max-w-6xl mx-auto p-3 sm:p-4 space-y-4 sm:space-y-6 text-left pb-20">
             {!selectedActivity ? (
-                /* --- 활동 목록 리스트 --- */
                 <div className="space-y-4 sm:space-y-6">
                     <header>
                         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">대진 관리</h1>
@@ -173,7 +171,6 @@ export default function TournamentPage() {
                 </div>
             ) : (
                 <div className="space-y-4 sm:space-y-6">
-                    {/* 상단 통합 섹션 */}
                     <section className="bg-white rounded-2xl shadow-sm p-4 sm:p-8">
                         <header className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-6 sm:mb-8">
                             <div>
@@ -197,14 +194,13 @@ export default function TournamentPage() {
                             ))}
                         </div>
 
-                        {/* [인원 선택] 데스크탑 UI 유지 + 모바일 Step 1 */}
                         {(!isMobile || (currentCourt !== '전체' && mobileStep === 1)) && (
                             <div className="animate-in fade-in">
                                 <div className="mb-6 sm:mb-8">
                                     <h3 className="text-xs font-bold text-gray-400 mb-3 sm:mb-4 uppercase tracking-wider">미배치 인원 ({unassigned.length})</h3>
                                     <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
                                         {unassigned.map((p) => (
-                                            <button key={p.name} onClick={() => handleAssign(p)} className="bg-white border border-gray-200 px-3 py-2 rounded-xl text-xs flex justify-between items-center hover:border-blue-500 shadow-sm transition active:scale-95">
+                                            <button key={p.name} onClick={() => handleAssign(p)} className="bg-white border border-gray-100 px-3 py-2 rounded-xl text-xs flex justify-between items-center hover:border-blue-500 shadow-sm transition active:scale-95">
                                                 <span className="font-bold text-gray-700 truncate">{p.name}</span>
                                                 <span className={`text-[10px] font-medium ml-1 ${p.gender === '남' ? 'text-blue-400' : 'text-red-400'}`}>{p.gender}</span>
                                             </button>
@@ -220,7 +216,9 @@ export default function TournamentPage() {
                                                 <div 
                                                     key={p.name} 
                                                     draggable 
-                                                    onDragStart={(e) => onDragStart(e, p)} 
+                                                    onDragStart={(e) => {
+                                                        e.dataTransfer.setData('memberData', JSON.stringify(p));
+                                                    }} 
                                                     className="bg-white border-2 border-blue-100 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2 cursor-grab shadow-sm transition active:scale-95"
                                                 >
                                                     <span>{p.name}</span>
@@ -241,7 +239,6 @@ export default function TournamentPage() {
                         )}
                     </section>
 
-                    {/* [대진표 섹션] 데스크탑 UI 유지 + 모바일 Step 2 */}
                     {currentCourt === '전체' ? (
                         <section className="animate-in fade-in duration-500 space-y-4">
                             <div className="flex justify-between items-center px-1">
@@ -268,7 +265,6 @@ export default function TournamentPage() {
                     ) : (
                         (!isMobile || mobileStep === 2) && (
                             <section className="bg-white rounded-2xl shadow-sm p-4 sm:p-8 animate-in slide-in-from-right-4">
-                                {/* 모바일 전용: 배정된 멤버를 상단에 노출 (드래그용) */}
                                 {isMobile && (
                                     <div className="mb-6 bg-blue-50/50 p-4 rounded-xl border-2 border-dashed border-blue-100">
                                         <p className="text-[10px] font-bold text-blue-500 mb-3 uppercase tracking-wider">배정된 멤버 (아래 칸으로 드래그/탭)</p>
@@ -352,6 +348,4 @@ function BracketCell({ person, onDrop, onClear }: any) {
             ) : <span className="text-[9px] sm:text-[10px] text-gray-300 font-bold uppercase">Drop</span>}
         </div>
     );
-} 
-
-
+}
