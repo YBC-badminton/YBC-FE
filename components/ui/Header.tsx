@@ -59,6 +59,11 @@ export default function Header() {
                   지원하기
                 </Link>
               </li>
+              <li>
+                <Link href="/minigame" className="hover:text-green-700 transition">
+                  미니게임
+                </Link>
+              </li>
             </ul>
           </nav>
           {user ? (
@@ -121,6 +126,7 @@ export default function Header() {
               { href: "/past-activities", label: "지난 활동" },
               { href: "/faq", label: "문의하기" },
               { href: "/apply", label: "지원하기" },
+              { href: "/minigame", label: "미니게임" },
             ].map((item) => (
               <Link
                 key={item.href}

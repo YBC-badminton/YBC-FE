@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { label: "지난 활동", href: "#past-activities" },
   { label: "문의하기", href: "#contact" },
   { label: "지원하기", href: "#apply" },
+  { label: "미니게임", href: "#minigame" },
 ] as const;
 
 export function Navbar() {
