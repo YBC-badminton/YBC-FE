@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../context/AuthContext';
 import CreateReviewModal from '../../../components/ui/CreateReviewModal';
+import LoginRequiredModal from '../../../components/ui/LoginRequiredModal';
 
 // 1. 후기 데이터 타입 정의
 interface Review {
@@ -84,12 +84,12 @@ interface Review {
     export default function ReviewPage() {
     const [activeTab, setActiveTab] = useState('전체');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [showLoginModal, setShowLoginModal] = useState(false);
     const { user } = useAuth();
-    const router = useRouter();
 
     const handleWriteReview = () => {
         if (!user) {
-            router.push('/login');
+            setShowLoginModal(true);
             return;
         }
         setIsModalOpen(true);
@@ -137,6 +137,10 @@ interface Review {
                 <CreateReviewModal
                     isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
+                />
+                <LoginRequiredModal
+                    isOpen={showLoginModal}
+                    onClose={() => setShowLoginModal(false)}
                 />
             </div>
 

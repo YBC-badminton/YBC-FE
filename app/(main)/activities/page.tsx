@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import api from '../../../lib/axios';
 import { useAuth } from '../../../context/AuthContext';
 import CreateLightningModal from '../../../components/ui/CreateLightningModal';
+import LoginRequiredModal from '../../../components/ui/LoginRequiredModal';
 
 // API 응답 타입
 interface VoteItem {
@@ -52,12 +53,12 @@ function formatDate(dateStr: string): string {
 export default function ActivitiesPage() {
     const [activeTab, setActiveTab] = useState('전체');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [showLoginModal, setShowLoginModal] = useState(false);
     const { user } = useAuth();
-    const router = useRouter();
 
     const handleCreateLightning = () => {
         if (!user) {
-            router.push('/login');
+            setShowLoginModal(true);
             return;
         }
         setIsModalOpen(true);
@@ -182,6 +183,10 @@ export default function ActivitiesPage() {
             <CreateLightningModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
+            />
+            <LoginRequiredModal
+                isOpen={showLoginModal}
+                onClose={() => setShowLoginModal(false)}
             />
         </div>
     );

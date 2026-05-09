@@ -44,13 +44,16 @@ api.interceptors.response.use(
                 ? localStorage.getItem('refreshToken')
                 : null;
 
-            // refresh 토큰이 없으면 로그아웃 처리
+            // refresh 토큰이 없으면 — 토큰이 있었던 경우만 로그아웃 리다이렉트
             if (!refreshToken) {
                 if (typeof window !== 'undefined') {
+                    const hadToken = localStorage.getItem('accessToken');
                     localStorage.removeItem('accessToken');
                     localStorage.removeItem('refreshToken');
                     localStorage.removeItem('user');
-                    window.location.href = '/login';
+                    if (hadToken) {
+                        window.location.href = '/login';
+                    }
                 }
                 return Promise.reject(error);
             }
