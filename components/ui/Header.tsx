@@ -80,6 +80,11 @@ export default function Header() {
                   미니게임
                 </Link>
               </li>
+              <li>
+                <Link href="/admin" className="hover:text-green-700 transition">
+                  관리자 페이지
+                </Link>
+              </li>
             </ul>
           </nav>
           {user ? (
@@ -159,6 +164,7 @@ export default function Header() {
               { href: "/faq", label: "문의하기" },
               { href: "/apply", label: "지원하기" },
               { href: "/minigame", label: "미니게임" },
+              { href: "/admin", label: "관리자 페이지" },
             ].map((item) => (
               <Link
                 key={item.href}
