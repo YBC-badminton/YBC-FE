@@ -13,6 +13,7 @@ function KakaoCallbackContent() {
     useEffect(() => {
         const accessToken = searchParams.get('accessToken');
         const refreshToken = searchParams.get('refreshToken');
+        const firstLogin = searchParams.get('firstLogin') === 'true';
 
         if (!accessToken || !refreshToken) {
             setError('로그인 정보를 받지 못했습니다. 다시 시도해 주세요.');
@@ -21,6 +22,11 @@ function KakaoCallbackContent() {
 
         handleKakaoCallback(accessToken, refreshToken)
             .then(() => {
+                if (firstLogin) {
+                    sessionStorage.removeItem('postLoginRedirect');
+                    router.replace('/apply');
+                    return;
+                }
                 const stored = sessionStorage.getItem('postLoginRedirect');
                 sessionStorage.removeItem('postLoginRedirect');
                 const target = stored && stored.startsWith('/') ? stored : '/';
