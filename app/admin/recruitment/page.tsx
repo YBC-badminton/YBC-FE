@@ -60,12 +60,21 @@ export default function RecruitmentPage() {
         setLoading(true);
         setError(null);
         try {
-            const res = await api.get<RecruitmentListItem[]>('/admin/recruitments');
-            setSchedules(res.data);
+            const res = await api.get('/admin/recruitments');
+            const data: unknown = res.data;
+            const list: RecruitmentListItem[] = Array.isArray(data)
+                ? (data as RecruitmentListItem[])
+                : Array.isArray((data as { recruitments?: unknown })?.recruitments)
+                    ? ((data as { recruitments: RecruitmentListItem[] }).recruitments)
+                    : Array.isArray((data as { data?: unknown })?.data)
+                        ? ((data as { data: RecruitmentListItem[] }).data)
+                        : [];
+            setSchedules(list);
         } catch (err: unknown) {
             const message = (err as { response?: { data?: { message?: string } } })
                 ?.response?.data?.message || '모집 일정 목록을 불러오는 중 오류가 발생했습니다.';
             setError(message);
+            setSchedules([]);
         } finally {
             setLoading(false);
         }
