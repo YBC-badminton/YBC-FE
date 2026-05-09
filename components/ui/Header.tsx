@@ -1,20 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
   const { user, logout } = useAuth();
   const router = useRouter();
 
   const handleLogout = async () => {
     await logout();
     setIsMenuOpen(false);
+    setIsProfileOpen(false);
     router.push("/");
   };
+
+  const initial = user?.name?.trim().charAt(0).toUpperCase() ?? "?";
+
+  useEffect(() => {
+    if (!isProfileOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isProfileOpen]);
 
   return (
     <header className="w-full bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50 transition-all duration-300">
@@ -67,14 +83,30 @@ export default function Header() {
             </ul>
           </nav>
           {user ? (
-            <div className="flex items-center gap-4">
-              <span className="text-sm font-bold text-slate-600">{user.name}</span>
+            <div className="relative" ref={profileRef}>
               <button
-                onClick={handleLogout}
-                className="px-5 py-2 border-2 border-slate-300 rounded-full text-[14px] font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors"
+                onClick={() => setIsProfileOpen((v) => !v)}
+                aria-label="프로필 메뉴"
+                className="w-10 h-10 rounded-full bg-[#4B7332] text-white font-bold text-[15px] flex items-center justify-center shadow-sm hover:brightness-110 active:scale-95 transition-all"
               >
-                로그아웃
+                {initial}
               </button>
+              {isProfileOpen && (
+                <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl border border-gray-100 shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="px-5 py-4 bg-slate-50 border-b border-gray-100">
+                    <p className="text-[15px] font-black text-slate-800 truncate">{user.name}</p>
+                    {user.email && (
+                      <p className="text-xs font-medium text-slate-400 truncate mt-0.5">{user.email}</p>
+                    )}
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                  >
+                    로그아웃
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <Link
@@ -138,8 +170,18 @@ export default function Header() {
               </Link>
             ))}
             {user ? (
-              <div className="mx-4 mt-3 mb-2 space-y-2">
-                <p className="text-center text-sm font-bold text-slate-600">{user.name}</p>
+              <div className="mx-4 mt-3 mb-2 space-y-3">
+                <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-2xl">
+                  <div className="w-10 h-10 rounded-full bg-[#4B7332] text-white font-bold text-[15px] flex items-center justify-center shrink-0">
+                    {initial}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-black text-slate-800 truncate">{user.name}</p>
+                    {user.email && (
+                      <p className="text-xs font-medium text-slate-400 truncate">{user.email}</p>
+                    )}
+                  </div>
+                </div>
                 <button
                   onClick={handleLogout}
                   className="w-full text-center px-6 py-2.5 border-2 border-slate-300 rounded-full text-[15px] font-bold text-slate-500 hover:bg-slate-50 transition-colors"

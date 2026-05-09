@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 interface LoginRequiredModalProps {
   isOpen: boolean;
@@ -13,14 +13,11 @@ export default function LoginRequiredModal({
   onClose,
 }: LoginRequiredModalProps) {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   if (!isOpen) return null;
 
   const handleLogin = () => {
-    const query = searchParams?.toString();
-    const currentUrl = pathname + (query ? `?${query}` : "");
+    const currentUrl = window.location.pathname + window.location.search;
     router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`);
   };
 
