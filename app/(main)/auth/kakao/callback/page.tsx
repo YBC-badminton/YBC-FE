@@ -21,7 +21,10 @@ function KakaoCallbackContent() {
 
         handleKakaoCallback(accessToken, refreshToken)
             .then(() => {
-                router.replace('/');
+                const stored = sessionStorage.getItem('postLoginRedirect');
+                sessionStorage.removeItem('postLoginRedirect');
+                const target = stored && stored.startsWith('/') ? stored : '/';
+                router.replace(target);
             })
             .catch(() => {
                 setError('로그인 처리 중 오류가 발생했습니다.');

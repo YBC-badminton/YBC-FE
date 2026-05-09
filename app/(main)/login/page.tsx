@@ -1,10 +1,21 @@
 'use client';
 
-import React from 'react';
+import { Suspense, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '../../../context/AuthContext';
 
-export default function LoginPage() {
+const POST_LOGIN_REDIRECT_KEY = 'postLoginRedirect';
+
+function LoginPageContent() {
     const { loginKakao, isLoading, error } = useAuth();
+    const searchParams = useSearchParams();
+
+    useEffect(() => {
+        const redirect = searchParams.get('redirect');
+        if (redirect && redirect.startsWith('/')) {
+            sessionStorage.setItem(POST_LOGIN_REDIRECT_KEY, redirect);
+        }
+    }, [searchParams]);
 
     const handleKakaoLogin = async () => {
         try {
@@ -66,5 +77,13 @@ export default function LoginPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={null}>
+            <LoginPageContent />
+        </Suspense>
     );
 }
