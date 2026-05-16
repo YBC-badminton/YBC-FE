@@ -32,7 +32,11 @@ interface VoteReserveRequest {
     memo: string;
     voteStartAt: string;
     voteEndAt: string;
+    capacity: number;
 }
+
+// 폼 입력 상태 타입 — capacity는 빈 문자열 허용을 위해 string으로 보관
+type VoteReserveFormState = Omit<VoteReserveRequest, 'capacity'> & { capacity: string };
 
 const ACTIVITY_TYPE_LABEL: Record<string, string> = {
     'REGULAR': '정기 운동',
@@ -44,11 +48,11 @@ export default function VoteReservationPage() {
     // GET /admin/votes/queue
     const { data: queueResponse, loading, error, refetch } = useAxios<VoteQueueResponse>('/admin/votes/queue');
 
-    const [regularForm, setRegularForm] = useState<VoteReserveRequest>({
-        activityType: 'REGULAR', title: '정기활동', activityDate: '', activityTime: '', location: '', memo: '', voteStartAt: '', voteEndAt: ''
+    const [regularForm, setRegularForm] = useState<VoteReserveFormState>({
+        activityType: 'REGULAR', title: '정기활동', activityDate: '', activityTime: '', location: '', memo: '', voteStartAt: '', voteEndAt: '', capacity: ''
     });
-    const [extraForm, setExtraForm] = useState<VoteReserveRequest>({
-        activityType: 'FLUSH', title: '', activityDate: '', activityTime: '', location: '', memo: '', voteStartAt: '', voteEndAt: ''
+    const [extraForm, setExtraForm] = useState<VoteReserveFormState>({
+        activityType: 'FLUSH', title: '', activityDate: '', activityTime: '', location: '', memo: '', voteStartAt: '', voteEndAt: '', capacity: ''
     });
 
     // POST /admin/votes
@@ -58,6 +62,7 @@ export default function VoteReservationPage() {
             ...form,
             voteStartAt: form.voteStartAt ? form.voteStartAt + ':00' : '',
             voteEndAt: form.voteEndAt ? form.voteEndAt + ':00' : '',
+            capacity: Number(form.capacity) || 0,
         };
 
         try {
@@ -138,13 +143,15 @@ export default function VoteReservationPage() {
 // 재사용 가능한 폼 카드 컴포넌트
 function VoteFormCard({ title, formData, setFormData, onSubmit, buttonColor }: {
     title: string;
-    formData: VoteReserveRequest;
-    setFormData: React.Dispatch<React.SetStateAction<VoteReserveRequest>>;
+    formData: VoteReserveFormState;
+    setFormData: React.Dispatch<React.SetStateAction<VoteReserveFormState>>;
     onSubmit: () => void;
     buttonColor: string;
 }) {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        const nextValue = name === 'capacity' ? value.replace(/\D/g, '') : value;
+        setFormData({ ...formData, [name]: nextValue });
     };
 
     return (
@@ -173,8 +180,11 @@ function VoteFormCard({ title, formData, setFormData, onSubmit, buttonColor }: {
                     <InputGroup label="활동 날짜" name="activityDate" type="date" value={formData.activityDate} onChange={handleChange} />
                     <InputGroup label="활동 시간" name="activityTime" value={formData.activityTime} onChange={handleChange} placeholder="예: 14:00 ~ 17:00" />
                 </div>
-                {/* 장소 */}
-                <InputGroup label="장소" name="location" value={formData.location} onChange={handleChange} placeholder="예: 망원나들목체육관" />
+                {/* 장소 및 정원 */}
+                <div className="flex gap-4">
+                    <InputGroup label="장소" name="location" value={formData.location} onChange={handleChange} placeholder="예: 망원나들목체육관" />
+                    <InputGroup label="정원" name="capacity" type="text" inputMode="numeric" value={formData.capacity} onChange={handleChange} placeholder="예: 25" />
+                </div>
                 {/* 메모 */}
                 <div className="flex-1 min-w-0">
                     <label className="block text-xs font-medium text-gray-400 mb-1">메모</label>
