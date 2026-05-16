@@ -93,6 +93,7 @@ export default function VoteReservationPage() {
                     setFormData={setRegularForm}
                     onSubmit={() => handleReserve('regular')}
                     buttonColor="bg-blue-600 hover:bg-blue-700"
+                    activityTypeOptions={['REGULAR']}
                 />
                 <VoteFormCard
                     title="특별활동 투표 예약"
@@ -100,6 +101,7 @@ export default function VoteReservationPage() {
                     setFormData={setExtraForm}
                     onSubmit={() => handleReserve('extra')}
                     buttonColor="bg-green-600 hover:bg-green-700"
+                    activityTypeOptions={['FLUSH', 'EVENT']}
                 />
             </div>
 
@@ -141,13 +143,15 @@ export default function VoteReservationPage() {
 }
 
 // 재사용 가능한 폼 카드 컴포넌트
-function VoteFormCard({ title, formData, setFormData, onSubmit, buttonColor }: {
+function VoteFormCard({ title, formData, setFormData, onSubmit, buttonColor, activityTypeOptions }: {
     title: string;
     formData: VoteReserveFormState;
     setFormData: React.Dispatch<React.SetStateAction<VoteReserveFormState>>;
     onSubmit: () => void;
     buttonColor: string;
+    activityTypeOptions: VoteReserveRequest['activityType'][];
 }) {
+    const showTypeSelector = activityTypeOptions.length > 1;
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         const nextValue = name === 'capacity' ? value.replace(/\D/g, '') : value;
@@ -160,19 +164,21 @@ function VoteFormCard({ title, formData, setFormData, onSubmit, buttonColor }: {
             <div className="space-y-4">
                 {/* 활동 유형 및 제목 */}
                 <div className="flex gap-4">
-                    <div className="flex-1 min-w-0">
-                        <label className="block text-xs font-medium text-gray-400 mb-1">활동 유형</label>
-                        <select
-                            name="activityType"
-                            value={formData.activityType}
-                            onChange={handleChange}
-                            className="w-full p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
-                        >
-                            <option value="REGULAR">정기 운동</option>
-                            <option value="FLUSH">번개 운동</option>
-                            <option value="EVENT">이벤트 운동</option>
-                        </select>
-                    </div>
+                    {showTypeSelector && (
+                        <div className="flex-1 min-w-0">
+                            <label className="block text-xs font-medium text-gray-400 mb-1">활동 유형</label>
+                            <select
+                                name="activityType"
+                                value={formData.activityType}
+                                onChange={handleChange}
+                                className="w-full p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
+                            >
+                                {activityTypeOptions.map((type) => (
+                                    <option key={type} value={type}>{ACTIVITY_TYPE_LABEL[type]}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                     <InputGroup label="제목" name="title" value={formData.title} onChange={handleChange} placeholder="예: 4월 3주차 정기 배드민턴 투표" />
                 </div>
                 {/* 날짜 및 시간 */}
