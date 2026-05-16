@@ -43,10 +43,19 @@ export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
                 ${isOpen ? 'translate-x-0' : '-translate-x-full'}
             `}>
                 <div className="flex justify-between items-center mb-12 px-1">
-                    {/* 스타일 타이틀 */}
-                    <h2 className="text-xl font-black text-[#1D2B41] tracking-tighter">
-                        관리자 페이지
-                    </h2>
+                    {/* 메인 페이지로 돌아가는 로고 링크 */}
+                    <Link
+                        href="/"
+                        onClick={onClose}
+                        aria-label="메인 페이지로"
+                        className="flex items-center transition-transform hover:scale-105 active:scale-95"
+                    >
+                        <img
+                            src="/images/logo.png"
+                            alt="YBC Logo"
+                            className="h-9 w-auto object-contain"
+                        />
+                    </Link>
                     {/* 모바일용 닫기 버튼 */}
                     <button onClick={onClose} className="lg:hidden text-gray-400 p-1">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

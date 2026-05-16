@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from './components/Sidebar';
@@ -34,7 +35,7 @@ export default function AdminLayout({
             
             {/* 모바일 상단 바 - lg(데스크탑) 이상에서는 숨김 */}
             <header className="lg:hidden flex items-center justify-between p-4 bg-white border-b border-gray-200 sticky top-0 z-[40]">
-            <button 
+            <button
                 onClick={() => setIsSidebarOpen(true)}
                 className="p-2 rounded-lg hover:bg-gray-50 text-gray-600"
             >
@@ -42,7 +43,17 @@ export default function AdminLayout({
                 <path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                 </svg>
             </button>
-            <span className="font-bold text-gray-800">관리자 페이지</span>
+            <Link
+                href="/"
+                aria-label="메인 페이지로"
+                className="flex items-center transition-transform active:scale-95"
+            >
+                <img
+                    src="/images/logo.png"
+                    alt="YBC Logo"
+                    className="h-8 w-auto object-contain"
+                />
+            </Link>
             <div className="w-10"></div>
             </header>
 
