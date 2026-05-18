@@ -120,40 +120,7 @@ export default function YBCMainPage() {
         </section>
 
         {/* --- 체육관 위치 --- */}
-        <section className="w-full bg-white py-16 sm:py-24 px-6 sm:px-12 max-w-screen-2xl mx-auto space-y-10 sm:space-y-16">
-          <div className="text-center space-y-3 sm:space-y-4">
-            <h2 className="text-3xl sm:text-5xl font-black text-green-800 tracking-tight">체육관 위치</h2>
-            <p className="text-base sm:text-xl font-medium text-slate-500">매주 화요일, 목요일 저녁 7시에 만나요!</p>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-stretch">
-            <div className="bg-white border-[1.5px] border-[#E9ECEF] rounded-[30px] sm:rounded-[40px] shadow-sm flex flex-col items-center justify-center p-8 sm:p-12 min-h-[320px] sm:min-h-[480px]">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 mb-6 sm:mb-8 flex items-center justify-center bg-green-50 rounded-full">
-                <img src="/images/Location.svg" alt="위치" className="w-10 h-10 sm:w-14 sm:h-14" />
-              </div>
-              <div className="text-center space-y-2 sm:space-y-3">
-                <p className="text-xl sm:text-2xl font-black text-slate-800">서울시 강남구 테헤란로 123</p>
-                <p className="text-base sm:text-xl font-bold text-slate-400">강남 스포츠센터 2층</p>
-              </div>
-            </div>
-            <div className="flex flex-col gap-4 sm:gap-6">
-              <div className="bg-[#F2F8E1] p-6 sm:p-10 rounded-[30px] sm:rounded-[40px] flex-1">
-                <h4 className="text-lg sm:text-[22px] font-black text-slate-800 mb-5 sm:mb-8 tracking-tight">찾아오시는 길</h4>
-                <ul className="space-y-3 sm:space-y-5 text-sm sm:text-[17px] font-bold text-slate-600">
-                  <li className="flex items-start gap-3"><span className="text-green-600 mt-1">•</span>지하철 2호선 강남역 3번 출구 도보 5분</li>
-                  <li className="flex items-start gap-3"><span className="text-green-600 mt-1">•</span>버스 정류장: 강남역 (간선 146, 740, 지선 3426)</li>
-                  <li className="flex items-start gap-3"><span className="text-green-600 mt-1">•</span>주차장 이용 가능 (2시간 무료)</li>
-                </ul>
-              </div>
-              <div className="bg-[#F2F8E1] p-6 sm:p-10 rounded-[30px] sm:rounded-[40px]">
-                <h4 className="text-lg sm:text-[22px] font-black text-slate-800 mb-5 sm:mb-8 tracking-tight">정기 활동 시간</h4>
-                <div className="space-y-3 sm:space-y-4 text-sm sm:text-[17px] font-bold">
-                  <div className="flex justify-between items-center"><span className="text-green-700">화요일</span><span className="text-slate-700">19:00 - 21:00</span></div>
-                  <div className="flex justify-between items-center"><span className="text-green-700">목요일</span><span className="text-slate-700">19:00 - 21:00</span></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        <GymLocationSection />
 
         {/* --- [지원하기 섹션] --- */}
         <section id="apply-section" className="max-w-screen-2xl mx-auto px-6 sm:px-12 py-20 sm:py-32 flex flex-col items-center text-center gap-6 sm:gap-10">
@@ -178,5 +145,137 @@ function InfoCard({ icon, label, value }: { icon: React.ReactNode; label: string
       <p className="text-xs sm:text-sm font-bold text-green-800/60 uppercase tracking-tighter">{label}</p>
       <p className="text-xl sm:text-2xl font-black text-slate-800">{value}</p>
     </div>
+  );
+}
+
+type Gym = {
+  name: string;
+  address: string;
+  subTitle: string;
+  scheduleLabel: string;
+  scheduleTime: string;
+  directions: string[];
+  placeQuery: string;
+};
+
+const GYMS: { magok: Gym; mangwon: Gym } = {
+  magok: {
+    name: '마곡실내배드민턴장',
+    address: '서울특별시 강서구 마곡중앙로 일대',
+    subTitle: '화요일 운동 장소',
+    scheduleLabel: '화요일',
+    scheduleTime: '19:00 - 21:00',
+    directions: [
+      '지하철 9호선/공항철도 마곡나루역 인근',
+      '버스: 마곡나루역 정류장 하차',
+      '주차장 이용 가능',
+    ],
+    placeQuery: 'place_id:ChIJNwJpmXicfDURx9pvbAFHmgM',
+  },
+  mangwon: {
+    name: '망원나들목체육관',
+    address: '서울특별시 마포구 망원동 한강공원 망원나들목',
+    subTitle: '토요일 운동 장소',
+    scheduleLabel: '토요일',
+    scheduleTime: '19:00 - 21:00',
+    directions: [
+      '지하철 6호선 망원역 1번 출구 도보 10분',
+      '한강공원 망원지구 내 위치',
+      '주차장 이용 가능 (망원한강공원 주차장)',
+    ],
+    placeQuery: 'place_id:ChIJe4XAnIWZfDURf4mpO8Zml-U',
+  },
+};
+
+function getGymForToday(today: Date = new Date()): Gym {
+  const day = today.getDay();
+  return day <= 2 ? GYMS.magok : GYMS.mangwon;
+}
+
+function GymLocationSection() {
+  const [gym, setGym] = React.useState<Gym>(GYMS.magok);
+
+  React.useEffect(() => {
+    setGym(getGymForToday());
+  }, []);
+
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const embedSrc = apiKey
+    ? `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodeURIComponent(gym.placeQuery)}&language=ko&region=KR`
+    : null;
+
+  return (
+    <section className="w-full bg-white py-16 sm:py-24 px-6 sm:px-12 max-w-screen-2xl mx-auto space-y-10 sm:space-y-16">
+      <div className="text-center space-y-3 sm:space-y-4">
+        <h2 className="text-3xl sm:text-5xl font-black text-green-800 tracking-tight">체육관 위치</h2>
+        <p className="text-base sm:text-xl font-medium text-slate-500">매주 화요일, 토요일 저녁 7시에 만나요!</p>
+      </div>
+
+      <div className="flex justify-center">
+        <span className="inline-flex items-center gap-2 bg-[#F2F8E1] text-green-800 text-sm sm:text-base font-bold px-4 sm:px-5 py-2 rounded-full">
+          <span className="w-2 h-2 rounded-full bg-green-500" />
+          이번 주 다음 운동: {gym.scheduleLabel} · {gym.name}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-stretch">
+        <div className="bg-white border-[1.5px] border-[#E9ECEF] rounded-[30px] sm:rounded-[40px] shadow-sm overflow-hidden min-h-[320px] sm:min-h-[480px] flex flex-col">
+          <div className="flex-1 w-full bg-[#E9ECEF] relative">
+            {embedSrc ? (
+              <iframe
+                key={gym.placeQuery}
+                title={`${gym.name} 지도`}
+                src={embedSrc}
+                className="w-full h-full min-h-[260px] sm:min-h-[380px]"
+                style={{ border: 0 }}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                allowFullScreen
+              />
+            ) : (
+              <div className="w-full h-full min-h-[260px] sm:min-h-[380px] flex items-center justify-center text-slate-400 text-sm font-medium px-6 text-center">
+                NEXT_PUBLIC_GOOGLE_MAPS_API_KEY 설정 후 지도가 표시됩니다.
+              </div>
+            )}
+          </div>
+          <div className="p-6 sm:p-8 flex items-center gap-4 border-t border-[#E9ECEF]">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 flex items-center justify-center bg-green-50 rounded-full">
+              <img src="/images/Location.svg" alt="위치" className="w-7 h-7 sm:w-9 sm:h-9" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-lg sm:text-2xl font-black text-slate-800">{gym.name}</p>
+              <p className="text-sm sm:text-base font-bold text-slate-400">{gym.address}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-4 sm:gap-6">
+          <div className="bg-[#F2F8E1] p-6 sm:p-10 rounded-[30px] sm:rounded-[40px] flex-1">
+            <h4 className="text-lg sm:text-[22px] font-black text-slate-800 mb-5 sm:mb-8 tracking-tight">찾아오시는 길</h4>
+            <ul className="space-y-3 sm:space-y-5 text-sm sm:text-[17px] font-bold text-slate-600">
+              {gym.directions.map((line) => (
+                <li key={line} className="flex items-start gap-3">
+                  <span className="text-green-600 mt-1">•</span>
+                  {line}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="bg-[#F2F8E1] p-6 sm:p-10 rounded-[30px] sm:rounded-[40px]">
+            <h4 className="text-lg sm:text-[22px] font-black text-slate-800 mb-5 sm:mb-8 tracking-tight">정기 활동 시간</h4>
+            <div className="space-y-3 sm:space-y-4 text-sm sm:text-[17px] font-bold">
+              <div className="flex justify-between items-center">
+                <span className="text-green-700">화요일 · {GYMS.magok.name}</span>
+                <span className="text-slate-700">{GYMS.magok.scheduleTime}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-green-700">토요일 · {GYMS.mangwon.name}</span>
+                <span className="text-slate-700">{GYMS.mangwon.scheduleTime}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
