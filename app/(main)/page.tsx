@@ -153,7 +153,7 @@ type Gym = {
   address: string;
   subTitle: string;
   scheduleLabel: string;
-  scheduleTime: string;
+  scheduleTime: string[];
   directions: string[];
   placeQuery: string;
 };
@@ -164,7 +164,7 @@ const GYMS: { magok: Gym; mangwon: Gym } = {
     address: '서울특별시 강서구 마곡중앙로 일대',
     subTitle: '화요일 운동 장소',
     scheduleLabel: '화요일',
-    scheduleTime: '19:00 - 21:00',
+    scheduleTime: ['16:00 - 19:00'],
     directions: [
       '지하철 9호선/공항철도 마곡나루역 인근',
       '버스: 마곡나루역 정류장 하차',
@@ -177,7 +177,7 @@ const GYMS: { magok: Gym; mangwon: Gym } = {
     address: '서울특별시 마포구 망원동 한강공원 망원나들목',
     subTitle: '토요일 운동 장소',
     scheduleLabel: '토요일',
-    scheduleTime: '19:00 - 21:00',
+    scheduleTime: ['13:30 - 15:30', '16:00 - 18:00'],
     directions: [
       '지하철 6호선 망원역 1번 출구 도보 10분',
       '한강공원 망원지구 내 위치',
@@ -208,7 +208,7 @@ function GymLocationSection() {
     <section className="w-full bg-white py-16 sm:py-24 px-6 sm:px-12 max-w-screen-2xl mx-auto space-y-10 sm:space-y-16">
       <div className="text-center space-y-3 sm:space-y-4">
         <h2 className="text-3xl sm:text-5xl font-black text-green-800 tracking-tight">체육관 위치</h2>
-        <p className="text-base sm:text-xl font-medium text-slate-500">매주 화요일, 토요일 저녁 7시에 만나요!</p>
+        <p className="text-base sm:text-xl font-medium text-slate-500">매주 화요일, 토요일에 만나요!</p>
       </div>
 
       <div className="flex justify-center">
@@ -264,13 +264,15 @@ function GymLocationSection() {
           <div className="bg-[#F2F8E1] p-6 sm:p-10 rounded-[30px] sm:rounded-[40px]">
             <h4 className="text-lg sm:text-[22px] font-black text-slate-800 mb-5 sm:mb-8 tracking-tight">정기 활동 시간</h4>
             <div className="space-y-3 sm:space-y-4 text-sm sm:text-[17px] font-bold">
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-start gap-4">
                 <span className="text-green-700">화요일 · {GYMS.magok.name}</span>
-                <span className="text-slate-700">{GYMS.magok.scheduleTime}</span>
+                <span className="text-slate-700 text-right">{GYMS.magok.scheduleTime.join(' / ')}</span>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-start gap-4">
                 <span className="text-green-700">토요일 · {GYMS.mangwon.name}</span>
-                <span className="text-slate-700">{GYMS.mangwon.scheduleTime}</span>
+                <span className="text-slate-700 text-right whitespace-pre-line">
+                  {GYMS.mangwon.scheduleTime.join('\n')}
+                </span>
               </div>
             </div>
           </div>
