@@ -101,22 +101,20 @@ export default function TournamentPage() {
     const fetchAdminActivities = useCallback(async () => {
         setLoading(true);
         try {
-            // [핵심 변경 포인트] params 객체 분리가 아닌 명세서와 100% 동일한 완전한 쿼리 스트링 패스 결합 형태로 다이렉트 호출합니다.
-            const response = await api.get<AdminActivity[]>('/admin/votes?status=completed');
-            
-            // 응답 데이터 배열 타입 가드 및 로깅
+            const response = await api.get<any>('/admin/votes?status=completed');
             console.log("🎯 [Admin Activities Fetch Success]:", response.data);
             
+            // 명세서 상 { votes: [...] } 구조로 내려올 경우 및 일반 배열 형태 응답 모두 대응 가능한 예외 가드 적용
             if (response.data && Array.isArray(response.data)) {
                 setActivities(response.data);
-            } else if (response.data && typeof response.data === 'object' && 'votes' in response.data) {
-                // 혹시 모를 래핑 객체 반환 구조 하위 호환성 예외 가드 추가
-                setActivities((response.data as any).votes || []);
+            } else if (response.data && response.data.votes && Array.isArray(response.data.votes)) {
+                setActivities(response.data.votes);
             } else {
                 setActivities([]);
             }
         } catch (err) {
             console.error('❌ [Fetch Admin Activities Error Detail]:', err);
+            setActivities([]);
         } finally {
             setLoading(false);
         }
@@ -141,13 +139,14 @@ export default function TournamentPage() {
             setAssignments({ '1코트': [], '2코트': [], '3코트': [], '4코트': [] });
             setCourtBrackets({ 
                 '1코트': initialBracket(), '2코트': initialBracket(), 
-                '3코트': initialBracket(), '4코트': initialBracket() 
+                '3코트': initialBracket(), '4코%트': initialBracket() 
             });
             setCurrentCourt('1코트');
             setMobileStep(1);
 
             // 명세서에 표기된 엔드포인트인 /admin/votes/{voteId}/matches 호출 실행
             const response = await api.get<TournamentDetailResponse>(`/admin/votes/${activity.voteId}/matches`);
+            console.log("🎯 [Tournament Detail Fetch Success]:", response.data);
             
             if (response.data) {
                 const parsedParticipants: LocalParticipant[] = (response.data.participants || []).map(p => ({
