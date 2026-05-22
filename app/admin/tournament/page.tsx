@@ -97,55 +97,24 @@ export default function TournamentPage() {
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
-    // [API 1] 투표 완료된 전체 활동 목록 로드 (테스트 데이터 가드 주입)
+    // [API 1] 투표 완료된 전체 활동 목록 로드 (순수 실서버 데이터 전용으로 복구)
     const fetchAdminActivities = useCallback(async () => {
         setLoading(true);
         try {
             const response = await api.get<any>('/admin/votes?status=completed');
             console.log("🎯 [Admin Activities Fetch Success]:", response.data);
             
-            let dataList = [];
+            // 백엔드 명세서 구조 그대로 배열 동기화 파싱
             if (response.data && Array.isArray(response.data)) {
-                dataList = response.data;
+                setActivities(response.data);
             } else if (response.data && response.data.votes && Array.isArray(response.data.votes)) {
-                dataList = response.data.votes;
+                setActivities(response.data.votes);
+            } else {
+                setActivities([]);
             }
-
-            // -------------------------------------------------------------------------
-            // 서버 데이터가 비어있을 때 성재님이 요청하신 모임 정보 강제 주입 (개발 편의성 목적)
-            if (dataList.length === 0) {
-                console.log("⚠️ 서버 목록이 비어있어 테스트 모임 데이터를 주입합니다. (voteId: 7)");
-                dataList = [
-                    {
-                        voteId: 7,
-                        title: "4월 3주차 번개모임 (프론트 테스트용)",
-                        activityDay: "토요일",
-                        activityDate: "2026-04-18",
-                        location: "망원나들목체육관",
-                        attendance: {
-                            currentAttendees: 19,
-                            currentGuests: 1,
-                            totalParticipants: 20
-                        }
-                    }
-                ];
-            }
-            // -------------------------------------------------------------------------
-
-            setActivities(dataList);
         } catch (err) {
             console.error('❌ [Fetch Admin Activities Error Detail]:', err);
-            // 에러가 나더라도 화면 테스트가 가능하도록 폴백 주입
-            setActivities([
-                {
-                    voteId: 7,
-                    title: "4월 3주차 번개모임 (프론트 테스트용)",
-                    activityDay: "토요일",
-                    activityDate: "2026-04-18",
-                    location: "망원나들목체육관",
-                    attendance: { currentAttendees: 19, currentGuests: 1, totalParticipants: 20 }
-                }
-            ]);
+            setActivities([]);
         } finally {
             setLoading(false);
         }
@@ -163,7 +132,7 @@ export default function TournamentPage() {
         return Math.floor((filledSlots / totalSlots) * 100);
     }, [courtBrackets]);
 
-    // [API 2] 특정 모임 선택 시 참여 부원 명단 로드 (테스트 데이터 가드 주입)
+    // [API 2] 특정 모임 선택 시 선택한 모임의 voteId를 사용하여 순수 실서버 참여자 명단 로드
     const handleSelectActivity = async (activity: AdminActivity) => {
         setLoading(true);
         try {
@@ -175,66 +144,34 @@ export default function TournamentPage() {
             setCurrentCourt('1코트');
             setMobileStep(1);
 
-            let responseData: TournamentDetailResponse | null = null;
+            const response = await api.get<TournamentDetailResponse>(`/admin/votes/${activity.voteId}/matches`);
+            console.log(`🎯 [Tournament Detail Fetch Success for voteId ${activity.voteId}]:`, response.data);
             
-            try {
-                const response = await api.get<TournamentDetailResponse>(`/admin/votes/${activity.voteId}/matches`);
-                console.log("🎯 [Tournament Detail Fetch Success]:", response.data);
-                responseData = response.data;
-            } catch (apiErr) {
-                console.warn("⚠️ 상세정보 API 호출 실패 혹은 데이터 공백으로 인해 테스트 명단 데이터로 대체합니다.");
-            }
-
-            // -------------------------------------------------------------------------
-            // 20명의 참여자 JSON 명단 강제 연동 (개발 편의성 목적)
-            if (!responseData || !responseData.participants || responseData.participants.length === 0) {
-                responseData = {
-                    voteId: activity.voteId,
-                    totalCount: 20,
-                    participants: [
-                        { "participantId": 1, "participantType": "GUEST", "name": "김민준", "gender": "MALE" },
-                        { "participantId": 2, "participantType": "MEMBER", "name": "이서연", "gender": "FEMALE" },
-                        { "participantId": 3, "participantType": "MEMBER", "name": "박지훈", "gender": "MALE" },
-                        { "participantId": 4, "participantType": "MEMBER", "name": "최하은", "gender": "FEMALE" },
-                        { "participantId": 5, "participantType": "MEMBER", "name": "정도윤", "gender": "MALE" },
-                        { "participantId": 6, "participantType": "MEMBER", "name": "강지우", "gender": "FEMALE" },
-                        { "participantId": 7, "participantType": "MEMBER", "name": "조현우", "gender": "MALE" },
-                        { "participantId": 8, "participantType": "MEMBER", "name": "윤서아", "gender": "FEMALE" },
-                        { "participantId": 9, "participantType": "MEMBER", "name": "장민재", "gender": "MALE" },
-                        { "participantId": 10, "participantType": "MEMBER", "name": "임수빈", "gender": "FEMALE" },
-                        { "participantId": 11, "participantType": "MEMBER", "name": "한도현", "gender": "MALE" },
-                        { "participantId": 12, "participantType": "MEMBER", "name": "오예린", "gender": "FEMALE" },
-                        { "participantId": 13, "participantType": "MEMBER", "name": "신우진", "gender": "MALE" },
-                        { "participantId": 14, "participantType": "MEMBER", "name": "서지민", "gender": "FEMALE" },
-                        { "participantId": 15, "participantType": "MEMBER", "name": "권태양", "gender": "MALE" },
-                        { "participantId": 16, "participantType": "MEMBER", "name": "문채원", "gender": "FEMALE" },
-                        { "participantId": 17, "participantType": "MEMBER", "name": "유준서", "gender": "MALE" },
-                        { "participantId": 18, "participantType": "MEMBER", "name": "배나연", "gender": "FEMALE" },
-                        { "participantId": 19, "participantType": "MEMBER", "name": "남시우", "gender": "MALE" },
-                        { "participantId": 20, "participantType": "MEMBER", "name": "홍유진", "gender": "FEMALE" }
-                    ]
-                };
-            }
-            // -------------------------------------------------------------------------
-            
-            const parsedParticipants: LocalParticipant[] = (responseData.participants || []).map(p => ({
-                participantId: p.participantId,
-                name: p.name,
-                gender: p.gender === 'MALE' ? '남' : '여',
-                participantType: p.participantType
-            }));
-            
-            setParticipantsPool(parsedParticipants);
-            setSelectedActivity(activity);
-            
-            if ((responseData as any).matchId) {
-                setMatchId((responseData as any).matchId);
+            if (response.data && response.data.participants) {
+                // 서버 성별 영문 이늄(MALE/FEMALE)을 로컬 UI 뷰 규격에 맞춰 한글 가독 포맷으로 스왑 파싱
+                const parsedParticipants: LocalParticipant[] = response.data.participants.map(p => ({
+                    participantId: p.participantId,
+                    name: p.name,
+                    gender: p.gender === 'MALE' ? '남' : '여',
+                    participantType: p.participantType
+                }));
+                
+                setParticipantsPool(parsedParticipants);
+                setSelectedActivity(activity);
+                
+                if ((response.data as any).matchId) {
+                    setMatchId((response.data as any).matchId);
+                } else {
+                    setMatchId(activity.voteId); 
+                }
             } else {
-                setMatchId(activity.voteId); 
+                setParticipantsPool([]);
+                setSelectedActivity(activity);
+                setMatchId(activity.voteId);
             }
         } catch (err) {
-            console.error('Fetch Tournament Details Fatal Error:', err);
-            alert('대진 데이터를 파싱하는 중 문제가 발생했습니다.');
+            console.error('❌ [Fetch Tournament Details Fatal Error]:', err);
+            alert('해당 모임의 참가자 명단 및 세부 정보를 불러오지 못했습니다.');
         } finally {
             setLoading(false);
         }
@@ -316,7 +253,7 @@ export default function TournamentPage() {
         setCourtBrackets(prev => ({ ...prev, [currentCourt]: newBracket }));
     };
 
-    // [API 3] 대진 확정 저장 및 전체 전송 (PATCH /admin/matches/{matchId})
+    // [API 3] 대진 확정 저장 및 전체 전송 (PATCH 구현 완료)
     const handleSaveTournament = async () => {
         if (!selectedActivity) return;
         
@@ -347,8 +284,8 @@ export default function TournamentPage() {
                 };
             });
 
-            const targetMatchId = matchId || selectedActivity.voteId;
-            const response = await api.patch(`/admin/matches/${targetMatchId}`, payload);
+            const targetVoteId = selectedActivity.voteId;
+            const response = await api.patch(`/admin/votes/${targetVoteId}/matches`, payload);
 
             if (response.status === 200 || response.status === 204) {
                 alert('대진 정보가 서버에 최종 저장 및 확정 전송되었습니다.');
@@ -356,8 +293,8 @@ export default function TournamentPage() {
                 setSelectedActivity(null);
             }
         } catch (err) {
-            console.error('Save Tournament Error:', err);
-            alert('대진 정보를 전송하는 중 오류가 발생했습니다.');
+            console.error('❌ [Save Tournament PATCH Error]:', err);
+            alert('대진 정보를 전송하는 중 오류가 발생했습니다. 백엔드 시큐리티 권한 및 경로 사양을 확인해 주세요.');
         } finally {
             setLoading(false);
         }
