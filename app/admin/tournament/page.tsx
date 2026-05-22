@@ -316,7 +316,7 @@ export default function TournamentPage() {
         setCourtBrackets(prev => ({ ...prev, [currentCourt]: newBracket }));
     };
 
-    // [API 3] 대진 확정 저장 및 전체 전송 (PUT /admin/matches/{matchId})
+    // [API 3] 대진 확정 저장 및 전체 전송 (PATCH /admin/matches/{matchId})
     const handleSaveTournament = async () => {
         if (!selectedActivity) return;
         
@@ -348,7 +348,7 @@ export default function TournamentPage() {
             });
 
             const targetMatchId = matchId || selectedActivity.voteId;
-            const response = await api.put(`/admin/matches/${targetMatchId}`, payload);
+            const response = await api.patch(`/admin/matches/${targetMatchId}`, payload);
 
             if (response.status === 200 || response.status === 204) {
                 alert('대진 정보가 서버에 최종 저장 및 확정 전송되었습니다.');
