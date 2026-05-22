@@ -6,27 +6,23 @@ import api from '../../../lib/axios';
 import CreateReviewModal from '../../../components/ui/CreateReviewModal';
 import LoginRequiredModal from '../../../components/ui/LoginRequiredModal';
 
-// --- 인터페이스 정의 (명세서 규격 일치화 및 타입 가드) ---
+// 1. API 응답 및 컴포넌트 공용 후기 데이터 타입 정의
 interface Review {
-    reviewId: number;
+    id: number;
     category: 'RACKET' | 'CLOTHES' | 'SHOES' | 'BAG' | 'SHUTTLECOCK' | 'ACCESSORY';
-    brandName: string;
-    productName: string;
     rating: number;
-    usageMonth: number;
+    title: string;
+    duration: string;
     content: string;
-    memberNickname: string;
-    createdAt: string;
+    author: string;
+    date: string;
 }
 
 interface ReviewResponse {
     reviews: Review[];
-    pageInfo?: {
-        totalElements: number;
-        totalPages: number;
-        isLast: boolean;
-    };
-    isLast?: boolean; // 하위 버전 호환 가드
+    isLast: boolean;
+    totalElements: number;
+    totalPages: number;
 }
 
 // 한글 탭 <-> API 영문 이늄 매핑 테이블
@@ -47,21 +43,6 @@ const REVERSE_CATEGORY_MAP: Record<string, string> = {
     'SHUTTLECOCK': '셔틀콕',
     'ACCESSORY': '악세서리'
 };
-
-// ISO 날짜 문자열 정제 함수
-function formatDate(dateStr: string): string {
-    if (!dateStr) return '';
-    try {
-        const d = new Date(dateStr);
-        if (isNaN(d.getTime())) return dateStr;
-        const yy = String(d.getFullYear());
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        return `${yy}.${mm}.${dd}`;
-    } catch {
-        return dateStr;
-    }
-}
 
 export default function ReviewPage() {
     const [activeTab, setActiveTab] = useState('전체');
@@ -86,60 +67,40 @@ export default function ReviewPage() {
 
     // [API 연동] 장비 후기 목록 비동기 Fetch 함수
     const fetchReviews = useCallback(async () => {
-        // -------------------------------------------------------------------------
-        // [배포용 가드] 로그인 유저가 없으면 API 호출을 차단하고 안내 모달을 띄웁니다.
-        // (테스트 시 로그인을 풀고 싶다면 아래 if문 블록을 통째로 주석 처리하세요)
-        if (!user) {
-            setReviews([]);
-            setLoading(false);
-            setShowLoginModal(true);
-            return;
-        }
-        // -------------------------------------------------------------------------
-
         setLoading(true);
         setError(null);
         try {
+            // 명세서 기반 파라미터 빌드
             const params: Record<string, any> = {
                 page: 0,
                 size: 50,
-                sort: 'id,desc'
+                sort: 'id,desc' // 최신 등록 순 정렬 가드
             };
 
+            // 선택된 탭이 '전체'가 아닐 경우만 영문 이늄 파라미터 매핑 추가
             if (activeTab !== '전체' && CATEGORY_MAP[activeTab]) {
                 params.category = CATEGORY_MAP[activeTab];
             }
 
             const response = await api.get<ReviewResponse>('/reviews', { params });
             
-            // 데이터 수신 구조 예외처리용 안전 가드
-            if (response.data) {
-                if (Array.isArray(response.data.reviews)) {
-                    setReviews(response.data.reviews);
-                } else if (Array.isArray(response.data)) {
-                    setReviews(response.data);
-                } else {
-                    setReviews([]);
-                }
+            // 데이터 수신 및 가드 처리
+            if (response.data && response.data.reviews) {
+                setReviews(response.data.reviews);
             } else {
                 setReviews([]);
             }
         } catch (err: unknown) {
-            // 목록 조회 에러 로깅
-            console.error('❌ [Review List Fetch Error]:', err);
-            if (typeof err === 'object' && err !== null && 'response' in err) {
-                const axiosErr = err as { response: { data: any; status: number } };
-                console.error(`Status Code: ${axiosErr.response.status}`, axiosErr.response.data);
-            }
-            
+            console.error('Fetch Reviews Error:', err);
             const message = (err as { response?: { data?: { message?: string } } })
                 ?.response?.data?.message || '장비 후기 목록을 불러오는 중 오류가 발생했습니다.';
             setError(message);
         } finally {
             setLoading(false);
         }
-    }, [activeTab, user]); // 가드 작동을 위해 의존성 배열에 user 추가
+    }, [activeTab]);
 
+    // 탭 변경 또는 컴포넌트 마운트 시 데이터 동기화
     useEffect(() => {
         fetchReviews();
     }, [fetchReviews]);
@@ -179,10 +140,9 @@ export default function ReviewPage() {
                     </button>
                     <CreateReviewModal
                         isOpen={isModalOpen}
-                        onClose={(isSubmitted?: boolean) => {
+                        onClose={() => {
                             setIsModalOpen(false);
-                            console.log("모달 닫힘 감지 - 목록을 갱신합니다.");
-                            fetchReviews();
+                            fetchReviews(); // 후기 작성 모달이 닫힐 때 최신 리스트 동기화
                         }}
                     />
                     <LoginRequiredModal
@@ -191,37 +151,29 @@ export default function ReviewPage() {
                     />
                 </div>
 
-                {/* 에러 피드백 표시바 */}
+                {/* 에러 피드백 바 UI */}
                 {error && (
                     <div className="bg-red-50 border border-red-200 text-red-600 text-sm font-bold px-5 py-4 rounded-xl">
                         {error}
                     </div>
                 )}
 
-                {/* --- [3] 후기 카드 그리드 --- */}
-                {/* ------------------------------------------------------------------------- */}
-                {/* [배포용 유효성 분기] 비로그인 상태일 때는 리스트 대신 안내 문구를 띄워줍니다. */}
-                {/* (테스트 시 로그인을 풀고 싶다면 '!user ? (...)' 부분을 주석 처리하고 기존 기본 구조로 사용하세요) */}
-                {!user ? (
-                    <div className="py-24 text-center bg-white rounded-[32px] border border-dashed border-gray-200 text-slate-400 font-bold">
-                        장비 후기 목록은 회원 전용 기능입니다. 로그인 후 확인해 보세요!
-                    </div>
-                ) : loading ? (
+                {/* --- [3] 후기 카드 그리드 및 로딩 상태 제어 --- */}
+                {loading ? (
                     <div className="py-24 text-center text-slate-400 font-bold text-base">
                         후기 목록을 불러오는 중입니다...
                     </div>
                 ) : reviews.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-8">
                         {reviews.map((review) => (
-                            <ReviewCard key={review.reviewId || Math.random()} review={review} />
+                            <ReviewCard key={review.id} review={review} />
                         ))}
                     </div>
                 ) : (
                     <div className="py-24 text-center bg-white rounded-[32px] border border-dashed border-gray-200 text-slate-400 font-bold">
-                        등록된 장비 후기가 존재하지 않습니다.
+                        선택하신 카테고리에 등록된 장비 후기가 존재하지 않습니다.
                     </div>
                 )}
-                {/* ------------------------------------------------------------------------- */}
             </div>
         </div>
     );
@@ -229,15 +181,8 @@ export default function ReviewPage() {
 
 /** 후기 카드 컴포넌트 **/
 function ReviewCard({ review }: { review: Review }) {
+    // 서버 이늄 값을 한글로 치환하여 노출
     const displayCategory = REVERSE_CATEGORY_MAP[review.category] || review.category;
-    
-    const formatUsageMonth = (months: number) => {
-        if (!months || months <= 0) return '1개월 미만';
-        if (months < 12) return `${months}개월`;
-        const yy = Math.floor(months / 12);
-        const mm = months % 12;
-        return `${yy}년 ${mm > 0 ? `${mm}개월` : ''}`.trim();
-    };
 
     return (
         <div className="bg-white p-5 sm:p-8 rounded-[24px] sm:rounded-[32px] shadow-sm border border-gray-100 flex flex-col gap-4 sm:gap-5 hover:shadow-md transition-shadow text-left">
@@ -256,9 +201,9 @@ function ReviewCard({ review }: { review: Review }) {
             {/* 카드 중단: 제목 & 기간 */}
             <div className="space-y-1">
                 <h3 className="text-xl font-black text-slate-800 tracking-tight truncate">
-                    {review.brandName || '미지정'} - {review.productName || '일반 상품'}
+                    {review.title}
                 </h3>
-                <p className="text-sm font-bold text-slate-400">사용 기간: {formatUsageMonth(review.usageMonth)}</p>
+                <p className="text-sm font-bold text-slate-400">사용 기간: {review.duration}</p>
             </div>
 
             {/* 카드 본문: 내용 */}
@@ -270,8 +215,8 @@ function ReviewCard({ review }: { review: Review }) {
 
             {/* 카드 하단: 작성자 & 날짜 */}
             <div className="flex justify-between items-center pt-2">
-                <span className="text-sm font-black text-slate-400">{review.memberNickname || '익명 부원'}</span>
-                <span className="text-sm font-bold text-slate-200 tabular-nums">{formatDate(review.createdAt)}</span>
+                <span className="text-sm font-black text-slate-400">{review.author}</span>
+                <span className="text-sm font-bold text-slate-200 tabular-nums">{review.date}</span>
             </div>
         </div>
     );
