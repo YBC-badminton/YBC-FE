@@ -101,15 +101,22 @@ export default function TournamentPage() {
     const fetchAdminActivities = useCallback(async () => {
         setLoading(true);
         try {
-            // 명세서에 표시된 엔드포인트 /admin/votes?status=completed 호환 맵핑
-            const response = await api.get<AdminActivity[]>('/admin/votes', {
-                params: { status: 'completed' }
-            });
-            if (Array.isArray(response.data)) {
+            // [핵심 변경 포인트] params 객체 분리가 아닌 명세서와 100% 동일한 완전한 쿼리 스트링 패스 결합 형태로 다이렉트 호출합니다.
+            const response = await api.get<AdminActivity[]>('/admin/votes?status=completed');
+            
+            // 응답 데이터 배열 타입 가드 및 로깅
+            console.log("🎯 [Admin Activities Fetch Success]:", response.data);
+            
+            if (response.data && Array.isArray(response.data)) {
                 setActivities(response.data);
+            } else if (response.data && typeof response.data === 'object' && 'votes' in response.data) {
+                // 혹시 모를 래핑 객체 반환 구조 하위 호환성 예외 가드 추가
+                setActivities((response.data as any).votes || []);
+            } else {
+                setActivities([]);
             }
         } catch (err) {
-            console.error('Fetch Admin Activities Error:', err);
+            console.error('❌ [Fetch Admin Activities Error Detail]:', err);
         } finally {
             setLoading(false);
         }
@@ -119,7 +126,7 @@ export default function TournamentPage() {
         fetchAdminActivities();
     }, [fetchAdminActivities]);
 
-    // 전체 진도율 계산 유틸
+    // 전체 진행도 계산 유틸
     const progress = useMemo(() => {
         const totalSlots = Object.values(courtBrackets).flat(2).length;
         if (totalSlots === 0) return 0;
@@ -131,7 +138,6 @@ export default function TournamentPage() {
     const handleSelectActivity = async (activity: AdminActivity) => {
         setLoading(true);
         try {
-            // 1. 기존 상태값 완전 초기화
             setAssignments({ '1코트': [], '2코트': [], '3코트': [], '4코트': [] });
             setCourtBrackets({ 
                 '1코트': initialBracket(), '2코트': initialBracket(), 
@@ -140,11 +146,10 @@ export default function TournamentPage() {
             setCurrentCourt('1코트');
             setMobileStep(1);
 
-            // 2. 명세서에 표기된 엔드포인트인 /admin/votes/{voteId}/matches 호출 실행
+            // 명세서에 표기된 엔드포인트인 /admin/votes/{voteId}/matches 호출 실행
             const response = await api.get<TournamentDetailResponse>(`/admin/votes/${activity.voteId}/matches`);
             
             if (response.data) {
-                // 서버 성별 이늄(MALE/FEMALE)을 클라이언트용(남/여) 규격으로 치환 파싱
                 const parsedParticipants: LocalParticipant[] = (response.data.participants || []).map(p => ({
                     participantId: p.participantId,
                     name: p.name,
@@ -155,11 +160,10 @@ export default function TournamentPage() {
                 setParticipantsPool(parsedParticipants);
                 setSelectedActivity(activity);
                 
-                // 만약 서버에서 기존에 저장해둔 대진표 데이터가 있다면 matchId를 함께 셋업합니다.
                 if ((response.data as any).matchId) {
                     setMatchId((response.data as any).matchId);
                 } else {
-                    setMatchId(activity.voteId); // 폴백 키 가드
+                    setMatchId(activity.voteId); 
                 }
             }
         } catch (err) {
@@ -252,18 +256,14 @@ export default function TournamentPage() {
         
         setLoading(true);
         try {
-            // 명세서 Request Body 구조에 맞춰 다차원 JSON 객체 직렬화 빌드
             const payload: CourtMatchGroup[] = Object.entries(courtBrackets).map(([courtName, rows]) => {
-                // '1코트', '2코트' 문자열에서 순수 숫자형 추출
                 const courtNumber = parseInt(courtName.replace(/[^0-9]/g, ''), 10) || 1;
                 
                 const courtMatches: ServerMatch[] = rows.map((row, index) => {
-                    // team1 구성 (셀 0, 셀 1)
                     const team1: TeamMember[] = [];
                     if (row[0]) team1.push({ participantType: row[0].participantType, participantId: row[0].participantId });
                     if (row[1]) team1.push({ participantType: row[1].participantType, participantId: row[1].participantId });
                     
-                    // team2 구성 (셀 2, 셀 3)
                     const team2: TeamMember[] = [];
                     if (row[2]) team2.push({ participantType: row[2].participantType, participantId: row[2].participantId });
                     if (row[3]) team2.push({ participantType: row[3].participantType, participantId: row[3].participantId });
@@ -282,8 +282,6 @@ export default function TournamentPage() {
             });
 
             const targetMatchId = matchId || selectedActivity.voteId;
-            
-            // 명세서 상의 PUT /admin/matches/{matchId} 스펙 결속 통신
             const response = await api.put(`/admin/matches/${targetMatchId}`, payload);
 
             if (response.status === 200 || response.status === 204) {
@@ -299,7 +297,6 @@ export default function TournamentPage() {
         }
     };
 
-    // 어떤 코트에도 아직 지정되지 않은 잔여 인원 필터링 계산
     const unassigned = useMemo(() => {
         return participantsPool.filter(
             (p) => !Object.values(assignments).flat().some(a => a.participantId === p.participantId)
