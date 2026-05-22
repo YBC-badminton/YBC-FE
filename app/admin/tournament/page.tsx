@@ -103,6 +103,23 @@ export default function TournamentPage() {
         try {
             const response = await api.get<any>('/admin/votes?status=completed');
             console.log("🎯 [Admin Activities Fetch Success]:", response.data);
+
+            if (response.data && response.data.length === 0) {
+                response.data = [
+                    {
+                        voteId: 5, // 실제 존재하는 voteId 또는 테스트용 ID
+                        title: "4월 3주차 번개모임 (프론트 테스트용)",
+                        activityDay: "토요일",
+                        activityDate: "2026-04-18",
+                        location: "망원나들목체육관",
+                        attendance: {
+                            currentAttendees: 12,
+                            currentGuests: 4,
+                            totalParticipants: 16
+                        }
+                    }
+                ];
+            }
             
             // 명세서 상 { votes: [...] } 구조로 내려올 경우 및 일반 배열 형태 응답 모두 대응 가능한 예외 가드 적용
             if (response.data && Array.isArray(response.data)) {
