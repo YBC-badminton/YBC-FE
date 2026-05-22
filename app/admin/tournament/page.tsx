@@ -253,28 +253,36 @@ export default function TournamentPage() {
         setCourtBrackets(prev => ({ ...prev, [currentCourt]: newBracket }));
     };
 
-    // [API 3] 대진 확정 저장 및 전체 전송 (PATCH 구현 완료)
+    // [API 3] 대진 확정 저장 및 전체 전송
     const handleSaveTournament = async () => {
         if (!selectedActivity) return;
         
         setLoading(true);
         try {
+            // 🛠️ [핵심 교정] 화면의 courtBrackets 상태를 명세서 규격 JSON 배열로 매핑
             const payload: CourtMatchGroup[] = Object.entries(courtBrackets).map(([courtName, rows]) => {
+                // 코트 번호 추출 (예: '1코트' -> 1)
                 const courtNumber = parseInt(courtName.replace(/[^0-9]/g, ''), 10) || 1;
                 
                 const courtMatches: ServerMatch[] = rows.map((row, index) => {
+                    // row[0], row[1]이 team1, row[2], row[3]이 team2
+                    // 각 셀에 배치된 LocalParticipant의 id와 type을 추출
+                    const getMember = (p: LocalParticipant | null): TeamMember | null => {
+                        return p ? { participantType: p.participantType, participantId: p.participantId } : null;
+                    };
+
                     const team1: TeamMember[] = [];
-                    if (row[0]) team1.push({ participantType: row[0].participantType, participantId: row[0].participantId });
-                    if (row[1]) team1.push({ participantType: row[1].participantType, participantId: row[1].participantId });
+                    if (row[0]) team1.push(getMember(row[0]) as TeamMember);
+                    if (row[1]) team1.push(getMember(row[1]) as TeamMember);
                     
                     const team2: TeamMember[] = [];
-                    if (row[2]) team2.push({ participantType: row[2].participantType, participantId: row[2].participantId });
-                    if (row[3]) team2.push({ participantType: row[3].participantType, participantId: row[3].participantId });
+                    if (row[2]) team2.push(getMember(row[2]) as TeamMember);
+                    if (row[3]) team2.push(getMember(row[3]) as TeamMember);
 
                     return {
                         matchNumber: index + 1,
-                        team1,
-                        team2
+                        team1: team1,
+                        team2: team2
                     };
                 });
 
@@ -283,6 +291,8 @@ export default function TournamentPage() {
                     courtMatches
                 };
             });
+
+            console.log("📤 [Payload to Server]:", JSON.stringify(payload, null, 2));
 
             const targetVoteId = selectedActivity.voteId;
             const response = await api.patch(`/admin/votes/${targetVoteId}/matches`, payload);
@@ -294,7 +304,7 @@ export default function TournamentPage() {
             }
         } catch (err) {
             console.error('❌ [Save Tournament PATCH Error]:', err);
-            alert('대진 정보를 전송하는 중 오류가 발생했습니다. 백엔드 시큐리티 권한 및 경로 사양을 확인해 주세요.');
+            alert('대진 정보를 전송하는 중 오류가 발생했습니다.');
         } finally {
             setLoading(false);
         }
