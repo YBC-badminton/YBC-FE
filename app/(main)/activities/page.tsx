@@ -1,62 +1,61 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import api from '../../../lib/axios';
 import { useAuth } from '../../../context/AuthContext';
-import CreateLightningModal from '../../../components/ui/CreateLightningModal';
+import api from '../../../lib/axios';
+import CreateReviewModal from '../../../components/ui/CreateReviewModal';
 import LoginRequiredModal from '../../../components/ui/LoginRequiredModal';
 
-// API 응답 타입
-interface VoteItem {
-    voteId: number;
-    name: string;
-    type: 'REGULAR' | 'FLUSH' | 'EVENT';
-    location: string;
-    voteStartAt: string;
-    voteEndAt: string;
-    activityTime: string;
-    capacity: number;
-    currentParticipantCount: number;
+// 1. API 응답 및 컴포넌트 공용 후기 데이터 타입 정의
+interface Review {
+    id: number;
+    category: 'RACKET' | 'CLOTHES' | 'SHOES' | 'BAG' | 'SHUTTLECOCK' | 'ACCESSORY';
+    rating: number;
+    title: string;
+    duration: string;
+    content: string;
+    author: string;
+    date: string;
 }
 
-interface VotesResponse {
-    votes: VoteItem[];
+interface ReviewResponse {
+    reviews: Review[];
     isLast: boolean;
     totalElements: number;
     totalPages: number;
 }
 
-interface VotesHistory {
-    joinableVotes: number;
-    thisYearVotes: number;
-}
-
-// API type → 한글 라벨
-const TYPE_LABEL: Record<string, string> = {
-    'REGULAR': '정기모임',
-    'FLUSH': '번개모임',
-    'EVENT': '이벤트',
+// 한글 탭 <-> API 영문 이늄 매핑 테이블
+const CATEGORY_MAP: Record<string, string> = {
+    '라켓': 'RACKET',
+    '의류': 'CLOTHES',
+    '신발': 'SHOES',
+    '가방': 'BAG',
+    '셔틀콕': 'SHUTTLECOCK',
+    '악세서리': 'ACCESSORY'
 };
 
-// 날짜 포맷: "2026-04-03T18:00:00" → "26.04.03 (목)"
-function formatDate(dateStr: string): string {
-    const d = new Date(dateStr);
-    const days = ['일', '월', '화', '수', '목', '금', '토'];
-    const yy = String(d.getFullYear()).slice(2);
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    return `${yy}.${mm}.${dd} (${days[d.getDay()]})`;
-}
+const REVERSE_CATEGORY_MAP: Record<string, string> = {
+    'RACKET': '라켓',
+    'CLOTHES': '의류',
+    'SHOES': '신발',
+    'BAG': '가방',
+    'SHUTTLECOCK': '셔틀콕',
+    'ACCESSORY': '악세서리'
+};
 
-export default function ActivitiesPage() {
+export default function ReviewPage() {
     const [activeTab, setActiveTab] = useState('전체');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [showLoginModal, setShowLoginModal] = useState(false);
     const { user } = useAuth();
 
-    const handleCreateLightning = () => {
+    // API 통신 관련 상태 관리
+    const [reviews, setReviews] = useState<Review[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const handleWriteReview = () => {
         if (!user) {
             setShowLoginModal(true);
             return;
@@ -64,193 +63,160 @@ export default function ActivitiesPage() {
         setIsModalOpen(true);
     };
 
-    const [availableActivities, setAvailableActivities] = useState<VoteItem[]>([]);
-    const [pastActivities, setPastActivities] = useState<VoteItem[]>([]);
-    const [history, setHistory] = useState<VotesHistory | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const categories = ['전체', '라켓', '의류', '신발', '가방', '셔틀콕', '악세서리'];
 
-    const fetchVotes = useCallback(async () => {
+    // [API 연동] 장비 후기 목록 비동기 Fetch 함수
+    const fetchReviews = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
-            const [joinableRes, pastRes, historyRes] = await Promise.all([
-                api.get<VotesResponse>('/votes', { params: { joinable: true, page: 0, size: 50 } }),
-                api.get<VotesResponse>('/votes', { params: { joinable: false, page: 0, size: 50 } }),
-                api.get<VotesHistory>('/votes/history'),
-            ]);
-            setAvailableActivities(joinableRes.data.votes);
-            setPastActivities(pastRes.data.votes);
-            setHistory(historyRes.data);
+            // 명세서 기반 파라미터 빌드
+            const params: Record<string, any> = {
+                page: 0,
+                size: 50,
+                sort: 'id,desc' // 최신 등록 순 정렬 가드
+            };
+
+            // 선택된 탭이 '전체'가 아닐 경우만 영문 이늄 파라미터 매핑 추가
+            if (activeTab !== '전체' && CATEGORY_MAP[activeTab]) {
+                params.category = CATEGORY_MAP[activeTab];
+            }
+
+            const response = await api.get<ReviewResponse>('/reviews', { params });
+            
+            // 데이터 수신 및 가드 처리
+            if (response.data && response.data.reviews) {
+                setReviews(response.data.reviews);
+            } else {
+                setReviews([]);
+            }
         } catch (err: unknown) {
+            console.error('Fetch Reviews Error:', err);
             const message = (err as { response?: { data?: { message?: string } } })
-                ?.response?.data?.message || '활동 목록을 불러오는 중 오류가 발생했습니다.';
+                ?.response?.data?.message || '장비 후기 목록을 불러오는 중 오류가 발생했습니다.';
             setError(message);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [activeTab]);
 
+    // 탭 변경 또는 컴포넌트 마운트 시 데이터 동기화
     useEffect(() => {
-        fetchVotes();
-    }, [fetchVotes]);
-
-    // 클라이언트 사이드 탭 필터링
-    const filterByTab = (items: VoteItem[]) => {
-        if (activeTab === '전체') return items;
-        return items.filter(item => TYPE_LABEL[item.type] === activeTab);
-    };
-
-    const filteredAvailable = filterByTab(availableActivities);
-    const filteredPast = filterByTab(pastActivities);
+        fetchReviews();
+    }, [fetchReviews]);
 
     return (
-        <div className="min-h-screen bg-[#F8F9FA] py-12 px-6 lg:px-24 font-sans select-none">
-            <div className="max-w-screen-xl mx-auto space-y-10 sm:space-y-16">
+        <div className="min-h-screen bg-[#F8F9FA] py-12 sm:py-16 px-6 lg:px-24 font-sans select-none text-left">
+            <div className="max-w-screen-xl mx-auto space-y-8 sm:space-y-12">
 
-                {/* 상단 탭 및 버튼 바 */}
+                {/* --- [1] 헤더 섹션 --- */}
+                <div className="space-y-2">
+                    <h1 className="text-3xl sm:text-4xl font-black text-slate-800">장비 후기</h1>
+                    <p className="text-sm sm:text-base text-slate-400 font-bold">클럽원들의 배드민턴 장비 사용 후기를 확인하고 공유해보세요</p>
+                </div>
+
+                {/* --- [2] 필터 및 작성 버튼 섹션 --- */}
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-                    <div className="flex bg-white p-1 rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
-                        {['전체', '정기모임', '번개모임'].map((tab) => (
+                    <div className="flex bg-white p-1 rounded-xl shadow-sm border border-gray-100 overflow-x-auto gap-1">
+                        {categories.map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
-                                className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
-                                    activeTab === tab ? 'bg-[#4B7332] text-white shadow-md' : 'text-slate-400 hover:text-slate-600'
+                                className={`px-3 sm:px-6 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
+                                    activeTab === tab
+                                        ? 'bg-[#4B7332] text-white shadow-md'
+                                        : 'text-slate-400 hover:text-slate-600'
                                 }`}
                             >
                                 {tab}
                             </button>
                         ))}
                     </div>
-                    <button className="bg-[#2D5A27] text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold shadow-md hover:bg-[#1e3d1a] transition-all text-sm sm:text-base"
-                        onClick={handleCreateLightning}>
-                        + 번개 모임 만들기
+                    <button
+                        className="bg-[#4B7332] text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#3d5d28] transition-all shadow-md text-sm sm:text-base"
+                        onClick={handleWriteReview}
+                    >
+                        <span className="text-lg sm:text-xl">+</span> 후기 작성하기
                     </button>
+                    <CreateReviewModal
+                        isOpen={isModalOpen}
+                        onClose={() => {
+                            setIsModalOpen(false);
+                            fetchReviews(); // 후기 작성 모달이 닫힐 때 최신 리스트 동기화
+                        }}
+                    />
+                    <LoginRequiredModal
+                        isOpen={showLoginModal}
+                        onClose={() => setShowLoginModal(false)}
+                    />
                 </div>
 
-                {/* 에러 표시 */}
+                {/* 에러 피드백 바 UI */}
                 {error && (
                     <div className="bg-red-50 border border-red-200 text-red-600 text-sm font-bold px-5 py-4 rounded-xl">
                         {error}
                     </div>
                 )}
 
-                {/* 로딩 */}
+                {/* --- [3] 후기 카드 그리드 및 로딩 상태 제어 --- */}
                 {loading ? (
-                    <div className="py-20 text-center text-slate-400 font-bold">불러오는 중...</div>
+                    <div className="py-24 text-center text-slate-400 font-bold text-base">
+                        후기 목록을 불러오는 중입니다...
+                    </div>
+                ) : reviews.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-8">
+                        {reviews.map((review) => (
+                            <ReviewCard key={review.id} review={review} />
+                        ))}
+                    </div>
                 ) : (
-                    <>
-                        {/* 참여 가능 활동 */}
-                        <section className="space-y-6">
-                            <div className="flex justify-between items-end">
-                                <h2 className="text-2xl font-black text-slate-800 tracking-tight">참여 가능 활동</h2>
-                                <span className="bg-[#F2F8E1] text-[#4B7332] px-4 py-1.5 rounded-full text-xs font-black border border-[#E2EBC8]">
-                                    {history ? `${history.joinableVotes}개 참여 가능` : `+ ${filteredAvailable.length} ACTIVITIES`}
-                                </span>
-                            </div>
-                            <div className="grid grid-cols-1 gap-4">
-                                {filteredAvailable.length > 0 ? (
-                                    filteredAvailable.map(vote => (
-                                        <ActivityCard key={vote.voteId} data={vote} isPast={false} />
-                                    ))
-                                ) : (
-                                    <div className="py-20 text-center bg-white rounded-[32px] border border-dashed border-gray-200 text-slate-400 font-bold">
-                                        현재 참여 가능한 활동이 없습니다.
-                                    </div>
-                                )}
-                            </div>
-                        </section>
-
-                        {/* 이전 활동 */}
-                        <section className="space-y-6">
-                            <div className="flex justify-between items-end">
-                                <h2 className="text-2xl font-black text-slate-800 tracking-tight">이전 활동</h2>
-                                <span className="bg-gray-100 text-gray-400 px-4 py-1.5 rounded-full text-xs font-black">
-                                    {history ? `올해 ${history.thisYearVotes}회 활동` : `+ ${filteredPast.length} ACTIVITIES`}
-                                </span>
-                            </div>
-                            <div className="grid grid-cols-1 gap-4 opacity-60 grayscale-[0.3]">
-                                {filteredPast.map(vote => (
-                                    <ActivityCard key={vote.voteId} data={vote} isPast={true} />
-                                ))}
-                            </div>
-                        </section>
-                    </>
+                    <div className="py-24 text-center bg-white rounded-[32px] border border-dashed border-gray-200 text-slate-400 font-bold">
+                        선택하신 카테고리에 등록된 장비 후기가 존재하지 않습니다.
+                    </div>
                 )}
-
             </div>
-            <CreateLightningModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-            />
-            <LoginRequiredModal
-                isOpen={showLoginModal}
-                onClose={() => setShowLoginModal(false)}
-            />
         </div>
     );
 }
 
-/** 공용 활동 카드 컴포넌트 **/
-function ActivityCard({ data, isPast }: { data: VoteItem; isPast: boolean }) {
-    const router = useRouter();
-    const percentage = data.capacity > 0
-        ? (data.currentParticipantCount / data.capacity) * 100
-        : 0;
-    const typeLabel = TYPE_LABEL[data.type] || data.type;
-
-    const handleCardClick = () => {
-        if (!isPast) {
-            router.push(`/activities/${data.voteId}`);
-        }
-    };
+/** 후기 카드 컴포넌트 **/
+function ReviewCard({ review }: { review: Review }) {
+    // 서버 이늄 값을 한글로 치환하여 노출
+    const displayCategory = REVERSE_CATEGORY_MAP[review.category] || review.category;
 
     return (
-        <div className="relative group">
-            <div
-                onClick={handleCardClick}
-                className={`bg-white p-5 sm:p-6 rounded-[24px] shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 hover:shadow-md transition-all relative ${isPast ? 'cursor-default' : 'cursor-pointer hover:-translate-y-0.5'}`}
-            >
-                <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl flex-shrink-0 ${isPast ? 'bg-slate-300' : 'bg-[#3D6B2C]'}`} />
-
-                <div className="flex-grow space-y-2 min-w-0">
-                    <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                        <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-black uppercase">
-                            {typeLabel}
-                        </span>
-                        <h3 className="text-base sm:text-lg font-black text-slate-800">{data.name}</h3>
-
-                        {!isPast && (
-                            <Link
-                                href={`/activities/${data.voteId}/tournament`}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                }}
-                                className="bg-[#4B7332] text-white text-[11px] font-bold px-3 py-1 rounded-full whitespace-nowrap drop-shadow-sm hover:bg-[#3d5d28] transition-colors z-20"
-                            >
-                                대진
-                            </Link>
-                        )}
-                    </div>
-                    <div className="flex flex-col gap-1 text-xs sm:text-sm font-bold text-slate-400">
-                        <p>📍 {data.location}</p>
-                        <p>📅 {formatDate(data.voteEndAt)} {data.activityTime}</p>
-                    </div>
+        <div className="bg-white p-5 sm:p-8 rounded-[24px] sm:rounded-[32px] shadow-sm border border-gray-100 flex flex-col gap-4 sm:gap-5 hover:shadow-md transition-shadow text-left">
+            {/* 카드 상단: 카테고리 & 별점 */}
+            <div className="flex justify-between items-center">
+                <span className="bg-slate-100 text-slate-500 text-[11px] font-black px-3 py-1 rounded-md uppercase">
+                    {displayCategory}
+                </span>
+                <div className="flex text-amber-400 text-lg">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                        <span key={i}>{i < review.rating ? '★' : '☆'}</span>
+                    ))}
                 </div>
+            </div>
 
-                <div className="w-full sm:w-48 sm:text-right space-y-2 sm:space-y-3 pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-50 flex-shrink-0">
-                    <div className="text-xs font-black text-slate-400 uppercase tracking-tighter">참여 인원</div>
-                    <div className="text-xl sm:text-2xl font-black text-slate-800">
-                        {data.currentParticipantCount} / <span className="text-slate-300">{data.capacity}</span>
-                    </div>
-                    <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                            className={`h-full transition-all duration-500 ${isPast ? 'bg-slate-400' : 'bg-[#4B7332]'}`}
-                            style={{ width: `${percentage}%` }}
-                        />
-                    </div>
-                </div>
+            {/* 카드 중단: 제목 & 기간 */}
+            <div className="space-y-1">
+                <h3 className="text-xl font-black text-slate-800 tracking-tight truncate">
+                    {review.title}
+                </h3>
+                <p className="text-sm font-bold text-slate-400">사용 기간: {review.duration}</p>
+            </div>
+
+            {/* 카드 본문: 내용 */}
+            <div className="py-4 border-t border-slate-50 min-h-[120px]">
+                <p className="text-[15px] font-medium text-slate-600 leading-relaxed break-keep whitespace-pre-wrap">
+                    {review.content}
+                </p>
+            </div>
+
+            {/* 카드 하단: 작성자 & 날짜 */}
+            <div className="flex justify-between items-center pt-2">
+                <span className="text-sm font-black text-slate-400">{review.author}</span>
+                <span className="text-sm font-bold text-slate-200 tabular-nums">{review.date}</span>
             </div>
         </div>
     );
