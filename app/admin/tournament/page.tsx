@@ -295,7 +295,7 @@ export default function TournamentPage() {
             console.log("📤 [Payload to Server]:", JSON.stringify(payload, null, 2));
 
             const targetVoteId = selectedActivity.voteId;
-            const response = await api.patch(`/admin/votes/${targetVoteId}/matches`, payload);
+            const response = await api.post(`/admin/votes/${targetVoteId}/matches`, payload);
 
             if (response.status === 200 || response.status === 204) {
                 alert('대진 정보가 서버에 최종 저장 및 확정 전송되었습니다.');
