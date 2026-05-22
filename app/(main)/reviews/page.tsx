@@ -6,23 +6,26 @@ import api from '../../../lib/axios';
 import CreateReviewModal from '../../../components/ui/CreateReviewModal';
 import LoginRequiredModal from '../../../components/ui/LoginRequiredModal';
 
-// 1. 후기 데이터 타입 정의
+// --- 명세서 Success Response 기반 데이터 인터페이스 정의 ---
 interface Review {
-    id: number;
+    reviewId: number;
     category: 'RACKET' | 'CLOTHES' | 'SHOES' | 'BAG' | 'SHUTTLECOCK' | 'ACCESSORY';
+    brandName: string;
+    productName: string;
     rating: number;
-    title: string;
-    duration: string;
+    usageMonth: number;
     content: string;
-    author: string;
-    date: string;
+    memberNickname: string;
+    createdAt: string;
 }
 
 interface ReviewResponse {
     reviews: Review[];
-    isLast: boolean;
-    totalElements: number;
-    totalPages: number;
+    pageInfo?: {
+        totalElements: number;
+        totalPages: number;
+        isLast: boolean;
+    };
 }
 
 const CATEGORY_MAP: Record<string, string> = {
@@ -42,6 +45,21 @@ const REVERSE_CATEGORY_MAP: Record<string, string> = {
     'SHUTTLECOCK': '셔틀콕',
     'ACCESSORY': '악세서리'
 };
+
+// ISO 날짜 문자열 정제 함수 ("2026-03-15T14:30:00" -> "2026.03.15")
+function formatDate(dateStr: string): string {
+    if (!dateStr) return '';
+    try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        const yy = String(d.getFullYear());
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yy}.${mm}.${dd}`;
+    } catch {
+        return dateStr;
+    }
+}
 
 export default function ReviewPage() {
     const [activeTab, setActiveTab] = useState('전체');
@@ -67,10 +85,11 @@ export default function ReviewPage() {
         setLoading(true);
         setError(null);
         try {
+            // 명세서 400 에러 해결의 핵심: 'id,desc'가 아닌 'desc' 단일 정렬 규격 파라미터 셋업
             const params: Record<string, any> = {
                 page: 0,
                 size: 50,
-                sort: 'id,desc'
+                sort: 'desc'
             };
 
             if (activeTab !== '전체' && CATEGORY_MAP[activeTab]) {
@@ -79,8 +98,15 @@ export default function ReviewPage() {
 
             const response = await api.get<ReviewResponse>('/reviews', { params });
             
-            if (response.data && response.data.reviews) {
-                setReviews(response.data.reviews);
+            // 데이터 응답 포맷 유연화 가드 처리
+            if (response.data) {
+                if (Array.isArray(response.data.reviews)) {
+                    setReviews(response.data.reviews);
+                } else if (Array.isArray(response.data)) {
+                    setReviews(response.data);
+                } else {
+                    setReviews([]);
+                }
             } else {
                 setReviews([]);
             }
@@ -135,7 +161,7 @@ export default function ReviewPage() {
                         isOpen={isModalOpen}
                         onClose={() => {
                             setIsModalOpen(false);
-                            fetchReviews();
+                            fetchReviews(); // 후기 등록 모달 닫힐 때 실시간 동기화 호출
                         }}
                     />
                     <LoginRequiredModal
@@ -159,7 +185,7 @@ export default function ReviewPage() {
                 ) : reviews.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-8">
                         {reviews.map((review) => (
-                            <ReviewCard key={review.id} review={review} />
+                            <ReviewCard key={review.reviewId || Math.random()} review={review} />
                         ))}
                     </div>
                 ) : (
@@ -176,6 +202,11 @@ export default function ReviewPage() {
 function ReviewCard({ review }: { review: Review }) {
     const displayCategory = REVERSE_CATEGORY_MAP[review.category] || review.category;
 
+    // 사용 개월 수 데이터를 연/월 단위 문자열로 가독성 있게 치환 
+    const displayDuration = review.usageMonth >= 12
+        ? `${Math.floor(review.usageMonth / 12)}년 ${review.usageMonth % 12 > 0 ? `${review.usageMonth % 12}개월` : ''}`.trim()
+        : `${review.usageMonth || 1}개월`;
+
     return (
         <div className="bg-white p-5 sm:p-8 rounded-[24px] sm:rounded-[32px] shadow-sm border border-gray-100 flex flex-col gap-4 sm:gap-5 hover:shadow-md transition-shadow text-left">
             {/* 카드 상단: 카테고리 & 별점 */}
@@ -190,12 +221,12 @@ function ReviewCard({ review }: { review: Review }) {
                 </div>
             </div>
 
-            {/* 카드 중단: 제목 & 기간 */}
+            {/* 카드 중단: 브랜드명 - 제품명 조합 타이틀 & 사용 기간 */}
             <div className="space-y-1">
                 <h3 className="text-xl font-black text-slate-800 tracking-tight truncate">
-                    {review.title}
+                    {review.brandName || '미지정'} - {review.productName || '일반 상품'}
                 </h3>
-                <p className="text-sm font-bold text-slate-400">사용 기간: {review.duration}</p>
+                <p className="text-sm font-bold text-slate-400">사용 기간: {displayDuration}</p>
             </div>
 
             {/* 카드 본문: 내용 */}
@@ -205,10 +236,10 @@ function ReviewCard({ review }: { review: Review }) {
                 </p>
             </div>
 
-            {/* 카드 하단: 작성자 & 날짜 */}
+            {/* 카드 하단: 작성자 닉네임 & 날짜 */}
             <div className="flex justify-between items-center pt-2">
-                <span className="text-sm font-black text-slate-400">{review.author}</span>
-                <span className="text-sm font-bold text-slate-200 tabular-nums">{review.date}</span>
+                <span className="text-sm font-black text-slate-400">{review.memberNickname || '익명 부원'}</span>
+                <span className="text-sm font-bold text-slate-200 tabular-nums">{formatDate(review.createdAt)}</span>
             </div>
         </div>
     );
