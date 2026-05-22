@@ -6,7 +6,7 @@ import api from '../../../lib/axios';
 import CreateReviewModal from '../../../components/ui/CreateReviewModal';
 import LoginRequiredModal from '../../../components/ui/LoginRequiredModal';
 
-// 1. API 응답 및 컴포넌트 공용 후기 데이터 타입 정의
+// 1. 후기 데이터 타입 정의
 interface Review {
     id: number;
     category: 'RACKET' | 'CLOTHES' | 'SHOES' | 'BAG' | 'SHUTTLECOCK' | 'ACCESSORY';
@@ -25,7 +25,6 @@ interface ReviewResponse {
     totalPages: number;
 }
 
-// 한글 탭 <-> API 영문 이늄 매핑 테이블
 const CATEGORY_MAP: Record<string, string> = {
     '라켓': 'RACKET',
     '의류': 'CLOTHES',
@@ -50,7 +49,6 @@ export default function ReviewPage() {
     const [showLoginModal, setShowLoginModal] = useState(false);
     const { user } = useAuth();
 
-    // API 통신 관련 상태 관리
     const [reviews, setReviews] = useState<Review[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -65,26 +63,22 @@ export default function ReviewPage() {
 
     const categories = ['전체', '라켓', '의류', '신발', '가방', '셔틀콕', '악세서리'];
 
-    // [API 연동] 장비 후기 목록 비동기 Fetch 함수
     const fetchReviews = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
-            // 명세서 기반 파라미터 빌드
             const params: Record<string, any> = {
                 page: 0,
                 size: 50,
-                sort: 'id,desc' // 최신 등록 순 정렬 가드
+                sort: 'id,desc'
             };
 
-            // 선택된 탭이 '전체'가 아닐 경우만 영문 이늄 파라미터 매핑 추가
             if (activeTab !== '전체' && CATEGORY_MAP[activeTab]) {
                 params.category = CATEGORY_MAP[activeTab];
             }
 
             const response = await api.get<ReviewResponse>('/reviews', { params });
             
-            // 데이터 수신 및 가드 처리
             if (response.data && response.data.reviews) {
                 setReviews(response.data.reviews);
             } else {
@@ -100,13 +94,12 @@ export default function ReviewPage() {
         }
     }, [activeTab]);
 
-    // 탭 변경 또는 컴포넌트 마운트 시 데이터 동기화
     useEffect(() => {
         fetchReviews();
     }, [fetchReviews]);
 
     return (
-        <div className="min-h-screen bg-[#F8F9FA] py-12 sm:py-16 px-6 lg:px-24 font-sans select-none text-left">
+        <div className="min-h-screen bg-[#F8F9FA] py-12 px-6 lg:px-24 font-sans select-none text-left">
             <div className="max-w-screen-xl mx-auto space-y-8 sm:space-y-12">
 
                 {/* --- [1] 헤더 섹션 --- */}
@@ -142,7 +135,7 @@ export default function ReviewPage() {
                         isOpen={isModalOpen}
                         onClose={() => {
                             setIsModalOpen(false);
-                            fetchReviews(); // 후기 작성 모달이 닫힐 때 최신 리스트 동기화
+                            fetchReviews();
                         }}
                     />
                     <LoginRequiredModal
@@ -151,14 +144,14 @@ export default function ReviewPage() {
                     />
                 </div>
 
-                {/* 에러 피드백 바 UI */}
+                {/* 에러 피드백 표시바 */}
                 {error && (
                     <div className="bg-red-50 border border-red-200 text-red-600 text-sm font-bold px-5 py-4 rounded-xl">
                         {error}
                     </div>
                 )}
 
-                {/* --- [3] 후기 카드 그리드 및 로딩 상태 제어 --- */}
+                {/* --- [3] 후기 카드 그리드 --- */}
                 {loading ? (
                     <div className="py-24 text-center text-slate-400 font-bold text-base">
                         후기 목록을 불러오는 중입니다...
@@ -171,7 +164,7 @@ export default function ReviewPage() {
                     </div>
                 ) : (
                     <div className="py-24 text-center bg-white rounded-[32px] border border-dashed border-gray-200 text-slate-400 font-bold">
-                        선택하신 카테고리에 등록된 장비 후기가 존재하지 않습니다.
+                        등록된 장비 후기가 존재하지 않습니다.
                     </div>
                 )}
             </div>
@@ -181,7 +174,6 @@ export default function ReviewPage() {
 
 /** 후기 카드 컴포넌트 **/
 function ReviewCard({ review }: { review: Review }) {
-    // 서버 이늄 값을 한글로 치환하여 노출
     const displayCategory = REVERSE_CATEGORY_MAP[review.category] || review.category;
 
     return (
