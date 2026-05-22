@@ -37,22 +37,18 @@ interface ServerMatch {
     team2: TeamMember[];
 }
 
+// 💡 지워졌던 CourtMatchGroup 인터페이스 복구 및 통합
 interface CourtMatchGroup {
-    courtNumber: number;
-    courtMatches: ServerMatch[];
-}
-
-interface Match {
     courtNumber: number;
     courtMatches: ServerMatch[];
 }
 
 interface TournamentDetailResponse {
     voteId: number;
-    matchId?: number;
+    matchId?: number; // 대진 수정 시 필요한 matchId
     totalCount: number;
     participants: Participant[];
-    matches?: Match[];
+    matches?: CourtMatchGroup[]; // 서버에서 내려주는 기존 대진 데이터
 }
 
 // 대진표 셀 한 칸에 들어갈 로컬 가독성용 타입
@@ -70,7 +66,8 @@ export default function TournamentPage() {
     const [activities, setActivities] = useState<AdminActivity[]>([]);
     const [selectedActivity, setSelectedActivity] = useState<AdminActivity | null>(null);
     const [participantsPool, setParticipantsPool] = useState<LocalParticipant[]>([]);
-    const [matchId, setMatchId] = useState<number | null>(null); 
+    const [matchId, setMatchId] = useState<number | null>(null);
+    const [isEditMode, setIsEditMode] = useState<boolean>(false); // 신규 등록 vs 수정 모드 판별
     
     const [currentCourt, setCurrentCourt] = useState('1코트');
     const [completedActivityIds, setCompletedActivityIds] = useState<number[]>([]);
@@ -94,6 +91,7 @@ export default function TournamentPage() {
         '1코트': initialBracket(), '2코트': initialBracket(), '3코트': initialBracket(), '4코트': initialBracket(),
     });
 
+    // 화면 크기 체크 (모바일 가드)
     useEffect(() => {
         const checkMobile = () => {
             setIsMobile(window.innerWidth < 768);
@@ -108,6 +106,8 @@ export default function TournamentPage() {
         setLoading(true);
         try {
             const response = await api.get<any>('/admin/votes?status=completed');
+            console.log("🎯 [Admin Activities Fetch Success]:", response.data);
+            
             if (response.data && Array.isArray(response.data)) {
                 setActivities(response.data);
             } else if (response.data && response.data.votes && Array.isArray(response.data.votes)) {
@@ -116,7 +116,7 @@ export default function TournamentPage() {
                 setActivities([]);
             }
         } catch (err) {
-            console.error('Fetch Admin Activities Error:', err);
+            console.error('❌ [Fetch Admin Activities Error Detail]:', err);
             setActivities([]);
         } finally {
             setLoading(false);
@@ -127,6 +127,7 @@ export default function TournamentPage() {
         fetchAdminActivities();
     }, [fetchAdminActivities]);
 
+    // 전체 진행도 계산 유틸
     const progress = useMemo(() => {
         const totalSlots = Object.values(courtBrackets).flat(2).length;
         if (totalSlots === 0) return 0;
@@ -134,7 +135,7 @@ export default function TournamentPage() {
         return Math.floor((filledSlots / totalSlots) * 100);
     }, [courtBrackets]);
 
-    // [API 2] 특정 모임 선택 시 참여자 명단 및 기존 매치 상세 정보 로드 (수정 모드 지원)
+    // [API 2] 특정 모임 선택 시 명단 로드 및 대진표 복구 (Hydration)
     const handleSelectActivity = async (activity: AdminActivity) => {
         setLoading(true);
         try {
@@ -147,57 +148,87 @@ export default function TournamentPage() {
             setMobileStep(1);
 
             const response = await api.get<TournamentDetailResponse>(`/admin/votes/${activity.voteId}/matches`);
+            console.log(`🎯 [Tournament Detail Fetch Success for voteId ${activity.voteId}]:`, response.data);
+            
             const data = response.data;
-            
-            const parsedParticipants: LocalParticipant[] = (data.participants || []).map(p => ({
-                participantId: p.participantId,
-                name: p.name,
-                gender: p.gender === 'MALE' ? '남' : '여',
-                participantType: p.participantType
-            }));
-            
-            setParticipantsPool(parsedParticipants);
-            setSelectedActivity(activity);
-            setMatchId(data.matchId || activity.voteId);
+            let parsedParticipants: LocalParticipant[] = [];
 
-            // [수정 모드] 서버에 이미 대진이 저장되어 있다면 불러오기
+            if (data && data.participants) {
+                parsedParticipants = data.participants.map(p => ({
+                    participantId: p.participantId,
+                    name: p.name,
+                    gender: p.gender === 'MALE' ? '남' : '여',
+                    participantType: p.participantType
+                }));
+                setParticipantsPool(parsedParticipants);
+                setSelectedActivity(activity);
+            } else {
+                setParticipantsPool([]);
+                setSelectedActivity(activity);
+            }
+
+            // [수정 모드 로직] 서버에서 기존 대진 데이터(matches)가 내려온 경우 화면에 복구
             if (data.matches && data.matches.length > 0) {
+                setIsEditMode(true);
+                setMatchId(data.matchId || null);
+
                 const newBrackets: Record<string, BracketRow[]> = {
                     '1코트': initialBracket(), '2코트': initialBracket(), 
-                    '3코트': initialBracket(), '4코트': initialBracket() 
+                    '3코트': initialBracket(), '4코트': initialBracket()
                 };
                 const newAssignments: Record<string, LocalParticipant[]> = { '1코트': [], '2코트': [], '3코트': [], '4코트': [] };
 
                 data.matches.forEach((m) => {
                     const courtKey = `${m.courtNumber}코트`;
-                    const rows = m.courtMatches.map((match) => {
-                        const row: BracketRow = [null, null, null, null];
-                        
-                        [...match.team1, ...match.team2].forEach((member, idx) => {
-                            const pData = parsedParticipants.find(p => p.participantId === member.participantId);
-                            if (pData) {
-                                row[idx] = pData;
-                                if (!newAssignments[courtKey].some(a => a.participantId === pData.participantId)) {
-                                    newAssignments[courtKey].push(pData);
-                                }
+                    if (newBrackets[courtKey]) {
+                        const rows = m.courtMatches.map((match) => {
+                            const row: BracketRow = [null, null, null, null];
+                            
+                            // 팀 1 배치
+                            if (match.team1 && match.team1.length > 0) {
+                                if (match.team1[0]) row[0] = parsedParticipants.find(p => p.participantId === match.team1[0].participantId) || null;
+                                if (match.team1[1]) row[1] = parsedParticipants.find(p => p.participantId === match.team1[1].participantId) || null;
                             }
+                            // 팀 2 배치
+                            if (match.team2 && match.team2.length > 0) {
+                                if (match.team2[0]) row[2] = parsedParticipants.find(p => p.participantId === match.team2[0].participantId) || null;
+                                if (match.team2[1]) row[3] = parsedParticipants.find(p => p.participantId === match.team2[1].participantId) || null;
+                            }
+
+                            // 해당 인원들을 코트별 상단 배치 인원(assignments) 목록에도 자동 추가
+                            row.forEach(p => {
+                                if (p && !newAssignments[courtKey].some(a => a.participantId === p.participantId)) {
+                                    newAssignments[courtKey].push(p);
+                                }
+                            });
+
+                            return row;
                         });
-                        return row;
-                    });
-                    newBrackets[courtKey] = rows;
+
+                        // UI를 위해 최소 4행(기본값)을 유지
+                        while (rows.length < 4) {
+                            rows.push(createEmptyRow());
+                        }
+                        newBrackets[courtKey] = rows;
+                    }
                 });
-                
+
                 setCourtBrackets(newBrackets);
                 setAssignments(newAssignments);
+            } else {
+                setIsEditMode(false);
+                setMatchId(null);
             }
+
         } catch (err) {
-            console.error('Fetch Tournament Details Error:', err);
-            alert('데이터 로드 실패');
+            console.error('❌ [Fetch Tournament Details Fatal Error]:', err);
+            alert('해당 모임의 참가자 명단 및 세부 정보를 불러오지 못했습니다.');
         } finally {
             setLoading(false);
         }
     };
 
+    // 게임 수 조절 핸들러 (+ / -)
     const handleMatchCount = (type: 'plus' | 'minus') => {
         if (currentCourt === '전체') return;
         setCourtBrackets(prev => {
@@ -212,12 +243,14 @@ export default function TournamentPage() {
         });
     };
 
+    // 상단 코트 배치 박스 배정 핸들러
     const handleAssign = (person: LocalParticipant) => {
         if (currentCourt === '전체') return;
         if (assignments[currentCourt].some(p => p.participantId === person.participantId)) return;
         setAssignments(prev => ({ ...prev, [currentCourt]: [...prev[currentCourt], person] }));
     };
 
+    // 배정 인원 취소 및 셀 내용 클리어 핸들러
     const handleRemoveMember = (court: string, person: LocalParticipant) => {
         setAssignments(prev => ({ ...prev, [court]: prev[court].filter(p => p.participantId !== person.participantId) }));
         setCourtBrackets(prev => {
@@ -226,6 +259,7 @@ export default function TournamentPage() {
         });
     };
 
+    // 드롭존 배치 핸들러
     const onDrop = (e: React.DragEvent, row: number, col: number) => {
         e.preventDefault();
         const data = e.dataTransfer.getData('memberData');
@@ -243,6 +277,7 @@ export default function TournamentPage() {
         }
     };
 
+    // 랜덤 배치 엔진 로직
     const handleRandomAssign = () => {
         const currentMembers = assignments[currentCourt];
         if (currentMembers.length < 4) return alert('최소 4명의 멤버가 필요합니다.');
@@ -269,31 +304,65 @@ export default function TournamentPage() {
         setCourtBrackets(prev => ({ ...prev, [currentCourt]: newBracket }));
     };
 
+    // [API 3] 대진 확정 저장 및 전체 전송 (수정 모드 분기 처리)
     const handleSaveTournament = async () => {
         if (!selectedActivity) return;
+        
         setLoading(true);
         try {
             const payload: CourtMatchGroup[] = Object.entries(courtBrackets).map(([courtName, rows]) => {
                 const courtNumber = parseInt(courtName.replace(/[^0-9]/g, ''), 10) || 1;
+                
                 const courtMatches: ServerMatch[] = rows.map((row, index) => {
-                    const getMember = (p: LocalParticipant | null): TeamMember | null => 
-                        p ? { participantType: p.participantType, participantId: p.participantId } : null;
+                    const getMember = (p: LocalParticipant | null): TeamMember | null => {
+                        return p ? { participantType: p.participantType, participantId: p.participantId } : null;
+                    };
+
+                    const team1: TeamMember[] = [];
+                    if (row[0]) team1.push(getMember(row[0]) as TeamMember);
+                    if (row[1]) team1.push(getMember(row[1]) as TeamMember);
+                    
+                    const team2: TeamMember[] = [];
+                    if (row[2]) team2.push(getMember(row[2]) as TeamMember);
+                    if (row[3]) team2.push(getMember(row[3]) as TeamMember);
+
                     return {
                         matchNumber: index + 1,
-                        team1: [getMember(row[0]), getMember(row[1])].filter(Boolean) as TeamMember[],
-                        team2: [getMember(row[2]), getMember(row[3])].filter(Boolean) as TeamMember[]
+                        team1: team1,
+                        team2: team2
                     };
                 });
-                return { courtNumber, courtMatches };
+
+                return {
+                    courtNumber,
+                    courtMatches
+                };
             });
 
-            await api.patch(`/admin/votes/${selectedActivity.voteId}/matches`, payload);
-            alert('대진 정보가 저장되었습니다.');
+            console.log("📤 [Payload to Server]:", JSON.stringify(payload, null, 2));
+
+            // 💡 [핵심] API 명세서에 따른 신규 등록(POST) vs 수정(PATCH) 라우팅 분기
+            if (isEditMode && matchId) {
+                // 수정 모드: PATCH /admin/matches/{matchId}
+                const response = await api.patch(`/admin/matches/${matchId}`, payload);
+                if (response.status === 200 || response.status === 204) {
+                    alert('대진 정보가 성공적으로 수정되었습니다.');
+                }
+            } else {
+                // 신규 모드: POST /admin/votes/{voteId}/matches
+                const targetVoteId = selectedActivity.voteId;
+                const response = await api.post(`/admin/votes/${targetVoteId}/matches`, payload);
+                if (response.status === 200 || response.status === 201 || response.status === 204) {
+                    alert('대진 정보가 서버에 최초 저장되었습니다.');
+                }
+            }
+
             setCompletedActivityIds(prev => [...prev, selectedActivity.voteId]);
             setSelectedActivity(null);
+
         } catch (err) {
-            console.error(err);
-            alert('저장 실패');
+            console.error('❌ [Save Tournament Error]:', err);
+            alert('대진 정보를 전송하는 중 오류가 발생했습니다.');
         } finally {
             setLoading(false);
         }
@@ -307,7 +376,11 @@ export default function TournamentPage() {
 
     return (
         <div className="max-w-6xl mx-auto p-3 sm:p-4 space-y-4 sm:space-y-6 text-left pb-20 select-none">
-            {loading && <div className="fixed inset-0 bg-white/60 backdrop-blur-sm z-[999] flex items-center justify-center font-bold text-gray-500 text-sm">데이터 동기화 중...</div>}
+            {loading && (
+                <div className="fixed inset-0 bg-white/60 backdrop-blur-sm z-[999] flex items-center justify-center font-bold text-gray-500 text-sm">
+                    데이터 동기화 중...
+                </div>
+            )}
 
             {!selectedActivity ? (
                 <div className="space-y-4 sm:space-y-6">
@@ -316,12 +389,29 @@ export default function TournamentPage() {
                         <p className="text-sm sm:text-base text-gray-500 font-medium">참가 투표가 완료된 활동을 선택하세요.</p>
                     </header>
                     <div className="grid grid-cols-1 gap-4">
-                        {activities.map((activity) => (
-                            <div key={activity.voteId} onClick={() => handleSelectActivity(activity)} className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm hover:border-blue-500 cursor-pointer transition-all">
-                                <h3 className="text-xl font-bold text-gray-800">{activity.title}</h3>
-                                <p className="text-sm text-gray-400 mt-2">📅 {activity.activityDate} | 📍 {activity.location}</p>
+                        {activities.length > 0 ? (
+                            activities.map((activity) => (
+                                <div key={activity.voteId} onClick={() => handleSelectActivity(activity)} className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm hover:border-blue-500 cursor-pointer transition-all relative group">
+                                    {completedActivityIds.includes(activity.voteId) && (
+                                        <span className="absolute top-4 right-6 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">완료</span>
+                                    )}
+                                    <h3 className="text-xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors">{activity.title}</h3>
+                                    <p className="text-sm text-gray-400 mt-2 font-medium">
+                                        📅 날짜: {activity.activityDate} ({activity.activityDay}) | 📍 장소: {activity.location}
+                                    </p>
+                                    <div className="mt-3 flex items-center gap-3 text-xs font-bold text-gray-500">
+                                        <span className="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-md">회원 {activity.attendance.currentAttendees}명</span>
+                                        <span className="bg-purple-50 text-purple-600 px-2.5 py-1 rounded-md">게스트 {activity.attendance.currentGuests}명</span>
+                                        <span className="text-gray-300">|</span>
+                                        <span className="text-gray-700">총 {activity.attendance.totalParticipants}명 참여 투표 완료</span>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="py-20 text-center bg-white rounded-[24px] border border-dashed border-gray-200 text-gray-400 font-bold text-sm">
+                                현재 대진표 작성이 필요한 완료 모임이 존재하지 않습니다.
                             </div>
-                        ))}
+                        )}
                     </div>
                 </div>
             ) : (
@@ -401,7 +491,7 @@ export default function TournamentPage() {
                             <div className="flex justify-between items-center px-1">
                                 <h3 className="text-lg font-bold text-blue-600">전체 코트 대진 현황</h3>
                                 <button onClick={handleSaveTournament} className="bg-blue-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg hover:bg-blue-700 transition-colors">
-                                    대진 확정 및 전송
+                                    {isEditMode ? '대진 수정 및 전송' : '대진 확정 및 전송'}
                                 </button>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 p-4 bg-gray-50 rounded-3xl">
