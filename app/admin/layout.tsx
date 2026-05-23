@@ -12,15 +12,42 @@ export default function AdminLayout({
     children: React.ReactNode;
     }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const { user } = useAuth();
+    const [isAuthorized, setIsAuthorized] = useState(false);
+    const [isVerifying, setIsVerifying] = useState(true);
+    const { refreshMe } = useAuth();
     const router = useRouter();
 
-    // TODO: 개발 완료 후 아래 주석 해제하여 인증 보호 활성화
-    // useEffect(() => {
-    //     if (user === null && typeof window !== 'undefined' && !localStorage.getItem('accessToken')) {
-    //         router.replace('/login?redirect=/admin');
-    //     }
-    // }, [user, router]);
+    // /me 로 관리자 권한 확인 후 진입 허용
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            if (typeof window === 'undefined') return;
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                router.replace('/login?redirect=/admin');
+                return;
+            }
+            const me = await refreshMe();
+            if (cancelled) return;
+            if (!me) {
+                router.replace('/login?redirect=/admin');
+            } else if (!me.isAdmin) {
+                router.replace('/');
+            } else {
+                setIsAuthorized(true);
+            }
+            setIsVerifying(false);
+        })();
+        return () => { cancelled = true; };
+    }, [router, refreshMe]);
+
+    if (isVerifying || !isAuthorized) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-gray-50 text-slate-500 text-sm">
+                확인 중...
+            </div>
+        );
+    }
 
     return (
         <div className="flex min-h-screen bg-gray-50">
