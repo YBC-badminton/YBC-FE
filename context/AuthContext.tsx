@@ -12,6 +12,7 @@ interface User {
     email?: string;
     phone?: string;
     provider?: string;
+    isAdmin?: boolean;
 }
 
 interface AuthContextType {
@@ -22,6 +23,7 @@ interface AuthContextType {
     handleKakaoCallback: (accessToken: string, refreshToken: string) => Promise<void>;
     loginApplicant: (name: string, phone: string) => Promise<void>;
     logout: () => Promise<void>;
+    refreshMe: () => Promise<User | null>;
     clearError: () => void;
 }
 
@@ -81,8 +83,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             name: data.nickname,
             email: data.email,
             provider: data.provider,
+            isAdmin: data.isAdmin === true,
         };
     }, []);
+
+    // /me 재조회 — 관리자 권한 등 최신 상태로 동기화
+    const refreshMe = useCallback(async (): Promise<User | null> => {
+        try {
+            const fetched = await fetchMe();
+            saveUser(fetched);
+            setUser(fetched);
+            return fetched;
+        } catch {
+            clearAuth();
+            setUser(null);
+            return null;
+        }
+    }, [fetchMe]);
 
     // 카카오 로그인 — 1단계: loginUrl 받아서 리다이렉트
     const loginKakao = useCallback(async () => {
@@ -157,7 +174,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, isLoading, error, loginKakao, handleKakaoCallback, loginApplicant, logout, clearError }}>
+        <AuthContext.Provider value={{ user, isLoading, error, loginKakao, handleKakaoCallback, loginApplicant, logout, refreshMe, clearError }}>
             {children}
         </AuthContext.Provider>
     );
