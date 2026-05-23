@@ -46,6 +46,8 @@ export default function ActivityVotePage() {
     const [activity, setActivity] = useState<VoteDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [submitting, setSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
 
     // 투표 진행 중 여부
     const isVoteActive = activity
@@ -56,28 +58,78 @@ export default function ActivityVotePage() {
         ? Math.round((activity.currentParticipantCount / activity.capacity) * 100)
         : 0;
 
+    const fetchDetail = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await api.get<VoteDetail>(`/votes/${voteId}`);
+            setActivity(res.data);
+        } catch (err: unknown) {
+            const message = (err as { response?: { data?: { message?: string } } })
+                ?.response?.data?.message || '활동 정보를 불러오는 중 오류가 발생했습니다.';
+            setError(message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchDetail = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                const res = await api.get<VoteDetail>(`/votes/${voteId}`);
-                setActivity(res.data);
-            } catch (err: unknown) {
-                const message = (err as { response?: { data?: { message?: string } } })
-                    ?.response?.data?.message || '활동 정보를 불러오는 중 오류가 발생했습니다.';
-                setError(message);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchDetail();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [voteId]);
 
-    // 게스트 폼 상태 (API 미연동 — 추후 연결)
+    const submitAttendance = async (attendanceStatus: boolean) => {
+        if (submitting) return;
+        setSubmitting(true);
+        setSubmitError(null);
+        try {
+            await api.post(`/sessions/${voteId}/attendance`, { attendanceStatus });
+            // 참여인원 수 갱신을 위해 상세 재조회
+            const res = await api.get<VoteDetail>(`/votes/${voteId}`);
+            setActivity(res.data);
+        } catch (err: unknown) {
+            const message = (err as { response?: { data?: { message?: string } } })
+                ?.response?.data?.message || '참여 여부 제출 중 오류가 발생했습니다.';
+            setSubmitError(message);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    // 게스트 폼 상태
     const [guestName, setGuestName] = useState('');
+    const [guestGender, setGuestGender] = useState('');
+    const [guestLevel, setGuestLevel] = useState('');
+    const [guestSubmitting, setGuestSubmitting] = useState(false);
+    const [guestError, setGuestError] = useState<string | null>(null);
     const [showAttending, setShowAttending] = useState(false);
     const [showAbsent, setShowAbsent] = useState(false);
+
+    const submitGuest = async () => {
+        if (guestSubmitting) return;
+        if (!guestName.trim() || !guestGender || !guestLevel) {
+            setGuestError('이름, 성별, 실력을 모두 입력해 주세요.');
+            return;
+        }
+        setGuestSubmitting(true);
+        setGuestError(null);
+        try {
+            await api.post(`/sessions/${voteId}/guest`, {
+                name: guestName.trim(),
+                gender: guestGender,
+                level: guestLevel,
+            });
+            setGuestName('');
+            setGuestGender('');
+            setGuestLevel('');
+        } catch (err: unknown) {
+            const message = (err as { response?: { data?: { message?: string } } })
+                ?.response?.data?.message || '게스트 등록 중 오류가 발생했습니다.';
+            setGuestError(message);
+        } finally {
+            setGuestSubmitting(false);
+        }
+    };
 
     if (loading) {
         return (
@@ -212,9 +264,28 @@ export default function ActivityVotePage() {
 
             {/* --- [3] 참석 여부 선택 버튼 --- */}
             {isVoteActive && (
-                <div className="grid grid-cols-2 gap-4 relative z-10">
-                <button className="py-5 bg-white border border-gray-200 text-slate-800 font-black rounded-2xl hover:bg-slate-50 transition-all shadow-sm active:scale-[0.98]">불참</button>
-                <button className="py-5 bg-[#4B7332] text-white font-black rounded-2xl hover:bg-[#3d5d28] transition-all shadow-md active:scale-[0.98]">참석</button>
+                <div className="space-y-3 relative z-10">
+                <div className="grid grid-cols-2 gap-4">
+                <button
+                    onClick={() => submitAttendance(false)}
+                    disabled={submitting}
+                    className="py-5 bg-white border border-gray-200 text-slate-800 font-black rounded-2xl hover:bg-slate-50 transition-all shadow-sm active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    불참
+                </button>
+                <button
+                    onClick={() => submitAttendance(true)}
+                    disabled={submitting}
+                    className="py-5 bg-[#4B7332] text-white font-black rounded-2xl hover:bg-[#3d5d28] transition-all shadow-md active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    참석
+                </button>
+                </div>
+                {submitError && (
+                    <div className="bg-red-50 border border-red-200 text-red-600 text-sm font-bold px-5 py-3 rounded-xl">
+                        {submitError}
+                    </div>
+                )}
                 </div>
             )}
 
@@ -226,7 +297,7 @@ export default function ActivityVotePage() {
             </div>
             </section>
 
-            {/* --- [5] 게스트 추가 폼 (API 추후 연동) --- */}
+            {/* --- [5] 게스트 추가 폼 --- */}
             {isVoteActive && (
                 <section className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-8 space-y-6 mb-10">
                 <h3 className="text-xl font-black text-slate-800">게스트 추가</h3>
@@ -237,23 +308,43 @@ export default function ActivityVotePage() {
                     className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/20"
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
+                    disabled={guestSubmitting}
                     />
                     <div className="grid grid-cols-2 gap-4">
-                    <select className="p-4 border border-gray-200 rounded-xl text-slate-400 font-bold bg-white focus:outline-none cursor-pointer">
-                        <option>성별</option>
-                        <option>남</option>
-                        <option>여</option>
+                    <select
+                        className="p-4 border border-gray-200 rounded-xl text-slate-700 font-bold bg-white focus:outline-none cursor-pointer disabled:opacity-50"
+                        value={guestGender}
+                        onChange={(e) => setGuestGender(e.target.value)}
+                        disabled={guestSubmitting}
+                    >
+                        <option value="">성별</option>
+                        <option value="MALE">남</option>
+                        <option value="FEMALE">여</option>
                     </select>
-                    <select className="p-4 border border-gray-200 rounded-xl text-slate-400 font-bold bg-white focus:outline-none cursor-pointer">
-                        <option>실력</option>
-                        <option>A (최상)</option>
-                        <option>B (상)</option>
-                        <option>C (중)</option>
-                        <option>D (하)</option>
+                    <select
+                        className="p-4 border border-gray-200 rounded-xl text-slate-700 font-bold bg-white focus:outline-none cursor-pointer disabled:opacity-50"
+                        value={guestLevel}
+                        onChange={(e) => setGuestLevel(e.target.value)}
+                        disabled={guestSubmitting}
+                    >
+                        <option value="">실력</option>
+                        <option value="A">A (최상)</option>
+                        <option value="B">B (상)</option>
+                        <option value="C">C (중)</option>
+                        <option value="D">D (하)</option>
                     </select>
                     </div>
-                    <button className="w-full py-5 bg-[#4B7332] text-white font-black rounded-2xl shadow-md hover:bg-[#3d5d28] transition-all active:scale-[0.98]">
-                    등록
+                    {guestError && (
+                        <div className="bg-red-50 border border-red-200 text-red-600 text-sm font-bold px-5 py-3 rounded-xl">
+                            {guestError}
+                        </div>
+                    )}
+                    <button
+                        onClick={submitGuest}
+                        disabled={guestSubmitting}
+                        className="w-full py-5 bg-[#4B7332] text-white font-black rounded-2xl shadow-md hover:bg-[#3d5d28] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                    {guestSubmitting ? '등록 중...' : '등록'}
                     </button>
                 </div>
                 </section>
