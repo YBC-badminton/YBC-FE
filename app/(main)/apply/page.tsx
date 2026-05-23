@@ -524,6 +524,15 @@ function FormRadioGroup({
                 : "border-gray-200 bg-slate-50 text-slate-500 hover:border-slate-300"
             }`}
           >
+            {/* 💡 동작을 처리할 실제 input 태그 추가 */}
+            <input
+              type="radio"
+              name={label}
+              value={option}
+              checked={value === option}
+              onChange={() => onChange(option)}
+              className="hidden"
+            />
             <div
               className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
                 value === option ? "border-[#4B7332]" : "border-slate-300"
@@ -570,6 +579,14 @@ function FormCheckboxGroup({
                 : "border-gray-200 bg-slate-50 text-slate-500 hover:border-slate-300"
             }`}
           >
+            {/* 💡 동작을 처리할 실제 input 태그 추가 */}
+            <input
+              type="checkbox"
+              value={option}
+              checked={value.includes(option)}
+              onChange={() => onChange(option)}
+              className="hidden"
+            />
             <div
               className={`w-[18px] h-[18px] rounded border-2 flex items-center justify-center shrink-0 ${
                 value.includes(option)
