@@ -127,7 +127,7 @@ export default function ActivityVotePage() {
 
     const fetchMyAttendance = useCallback(async () => {
         try {
-            const res = await api.get<AttendanceStatusResponse>(`/votes/${voteId}/attendance/me`);
+            const res = await api.get<AttendanceStatusResponse>(`/votes/${voteId}/attendance`);
             setMyAttendance(res.data.attendanceStatus);
         } catch {
             // 미참여 상태로 유지
