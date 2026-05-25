@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import api from '@/lib/axios';
 import { useAxios } from '@/hooks/useAxios';
+import { useToast } from '@/components/ui/Toast';
 
 // API 응답 타입 (spec 기준)
 interface VoteQueueItem {
@@ -45,6 +46,7 @@ const ACTIVITY_TYPE_LABEL: Record<string, string> = {
 };
 
 export default function VoteReservationPage() {
+    const { showToast } = useToast();
     // GET /admin/votes/queue
     const { data: queueResponse, loading, error, refetch } = useAxios<VoteQueueResponse>('/admin/votes/queue');
 
@@ -68,11 +70,11 @@ export default function VoteReservationPage() {
         try {
             const response = await api.post('/admin/votes', payload);
             if (response.status === 200 || response.status === 201) {
-                alert('투표 예약이 완료되었습니다!');
+                showToast('투표 예약이 완료되었습니다.', 'success');
                 refetch();
             }
         } catch {
-            alert('예약 중 오류가 발생했습니다.');
+            showToast('예약 중 오류가 발생했습니다.', 'error');
         }
     };
 

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/axios';
+import { useToast } from '@/components/ui/Toast';
 
 type InterviewStatus = 'FIRST_PASS' | 'FINAL_PASS' | 'FAIL' | 'HOLD';
 type SessionType = 'FIRST_SESSION' | 'SECOND_SESSION';
@@ -40,6 +41,7 @@ interface InterviewsResponse {
 }
 
 export default function InterviewsPage() {
+    const { showToast } = useToast();
     const [summary, setSummary] = useState<InterviewSummary | null>(null);
     const [interviewees, setInterviewees] = useState<InterviewItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -85,8 +87,9 @@ export default function InterviewsPage() {
             });
             setSummary(res.data.summary);
             setInterviewees(res.data.interviewList);
+            showToast('면접 정보가 저장되었습니다.', 'success');
         } catch {
-            alert('저장에 실패했습니다.');
+            showToast('저장에 실패했습니다.', 'error');
         } finally {
             setSavingId(null);
         }

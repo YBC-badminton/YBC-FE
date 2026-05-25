@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/axios';
+import { useToast } from '@/components/ui/Toast';
 
 interface MemberSummary {
     totalMembers: number;
@@ -47,6 +48,7 @@ const COURT_COLOR: Record<number, string> = {
 };
 
 export default function MembersPage() {
+    const { showToast } = useToast();
     const [summary, setSummary] = useState<MemberSummary | null>(null);
     const [members, setMembers] = useState<Member[]>([]);
     const [loading, setLoading] = useState(true);
@@ -106,8 +108,9 @@ export default function MembersPage() {
             setEditingId(null);
             setEditForm({});
             fetchMembers();
+            showToast('부원 정보가 수정되었습니다.', 'success');
         } catch {
-            alert('수정에 실패했습니다.');
+            showToast('수정에 실패했습니다.', 'error');
         }
     };
 
@@ -118,8 +121,9 @@ export default function MembersPage() {
             setShowAddForm(false);
             setAddForm({ name: '', university: '', phone: '', email: '', gender: 'MALE', age: '', term: '', court: null });
             fetchMembers();
+            showToast('부원이 추가되었습니다.', 'success');
         } catch {
-            alert('부원 추가에 실패했습니다.');
+            showToast('부원 추가에 실패했습니다.', 'error');
         }
     };
 
@@ -129,8 +133,9 @@ export default function MembersPage() {
         try {
             await api.delete(`/admin/members/${memberId}`);
             fetchMembers();
+            showToast(`${name} 부원이 삭제되었습니다.`, 'success');
         } catch {
-            alert('삭제에 실패했습니다.');
+            showToast('삭제에 실패했습니다.', 'error');
         }
     };
 

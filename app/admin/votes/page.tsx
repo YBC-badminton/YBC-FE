@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/axios';
+import { useToast } from '@/components/ui/Toast';
 
 type ActivityType = 'REGULAR' | 'FLUSH' | 'EVENT';
 type VoteStatusType = 'UPCOMING' | 'IN_PROGRESS' | 'COMPLETED';
@@ -53,6 +54,7 @@ interface VotesResponse {
 type FilterType = 'all' | 'IN_PROGRESS' | 'COMPLETED';
 
 export default function VoteStatusPage() {
+    const { showToast } = useToast();
     const [summary, setSummary] = useState<VoteSummary | null>(null);
     const [votes, setVotes] = useState<VoteItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -86,8 +88,9 @@ export default function VoteStatusPage() {
         try {
             await api.delete(`/admin/votes/${voteId}`);
             fetchVotes();
+            showToast('투표가 삭제되었습니다.', 'success');
         } catch {
-            alert('삭제에 실패했습니다.');
+            showToast('삭제에 실패했습니다.', 'error');
         }
     };
 
@@ -161,6 +164,7 @@ function StatCard({ label, count, color, bgColor }: { label: string; count: numb
 }
 
 function VoteCard({ vote, onDelete, onRefresh }: { vote: VoteItem; onDelete: (id: number) => void; onRefresh: () => void }) {
+    const { showToast } = useToast();
     const [editing, setEditing] = useState(false);
     const [editForm, setEditForm] = useState({
         activityType: vote.activityType,
@@ -179,8 +183,9 @@ function VoteCard({ vote, onDelete, onRefresh }: { vote: VoteItem; onDelete: (id
             await api.patch(`/admin/votes/${vote.voteId}`, editForm);
             setEditing(false);
             onRefresh();
+            showToast('투표가 수정되었습니다.', 'success');
         } catch {
-            alert('수정에 실패했습니다.');
+            showToast('수정에 실패했습니다.', 'error');
         }
     };
 

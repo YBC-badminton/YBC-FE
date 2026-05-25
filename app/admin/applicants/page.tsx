@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/axios';
+import { useToast } from '@/components/ui/Toast';
 
 // API 응답 타입 (spec 기준)
 type ApplicationStatus = 'NONE' | 'FIRST_PASS' | 'FINAL_PASS' | 'FAIL' | 'HOLD';
@@ -64,6 +65,7 @@ const STATUS_COLOR: Record<ApplicationStatus, string> = {
 };
 
 export default function ApplicantsPage() {
+    const { showToast } = useToast();
     const [applicants, setApplicants] = useState<ApplicantListItem[]>([]);
     const [totalCount, setTotalCount] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -123,8 +125,9 @@ export default function ApplicantsPage() {
             if (detail && detail.applicationId === applicationId) {
                 setDetail({ ...detail, status });
             }
+            showToast('지원자 상태가 변경되었습니다.', 'success');
         } catch {
-            alert('상태 변경에 실패했습니다.');
+            showToast('상태 변경에 실패했습니다.', 'error');
         }
     };
 

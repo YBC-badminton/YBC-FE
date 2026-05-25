@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import api from "../../../lib/axios";
+import { useToast } from "../../../components/ui/Toast";
 
 interface FormData {
   name: string;
@@ -45,6 +46,7 @@ const DISCOVERY_SOURCE_MAP: Record<string, string> = {
 const REFERRAL_OPTIONS = ["에브리타임", "캠퍼스픽", "인스타그램", "기타"];
 
 export default function ApplyPage() {
+  const { showToast } = useToast();
   const [form, setForm] = useState<FormData>({
     name: "",
     gender: "",
@@ -101,12 +103,12 @@ export default function ApplyPage() {
       form.interviewTimes.length === 0 ||
       !form.referral
     ) {
-      alert("모든 필수 항목을 입력해 주세요.");
+      showToast("모든 필수 항목을 입력해 주세요.", "error");
       return;
     }
 
     if (form.referral === "기타" && !form.referralDetail) {
-      alert("기타 경로를 입력해 주세요.");
+      showToast("기타 경로를 입력해 주세요.", "error");
       return;
     }
 
@@ -138,7 +140,7 @@ export default function ApplyPage() {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message || "제출 중 오류가 발생했습니다. 다시 시도해 주세요.";
-      alert(message);
+      showToast(message, "error");
     } finally {
       setIsSubmitting(false);
     }

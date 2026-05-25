@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import api from '../../../../lib/axios';
+import { useToast } from '../../../../components/ui/Toast';
 
 // API 응답 타입
 interface VoteDetail {
@@ -79,12 +80,12 @@ function formatDateTime(dateStr: string): string {
 export default function ActivityVotePage() {
     const params = useParams();
     const voteId = params.id;
+    const { showToast } = useToast();
 
     const [activity, setActivity] = useState<VoteDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
-    const [submitError, setSubmitError] = useState<string | null>(null);
 
     const [myAttendance, setMyAttendance] = useState<boolean | null>(null);
     const [attendees, setAttendees] = useState<MemberShort[]>([]);
@@ -97,7 +98,6 @@ export default function ActivityVotePage() {
     const [guestGender, setGuestGender] = useState('');
     const [guestLevel, setGuestLevel] = useState('');
     const [guestSubmitting, setGuestSubmitting] = useState(false);
-    const [guestError, setGuestError] = useState<string | null>(null);
     const [showAttending, setShowAttending] = useState(false);
     const [showAbsent, setShowAbsent] = useState(false);
 
@@ -178,9 +178,9 @@ export default function ActivityVotePage() {
     const submitAttendance = async (attendanceStatus: boolean) => {
         if (submitting) return;
         setSubmitting(true);
-        setSubmitError(null);
         try {
             await api.put(`/votes/${voteId}/attendance`, { attendanceStatus });
+            showToast(attendanceStatus ? '참석으로 제출되었습니다.' : '불참으로 제출되었습니다.', 'success');
             // 참석/불참 명단 및 내 상태 갱신
             await Promise.all([
                 fetchDetail(),
@@ -191,7 +191,7 @@ export default function ActivityVotePage() {
         } catch (err: unknown) {
             const message = (err as { response?: { data?: { message?: string } } })
                 ?.response?.data?.message || '참여 여부 제출 중 오류가 발생했습니다.';
-            setSubmitError(message);
+            showToast(message, 'error');
         } finally {
             setSubmitting(false);
         }
@@ -200,17 +200,17 @@ export default function ActivityVotePage() {
     const submitGuest = async () => {
         if (guestSubmitting) return;
         if (!guestName.trim() || !guestGender || !guestLevel) {
-            setGuestError('이름, 성별, 실력을 모두 입력해 주세요.');
+            showToast('이름, 성별, 실력을 모두 입력해 주세요.', 'error');
             return;
         }
         setGuestSubmitting(true);
-        setGuestError(null);
         try {
             await api.post(`/votes/${voteId}/guests`, {
                 name: guestName.trim(),
                 gender: guestGender,
                 level: guestLevel,
             });
+            showToast(`게스트 "${guestName.trim()}"님이 등록되었습니다.`, 'success');
             setGuestName('');
             setGuestGender('');
             setGuestLevel('');
@@ -218,7 +218,7 @@ export default function ActivityVotePage() {
         } catch (err: unknown) {
             const message = (err as { response?: { data?: { message?: string } } })
                 ?.response?.data?.message || '게스트 등록 중 오류가 발생했습니다.';
-            setGuestError(message);
+            showToast(message, 'error');
         } finally {
             setGuestSubmitting(false);
         }
@@ -389,32 +389,29 @@ export default function ActivityVotePage() {
                 <div className="grid grid-cols-2 gap-4">
                 <button
                     onClick={() => submitAttendance(false)}
-                    disabled={submitting}
-                    className={`py-5 font-black rounded-2xl transition-all shadow-sm active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${
+                    disabled={submitting || myAttendance === false}
+                    aria-pressed={myAttendance === false}
+                    className={`py-5 font-black rounded-2xl transition-all shadow-sm active:scale-[0.98] disabled:cursor-not-allowed ${
                         myAttendance === false
-                            ? 'bg-slate-800 text-white ring-2 ring-slate-800'
-                            : 'bg-white border border-gray-200 text-slate-800 hover:bg-slate-50'
+                            ? 'bg-slate-800 text-white ring-2 ring-slate-800 opacity-100'
+                            : 'bg-white border border-gray-200 text-slate-800 hover:bg-slate-50 disabled:opacity-50'
                     }`}
                 >
-                    불참
+                    불참{myAttendance === false && ' (선택됨)'}
                 </button>
                 <button
                     onClick={() => submitAttendance(true)}
-                    disabled={submitting}
-                    className={`py-5 font-black rounded-2xl transition-all shadow-md active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${
+                    disabled={submitting || myAttendance === true}
+                    aria-pressed={myAttendance === true}
+                    className={`py-5 font-black rounded-2xl transition-all shadow-md active:scale-[0.98] disabled:cursor-not-allowed ${
                         myAttendance === true
-                            ? 'bg-[#3d5d28] text-white ring-2 ring-[#3d5d28]'
-                            : 'bg-[#4B7332] text-white hover:bg-[#3d5d28]'
+                            ? 'bg-[#3d5d28] text-white ring-2 ring-[#3d5d28] opacity-100'
+                            : 'bg-[#4B7332] text-white hover:bg-[#3d5d28] disabled:opacity-50'
                     }`}
                 >
-                    참석
+                    참석{myAttendance === true && ' (선택됨)'}
                 </button>
                 </div>
-                {submitError && (
-                    <div className="bg-red-50 border border-red-200 text-red-600 text-sm font-bold px-5 py-3 rounded-xl">
-                        {submitError}
-                    </div>
-                )}
                 </div>
             )}
 
@@ -487,11 +484,6 @@ export default function ActivityVotePage() {
                         <option value="D">D (하)</option>
                     </select>
                     </div>
-                    {guestError && (
-                        <div className="bg-red-50 border border-red-200 text-red-600 text-sm font-bold px-5 py-3 rounded-xl">
-                            {guestError}
-                        </div>
-                    )}
                     <button
                         onClick={submitGuest}
                         disabled={guestSubmitting}
