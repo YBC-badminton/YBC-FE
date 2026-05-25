@@ -37,7 +37,9 @@ interface AttendeesResponse {
 
 interface AbsenteesResponse {
     totalAttendeeCount: number;
-    absentees: MemberShort[];
+    // BE는 현재 /absentees 응답에서도 키를 `attendees`로 내려보내므로 둘 다 허용
+    absentees?: MemberShort[];
+    attendees?: MemberShort[];
 }
 
 interface GuestItem {
@@ -146,7 +148,7 @@ export default function ActivityVotePage() {
     const fetchAbsentees = useCallback(async () => {
         try {
             const res = await api.get<AbsenteesResponse>(`/votes/${voteId}/absentees`);
-            setAbsentees(res.data.absentees ?? []);
+            setAbsentees(res.data.absentees ?? res.data.attendees ?? []);
         } catch {
             setAbsentees([]);
         }
