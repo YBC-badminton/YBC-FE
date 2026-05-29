@@ -41,6 +41,7 @@ interface VoteItem {
     activityTime: string;
     location: string;
     memo: string;
+    capacity: number;
     voteStartAt: string;
     voteEndAt: string;
     attendance: VoteAttendance;
@@ -173,6 +174,7 @@ function VoteCard({ vote, onDelete, onRefresh }: { vote: VoteItem; onDelete: (id
         activityTime: vote.activityTime,
         location: vote.location,
         memo: vote.memo,
+        capacity: String(vote.capacity ?? ''),
         voteStartAt: vote.voteStartAt,
         voteEndAt: vote.voteEndAt,
     });
@@ -180,7 +182,10 @@ function VoteCard({ vote, onDelete, onRefresh }: { vote: VoteItem; onDelete: (id
     // PATCH /admin/votes/{voteId}
     const handleSave = async () => {
         try {
-            await api.patch(`/admin/votes/${vote.voteId}`, editForm);
+            await api.patch(`/admin/votes/${vote.voteId}`, {
+                ...editForm,
+                capacity: Number(editForm.capacity) || 0,
+            });
             setEditing(false);
             onRefresh();
             showToast('투표가 수정되었습니다.', 'success');
@@ -220,6 +225,17 @@ function VoteCard({ vote, onDelete, onRefresh }: { vote: VoteItem; onDelete: (id
                     <div>
                         <label className="block text-xs text-gray-400 mb-1">장소</label>
                         <input value={editForm.location} onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} className="w-full p-2 border rounded-lg text-sm" />
+                    </div>
+                    <div>
+                        <label className="block text-xs text-gray-400 mb-1">정원</label>
+                        <input
+                            type="text"
+                            inputMode="numeric"
+                            value={editForm.capacity}
+                            onChange={(e) => setEditForm({ ...editForm, capacity: e.target.value.replace(/\D/g, '') })}
+                            className="w-full p-2 border rounded-lg text-sm"
+                            placeholder="예: 25"
+                        />
                     </div>
                     <div>
                         <label className="block text-xs text-gray-400 mb-1">메모</label>
@@ -276,7 +292,7 @@ function VoteCard({ vote, onDelete, onRefresh }: { vote: VoteItem; onDelete: (id
                 <InfoField label="날짜" value={vote.activityDate} />
                 <InfoField label="시간" value={vote.activityTime} />
                 <InfoField label="장소" value={vote.location} />
-                <InfoField label="참가자" value={`${vote.attendance.totalParticipants}명 (회원 ${vote.attendance.currentAttendees} + 게스트 ${vote.attendance.currentGuests})`} />
+                <InfoField label="참가자" value={`${vote.attendance.totalParticipants} / ${vote.capacity}명 (회원 ${vote.attendance.currentAttendees} + 게스트 ${vote.attendance.currentGuests})`} />
             </div>
 
             <div className="border-t border-gray-100 pt-4 space-y-2 text-[12px] sm:text-sm text-gray-500">
