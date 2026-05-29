@@ -144,6 +144,8 @@ export default function MembersPage() {
         setEditForm({
             name: member.name,
             university: member.university,
+            phone: member.phone,
+            email: member.email,
             age: member.age,
             term: member.term,
             court: member.court,
@@ -258,6 +260,7 @@ export default function MembersPage() {
                             <th className="p-4 font-medium">나이</th>
                             <th className="p-4 font-medium">학교</th>
                             <th className="p-4 font-medium">전화번호</th>
+                            <th className="p-4 font-medium">이메일</th>
                             <th className="p-4 font-medium">기수</th>
                             <th className="p-4 font-medium">코트</th>
                             <th className="p-4 font-medium text-center">관리</th>
@@ -271,7 +274,8 @@ export default function MembersPage() {
                                         <td className="p-4"><input value={editForm.name || ''} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="p-1 border rounded text-sm w-full" /></td>
                                         <td className="p-4"><input value={editForm.age || ''} onChange={(e) => setEditForm({ ...editForm, age: e.target.value })} className="p-1 border rounded text-sm w-16" /></td>
                                         <td className="p-4"><input value={editForm.university || ''} onChange={(e) => setEditForm({ ...editForm, university: e.target.value })} className="p-1 border rounded text-sm w-full" /></td>
-                                        <td className="p-4 text-sm">{member.phone}</td>
+                                        <td className="p-4"><input value={editForm.phone || ''} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className="p-1 border rounded text-sm w-full" /></td>
+                                        <td className="p-4"><input value={editForm.email || ''} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} className="p-1 border rounded text-sm w-full" /></td>
                                         <td className="p-4"><input value={editForm.term || ''} onChange={(e) => setEditForm({ ...editForm, term: e.target.value })} className="p-1 border rounded text-sm w-20" /></td>
                                         <td className="p-4">
                                             <select value={editForm.court ?? ''} onChange={(e) => setEditForm({ ...editForm, court: e.target.value ? Number(e.target.value) : null })} className="p-1 border rounded text-sm">
@@ -293,6 +297,7 @@ export default function MembersPage() {
                                         <td className="p-4">{member.age}년생</td>
                                         <td className="p-4">{member.university}</td>
                                         <td className="p-4">{member.phone}</td>
+                                        <td className="p-4 text-sm text-gray-600 truncate max-w-[200px]">{member.email}</td>
                                         <td className="p-4">{member.term}</td>
                                         <td className="p-4">
                                             {member.court ? (
@@ -349,6 +354,10 @@ export default function MembersPage() {
                             <div>
                                 <p className="text-[10px] text-gray-400 mb-0.5">전화번호</p>
                                 <p className="font-medium text-gray-700 text-xs tabular-nums">{member.phone}</p>
+                            </div>
+                            <div className="col-span-2">
+                                <p className="text-[10px] text-gray-400 mb-0.5">이메일</p>
+                                <p className="font-medium text-gray-700 text-xs break-all">{member.email}</p>
                             </div>
                         </div>
                     </div>
