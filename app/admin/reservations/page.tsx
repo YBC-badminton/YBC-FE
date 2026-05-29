@@ -54,7 +54,7 @@ export default function VoteReservationPage() {
         activityType: 'REGULAR', title: '정기활동', activityDate: '', activityTime: '', location: '', memo: '', voteStartAt: '', voteEndAt: '', capacity: ''
     });
     const [extraForm, setExtraForm] = useState<VoteReserveFormState>({
-        activityType: 'FLUSH', title: '', activityDate: '', activityTime: '', location: '', memo: '', voteStartAt: '', voteEndAt: '', capacity: ''
+        activityType: 'EVENT', title: '', activityDate: '', activityTime: '', location: '', memo: '', voteStartAt: '', voteEndAt: '', capacity: ''
     });
 
     // POST /admin/votes
@@ -103,7 +103,7 @@ export default function VoteReservationPage() {
                     setFormData={setExtraForm}
                     onSubmit={() => handleReserve('extra')}
                     buttonColor="bg-green-600 hover:bg-green-700"
-                    activityTypeOptions={['FLUSH', 'EVENT']}
+                    activityTypeOptions={['EVENT']}
                 />
             </div>
 
