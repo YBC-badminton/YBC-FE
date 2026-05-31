@@ -6,10 +6,6 @@ import { useToast } from '@/components/ui/Toast';
 
 interface MemberSummary {
     totalMembers: number;
-    court1: number;
-    court2: number;
-    court3: number;
-    court4: number;
 }
 
 interface Member {
@@ -21,7 +17,6 @@ interface Member {
     gender: 'MALE' | 'FEMALE';
     age: string;
     term: string;
-    court: number | null;
 }
 
 interface MembersResponse {
@@ -37,15 +32,7 @@ interface MemberForm {
     gender: 'MALE' | 'FEMALE';
     age: string;
     term: string;
-    court: number | null;
 }
-
-const COURT_COLOR: Record<number, string> = {
-    1: 'bg-red-50 text-red-500',
-    2: 'bg-orange-50 text-orange-500',
-    3: 'bg-blue-50 text-blue-500',
-    4: 'bg-green-50 text-green-500',
-};
 
 export default function MembersPage() {
     const { showToast } = useToast();
@@ -58,7 +45,7 @@ export default function MembersPage() {
     const [editForm, setEditForm] = useState<Partial<MemberForm>>({});
     const [showAddForm, setShowAddForm] = useState(false);
     const [addForm, setAddForm] = useState<MemberForm>({
-        name: '', university: '', phone: '', email: '', gender: 'MALE', age: '', term: '', court: null,
+        name: '', university: '', phone: '', email: '', gender: 'MALE', age: '', term: '',
     });
 
     // GET /admin/members
@@ -119,7 +106,7 @@ export default function MembersPage() {
         try {
             await api.post('/admin/members', addForm);
             setShowAddForm(false);
-            setAddForm({ name: '', university: '', phone: '', email: '', gender: 'MALE', age: '', term: '', court: null });
+            setAddForm({ name: '', university: '', phone: '', email: '', gender: 'MALE', age: '', term: '' });
             fetchMembers();
             showToast('부원이 추가되었습니다.', 'success');
         } catch {
@@ -148,7 +135,6 @@ export default function MembersPage() {
             email: member.email,
             age: member.age,
             term: member.term,
-            court: member.court,
         });
     };
 
@@ -182,22 +168,11 @@ export default function MembersPage() {
             </div>
 
             {/* 현황 카드 */}
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-8">
-                {[
-                    { label: '전체 부원', count: `${summary?.totalMembers ?? 0}명`, color: 'text-gray-800' },
-                    { label: '1코트', count: `${summary?.court1 ?? 0}명`, color: 'text-red-500' },
-                    { label: '2코트', count: `${summary?.court2 ?? 0}명`, color: 'text-orange-500' },
-                    { label: '3코트', count: `${summary?.court3 ?? 0}명`, color: 'text-blue-500' },
-                    { label: '4코트', count: `${summary?.court4 ?? 0}명`, color: 'text-green-500' },
-                ].map((item, idx) => (
-                    <div
-                        key={idx}
-                        className={`bg-white p-4 sm:p-6 rounded-xl border border-gray-100 shadow-sm text-center sm:text-left ${idx === 0 ? 'col-span-2 lg:col-span-1' : 'col-span-1'}`}
-                    >
-                        <p className="text-[10px] sm:text-sm text-gray-500 mb-1 whitespace-nowrap">{item.label}</p>
-                        <p className={`text-lg sm:text-2xl font-bold ${item.color}`}>{item.count}</p>
-                    </div>
-                ))}
+            <div className="mb-8">
+                <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-100 shadow-sm text-center sm:text-left">
+                    <p className="text-[10px] sm:text-sm text-gray-500 mb-1 whitespace-nowrap">전체 부원</p>
+                    <p className="text-lg sm:text-2xl font-bold text-gray-800">{summary?.totalMembers ?? 0}명</p>
+                </div>
             </div>
 
             {/* 검색 및 추가 버튼 */}
@@ -236,13 +211,6 @@ export default function MembersPage() {
                         </select>
                         <input placeholder="나이 (예: 01)" value={addForm.age} onChange={(e) => setAddForm({ ...addForm, age: e.target.value })} className="p-2 border rounded-lg text-sm" />
                         <input placeholder="기수 (예: 10기)" value={addForm.term} onChange={(e) => setAddForm({ ...addForm, term: e.target.value })} className="p-2 border rounded-lg text-sm" />
-                        <select value={addForm.court ?? ''} onChange={(e) => setAddForm({ ...addForm, court: e.target.value ? Number(e.target.value) : null })} className="p-2 border rounded-lg text-sm">
-                            <option value="">코트 미정</option>
-                            <option value="1">1코트</option>
-                            <option value="2">2코트</option>
-                            <option value="3">3코트</option>
-                            <option value="4">4코트</option>
-                        </select>
                     </div>
                     <div className="flex gap-2 mt-4 justify-end">
                         <button onClick={() => setShowAddForm(false)} className="px-4 py-2 text-sm text-gray-500 border rounded-lg hover:bg-gray-50">취소</button>
@@ -262,7 +230,6 @@ export default function MembersPage() {
                             <th className="p-4 font-medium">전화번호</th>
                             <th className="p-4 font-medium">이메일</th>
                             <th className="p-4 font-medium">기수</th>
-                            <th className="p-4 font-medium">코트</th>
                             <th className="p-4 font-medium text-center">관리</th>
                         </tr>
                     </thead>
@@ -277,15 +244,6 @@ export default function MembersPage() {
                                         <td className="p-4"><input value={editForm.phone || ''} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className="p-1 border rounded text-sm w-full" /></td>
                                         <td className="p-4"><input value={editForm.email || ''} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} className="p-1 border rounded text-sm w-full" /></td>
                                         <td className="p-4"><input value={editForm.term || ''} onChange={(e) => setEditForm({ ...editForm, term: e.target.value })} className="p-1 border rounded text-sm w-20" /></td>
-                                        <td className="p-4">
-                                            <select value={editForm.court ?? ''} onChange={(e) => setEditForm({ ...editForm, court: e.target.value ? Number(e.target.value) : null })} className="p-1 border rounded text-sm">
-                                                <option value="">미정</option>
-                                                <option value="1">1코트</option>
-                                                <option value="2">2코트</option>
-                                                <option value="3">3코트</option>
-                                                <option value="4">4코트</option>
-                                            </select>
-                                        </td>
                                         <td className="p-4 text-center space-x-2">
                                             <button onClick={() => handleSaveEdit(member.memberId)} className="text-blue-600 text-xs font-bold hover:underline">저장</button>
                                             <button onClick={() => setEditingId(null)} className="text-gray-400 text-xs font-bold hover:underline">취소</button>
@@ -299,15 +257,6 @@ export default function MembersPage() {
                                         <td className="p-4">{member.phone}</td>
                                         <td className="p-4 text-sm text-gray-600 truncate max-w-[200px]">{member.email}</td>
                                         <td className="p-4">{member.term}</td>
-                                        <td className="p-4">
-                                            {member.court ? (
-                                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${COURT_COLOR[member.court] || 'bg-gray-50 text-gray-500'}`}>
-                                                    {member.court}코트
-                                                </span>
-                                            ) : (
-                                                <span className="text-gray-400 text-xs">미정</span>
-                                            )}
-                                        </td>
                                         <td className="p-4 text-center space-x-2">
                                             <button onClick={() => startEdit(member)} className="text-gray-400 hover:text-blue-600 text-xl">✏️</button>
                                             <button onClick={() => handleDelete(member.memberId, member.name)} className="text-gray-400 hover:text-red-500 text-xl">🗑️</button>
@@ -330,13 +279,6 @@ export default function MembersPage() {
                                 <p className="text-xs text-gray-400 mt-1 truncate">{member.university}</p>
                             </div>
                             <div className="flex items-center gap-2">
-                                {member.court ? (
-                                    <span className={`px-3 py-1.5 rounded-xl text-[10px] font-bold whitespace-nowrap ${COURT_COLOR[member.court] || 'bg-gray-50 text-gray-500'}`}>
-                                        {member.court}코트
-                                    </span>
-                                ) : (
-                                    <span className="px-3 py-1.5 rounded-xl text-[10px] font-bold bg-gray-50 text-gray-400">미정</span>
-                                )}
                                 <button onClick={() => startEdit(member)} className="p-2 bg-gray-50 text-gray-500 rounded-xl hover:bg-gray-100 active:scale-95 transition-all">
                                     <span className="text-xs">✏️</span>
                                 </button>
