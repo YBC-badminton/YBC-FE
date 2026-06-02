@@ -1,1 +1,10 @@
 @import "tailwindcss";
+
+/* 가로 스크롤 영역의 스크롤바를 숨기는 유틸리티 (탭/필터 바 등) */
+@utility scrollbar-hide {
+    -ms-overflow-style: none; /* IE, Edge */
+    scrollbar-width: none; /* Firefox */
+    &::-webkit-scrollbar {
+        display: none; /* Chrome, Safari */
+    }
+}
