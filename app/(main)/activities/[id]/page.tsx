@@ -267,7 +267,7 @@ export default function ActivityVotePage() {
                 <h1 className="text-3xl font-black text-slate-800">{activity.name}</h1>
             </div>
 
-            <div className="bg-[#F2F8E1] p-6 rounded-2xl grid grid-cols-2 gap-y-6">
+            <div className="bg-[#F2F8E1] p-6 rounded-2xl grid grid-cols-2 gap-x-4 gap-y-6">
                 <InfoItem icon="📍" label="장소" value={activity.location} />
                 <InfoItem icon="⏰" label="시간" value={activity.activityTime} />
                 <InfoItem icon="📅" label="활동 날짜" value={formatDate(activity.activityDate)} />
@@ -506,7 +506,7 @@ export default function ActivityVotePage() {
 function InfoItem({ icon, label, value }: { icon: string; label: string; value: string }) {
     return (
         <div className="flex items-start gap-3">
-        <span className="text-lg">{icon}</span>
+        <span className="text-lg w-6 text-center shrink-0 leading-7">{icon}</span>
         <div className="flex flex-col">
             <span className="text-xs font-bold text-slate-400">{label}</span>
             <span className="text-[15px] font-black text-slate-700">{value}</span>
