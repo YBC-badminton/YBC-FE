@@ -52,7 +52,7 @@ interface VotesResponse {
     data: VoteItem[];
 }
 
-type FilterType = 'all' | 'IN_PROGRESS' | 'COMPLETED';
+type FilterType = 'all' | 'UPCOMING' | 'IN_PROGRESS' | 'COMPLETED';
 
 export default function VoteStatusPage() {
     const { showToast } = useToast();
@@ -102,6 +102,7 @@ export default function VoteStatusPage() {
 
     const filters: { key: FilterType; label: string }[] = [
         { key: 'all', label: '전체' },
+        { key: 'UPCOMING', label: '대기중' },
         { key: 'IN_PROGRESS', label: '진행 중' },
         { key: 'COMPLETED', label: '종료됨' },
     ];
