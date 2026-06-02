@@ -48,6 +48,8 @@ export default function InterviewsPage() {
     const [error, setError] = useState<string | null>(null);
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [savingId, setSavingId] = useState<number | null>(null);
+    const [sessionFilter, setSessionFilter] = useState<'all' | SessionType>('all');
+    const [resultFilter, setResultFilter] = useState<'all' | 'PASS' | 'FAIL' | 'HOLD'>('all');
 
     // GET /admin/interviews
     const fetchInterviews = useCallback(async () => {
@@ -104,6 +106,31 @@ export default function InterviewsPage() {
         }
     };
 
+    const matchesResult = (status: InterviewStatus) => {
+        if (resultFilter === 'all') return true;
+        if (resultFilter === 'PASS') return status === 'FIRST_PASS' || status === 'FINAL_PASS';
+        if (resultFilter === 'FAIL') return status === 'FAIL';
+        return status === 'HOLD';
+    };
+
+    const filteredInterviewees = interviewees.filter((person) => {
+        const sessionMatch = sessionFilter === 'all' || person.scheduledAt === sessionFilter;
+        return sessionMatch && matchesResult(person.status);
+    });
+
+    const sessionFilters: { key: 'all' | SessionType; label: string }[] = [
+        { key: 'all', label: '전체' },
+        { key: 'FIRST_SESSION', label: '앞타임' },
+        { key: 'SECOND_SESSION', label: '뒷타임' },
+    ];
+
+    const resultFilters: { key: 'all' | 'PASS' | 'FAIL' | 'HOLD'; label: string }[] = [
+        { key: 'all', label: '전체' },
+        { key: 'PASS', label: '합격' },
+        { key: 'FAIL', label: '불합격' },
+        { key: 'HOLD', label: '보류' },
+    ];
+
     if (loading) {
         return (
             <div className="max-w-6xl mx-auto px-4 py-6">
@@ -147,6 +174,42 @@ export default function InterviewsPage() {
                 </div>
             </div>
 
+            {/* 필터 바: 배정 시간대 / 결과 */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 mb-5">
+                <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-gray-400 shrink-0">시간대</span>
+                    <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
+                        {sessionFilters.map((f) => (
+                            <button
+                                key={f.key}
+                                onClick={() => setSessionFilter(f.key)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
+                                    sessionFilter === f.key ? 'bg-blue-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
+                                }`}
+                            >
+                                {f.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-gray-400 shrink-0">결과</span>
+                    <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
+                        {resultFilters.map((f) => (
+                            <button
+                                key={f.key}
+                                onClick={() => setResultFilter(f.key)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
+                                    resultFilter === f.key ? 'bg-blue-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
+                                }`}
+                            >
+                                {f.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
             {/* 데스크탑 테이블 */}
             <div className="hidden lg:block bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
                 <table className="w-full text-left">
@@ -161,7 +224,12 @@ export default function InterviewsPage() {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 text-gray-700 font-bold">
-                        {interviewees.map((person) => (
+                        {filteredInterviewees.length === 0 && (
+                            <tr>
+                                <td colSpan={6} className="p-10 text-center text-gray-400 text-sm font-medium">조건에 해당하는 면접자가 없습니다.</td>
+                            </tr>
+                        )}
+                        {filteredInterviewees.map((person) => (
                             <tr key={person.applicationId} className="hover:bg-gray-50 transition">
                                 <td className="p-4 font-bold text-gray-900">{person.name}</td>
                                 <td className="p-4">
@@ -222,7 +290,10 @@ export default function InterviewsPage() {
 
             {/* 모바일 카드 리스트 */}
             <div className="lg:hidden space-y-4">
-                {interviewees.map((person) => (
+                {filteredInterviewees.length === 0 && (
+                    <div className="bg-white border border-gray-200 rounded-2xl p-10 text-center text-gray-400 text-sm font-medium">조건에 해당하는 면접자가 없습니다.</div>
+                )}
+                {filteredInterviewees.map((person) => (
                     <div key={person.applicationId} className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden text-left transition-all">
                         <div
                             className="p-5 flex justify-between items-center cursor-pointer active:bg-gray-50"
