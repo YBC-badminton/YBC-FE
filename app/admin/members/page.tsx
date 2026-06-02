@@ -4,6 +4,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/axios';
 import { useToast } from '@/components/ui/Toast';
 
+const GENDER_LABEL: Record<string, string> = {
+    MALE: '남',
+    FEMALE: '여',
+};
+
 interface MemberSummary {
     totalMembers: number;
 }
@@ -133,6 +138,7 @@ export default function MembersPage() {
             university: member.university,
             phone: member.phone,
             email: member.email,
+            gender: member.gender,
             age: member.age,
             term: member.term,
         });
@@ -225,6 +231,7 @@ export default function MembersPage() {
                     <thead className="bg-gray-50 text-gray-400 text-sm uppercase font-bold">
                         <tr>
                             <th className="p-4 font-medium">이름</th>
+                            <th className="p-4 font-medium">성별</th>
                             <th className="p-4 font-medium">나이</th>
                             <th className="p-4 font-medium">학교</th>
                             <th className="p-4 font-medium">전화번호</th>
@@ -239,6 +246,12 @@ export default function MembersPage() {
                                 {editingId === member.memberId ? (
                                     <>
                                         <td className="p-4"><input value={editForm.name || ''} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="p-1 border rounded text-sm w-full" /></td>
+                                        <td className="p-4">
+                                            <select value={editForm.gender || 'MALE'} onChange={(e) => setEditForm({ ...editForm, gender: e.target.value as 'MALE' | 'FEMALE' })} className="p-1 border rounded text-sm">
+                                                <option value="MALE">남</option>
+                                                <option value="FEMALE">여</option>
+                                            </select>
+                                        </td>
                                         <td className="p-4"><input value={editForm.age || ''} onChange={(e) => setEditForm({ ...editForm, age: e.target.value })} className="p-1 border rounded text-sm w-16" /></td>
                                         <td className="p-4"><input value={editForm.university || ''} onChange={(e) => setEditForm({ ...editForm, university: e.target.value })} className="p-1 border rounded text-sm w-full" /></td>
                                         <td className="p-4"><input value={editForm.phone || ''} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className="p-1 border rounded text-sm w-full" /></td>
@@ -252,6 +265,7 @@ export default function MembersPage() {
                                 ) : (
                                     <>
                                         <td className="p-4 font-medium text-gray-900">{member.name}</td>
+                                        <td className="p-4">{GENDER_LABEL[member.gender] || '-'}</td>
                                         <td className="p-4">{member.age}년생</td>
                                         <td className="p-4">{member.university}</td>
                                         <td className="p-4">{member.phone}</td>
@@ -292,6 +306,10 @@ export default function MembersPage() {
                             <div>
                                 <p className="text-[10px] text-gray-400 mb-0.5">기수/나이</p>
                                 <p className="font-medium text-gray-700">{member.term} · {member.age}년생</p>
+                            </div>
+                            <div>
+                                <p className="text-[10px] text-gray-400 mb-0.5">성별</p>
+                                <p className="font-medium text-gray-700">{GENDER_LABEL[member.gender] || '-'}</p>
                             </div>
                             <div>
                                 <p className="text-[10px] text-gray-400 mb-0.5">전화번호</p>
