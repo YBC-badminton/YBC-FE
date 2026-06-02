@@ -1,8 +1,19 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Script from "next/script";
 import { Sansita } from "next/font/google";
+
+// Kakao Maps SDK는 전역 window.kakao 객체로 노출됩니다.
+declare global {
+  interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    kakao: any;
+  }
+}
+
+const KAKAO_MAP_API_KEY = process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY;
 
 // 폰트 설정 (이탤릭이 기본 포함된 굵은 서체입니다)
 const sansita = Sansita({
@@ -223,7 +234,9 @@ type Gym = {
   scheduleLabel: string;
   scheduleTime: string[];
   directions: string[];
-  placeQuery: string;
+  // 지도 초기 중심 좌표 (WGS84). SDK 로드 후 이름/주소 검색으로 보정됩니다.
+  lat: number;
+  lng: number;
 };
 
 const GYMS: { magok: Gym; mangwon: Gym } = {
@@ -236,7 +249,8 @@ const GYMS: { magok: Gym; mangwon: Gym } = {
     directions: [
       "주차장 이용 가능",
     ],
-    placeQuery: "place_id:ChIJNwJpmXicfDURx9pvbAFHmgM",
+    lat: 37.5675,
+    lng: 126.8405,
   },
   mangwon: {
     name: "망원나들목체육관",
@@ -247,15 +261,47 @@ const GYMS: { magok: Gym; mangwon: Gym } = {
     directions: [
       "주차장 이용 가능 (망원한강공원 주차장)",
     ],
-    placeQuery: "place_id:ChIJe4XAnIWZfDURf4mpO8Zml-U",
+    lat: 37.5556,
+    lng: 126.9015,
   },
 };
 
-function GymMapCard({ gym }: { gym: Gym }) {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-  const embedSrc = apiKey
-    ? `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodeURIComponent(gym.placeQuery)}&language=ko&region=KR`
-    : null;
+function GymMapCard({ gym, sdkReady }: { gym: Gym; sdkReady: boolean }) {
+  const mapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!sdkReady || !mapRef.current) return;
+
+    const { kakao } = window;
+    const map = new kakao.maps.Map(mapRef.current, {
+      center: new kakao.maps.LatLng(gym.lat, gym.lng),
+      level: 3,
+    });
+
+    const placeMarker = (lat: number, lng: number) => {
+      const position = new kakao.maps.LatLng(lat, lng);
+      map.setCenter(position);
+      new kakao.maps.Marker({ map, position });
+    };
+
+    // 우선 장소명으로 검색해 정확한 위치를 찾고, 실패하면 주소로 보정합니다.
+    const places = new kakao.maps.services.Places();
+    places.keywordSearch(gym.name, (data: { x: string; y: string }[], status: string) => {
+      if (status === kakao.maps.services.Status.OK && data[0]) {
+        placeMarker(Number(data[0].y), Number(data[0].x));
+        return;
+      }
+      const geocoder = new kakao.maps.services.Geocoder();
+      geocoder.addressSearch(gym.address, (result: { x: string; y: string }[], st: string) => {
+        if (st === kakao.maps.services.Status.OK && result[0]) {
+          placeMarker(Number(result[0].y), Number(result[0].x));
+        } else {
+          // 검색 실패 시에도 기본 좌표에 마커를 표시합니다.
+          placeMarker(gym.lat, gym.lng);
+        }
+      });
+    });
+  }, [sdkReady, gym]);
 
   return (
     <div className="bg-white border-[1.5px] border-[#E9ECEF] rounded-[30px] sm:rounded-[40px] shadow-sm overflow-hidden flex flex-col">
@@ -265,21 +311,16 @@ function GymMapCard({ gym }: { gym: Gym }) {
           {gym.scheduleLabel} 운동 장소
         </span>
       </div>
-      <div className="w-full bg-[#E9ECEF] relative mt-4 sm:mt-5">
-        {embedSrc ? (
-          <iframe
-            key={gym.placeQuery}
+      <div className="w-full bg-[#E9ECEF] relative mt-4 sm:mt-5 min-h-[260px] sm:min-h-[340px]">
+        {KAKAO_MAP_API_KEY ? (
+          <div
+            ref={mapRef}
             title={`${gym.name} 지도`}
-            src={embedSrc}
             className="w-full h-full min-h-[260px] sm:min-h-[340px]"
-            style={{ border: 0 }}
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            allowFullScreen
           />
         ) : (
           <div className="w-full h-full min-h-[260px] sm:min-h-[340px] flex items-center justify-center text-slate-400 text-sm font-medium px-6 text-center">
-            NEXT_PUBLIC_GOOGLE_MAPS_API_KEY 설정 후 지도가 표시됩니다.
+            NEXT_PUBLIC_KAKAO_MAP_API_KEY 설정 후 지도가 표시됩니다.
           </div>
         )}
       </div>
@@ -315,8 +356,19 @@ function GymMapCard({ gym }: { gym: Gym }) {
 }
 
 function GymLocationSection() {
+  const [sdkReady, setSdkReady] = useState(false);
+
   return (
     <section className="w-full bg-white py-16 sm:py-24 px-6 sm:px-12 max-w-screen-2xl mx-auto space-y-10 sm:space-y-16">
+      {/* Kakao Maps SDK (services 라이브러리로 장소/주소 검색) — autoload=false 후 kakao.maps.load로 초기화 */}
+      {KAKAO_MAP_API_KEY && (
+        <Script
+          src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&libraries=services&autoload=false`}
+          strategy="afterInteractive"
+          onReady={() => window.kakao.maps.load(() => setSdkReady(true))}
+        />
+      )}
+
       <div className="text-center space-y-3 sm:space-y-4">
         <h2 className="text-3xl sm:text-5xl font-black text-green-800 tracking-tight">
           체육관 위치
@@ -328,8 +380,8 @@ function GymLocationSection() {
 
       {/* 마곡 / 망원 두 체육관을 모두 표시 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-stretch">
-        <GymMapCard gym={GYMS.magok} />
-        <GymMapCard gym={GYMS.mangwon} />
+        <GymMapCard gym={GYMS.magok} sdkReady={sdkReady} />
+        <GymMapCard gym={GYMS.mangwon} sdkReady={sdkReady} />
       </div>
 
       <div className="bg-[#F2F8E1] p-6 sm:p-10 rounded-[30px] sm:rounded-[40px]">
