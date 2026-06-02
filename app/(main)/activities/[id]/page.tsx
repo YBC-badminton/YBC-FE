@@ -480,10 +480,12 @@ export default function ActivityVotePage() {
                         disabled={guestSubmitting}
                     >
                         <option value="">실력</option>
-                        <option value="A">A (최상)</option>
-                        <option value="B">B (상)</option>
-                        <option value="C">C (중)</option>
-                        <option value="D">D (하)</option>
+                        <option value="왕초심">왕초심</option>
+                        <option value="초심">초심</option>
+                        <option value="D">D</option>
+                        <option value="C">C</option>
+                        <option value="B">B</option>
+                        <option value="A">A</option>
                     </select>
                     </div>
                     <button
