@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/axios';
+import { useToast } from '@/components/ui/Toast';
 
 type ActivityType = 'REGULAR' | 'FLUSH' | 'EVENT';
 type VoteStatusType = 'UPCOMING' | 'IN_PROGRESS' | 'COMPLETED';
@@ -40,6 +41,7 @@ interface VoteItem {
     activityTime: string;
     location: string;
     memo: string;
+    capacity: number;
     voteStartAt: string;
     voteEndAt: string;
     attendance: VoteAttendance;
@@ -50,9 +52,10 @@ interface VotesResponse {
     data: VoteItem[];
 }
 
-type FilterType = 'all' | 'IN_PROGRESS' | 'COMPLETED';
+type FilterType = 'all' | 'UPCOMING' | 'IN_PROGRESS' | 'COMPLETED';
 
 export default function VoteStatusPage() {
+    const { showToast } = useToast();
     const [summary, setSummary] = useState<VoteSummary | null>(null);
     const [votes, setVotes] = useState<VoteItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -86,8 +89,9 @@ export default function VoteStatusPage() {
         try {
             await api.delete(`/admin/votes/${voteId}`);
             fetchVotes();
+            showToast('투표가 삭제되었습니다.', 'success');
         } catch {
-            alert('삭제에 실패했습니다.');
+            showToast('삭제에 실패했습니다.', 'error');
         }
     };
 
@@ -98,6 +102,7 @@ export default function VoteStatusPage() {
 
     const filters: { key: FilterType; label: string }[] = [
         { key: 'all', label: '전체' },
+        { key: 'UPCOMING', label: '대기중' },
         { key: 'IN_PROGRESS', label: '진행 중' },
         { key: 'COMPLETED', label: '종료됨' },
     ];
@@ -161,6 +166,7 @@ function StatCard({ label, count, color, bgColor }: { label: string; count: numb
 }
 
 function VoteCard({ vote, onDelete, onRefresh }: { vote: VoteItem; onDelete: (id: number) => void; onRefresh: () => void }) {
+    const { showToast } = useToast();
     const [editing, setEditing] = useState(false);
     const [editForm, setEditForm] = useState({
         activityType: vote.activityType,
@@ -169,6 +175,7 @@ function VoteCard({ vote, onDelete, onRefresh }: { vote: VoteItem; onDelete: (id
         activityTime: vote.activityTime,
         location: vote.location,
         memo: vote.memo,
+        capacity: String(vote.capacity ?? ''),
         voteStartAt: vote.voteStartAt,
         voteEndAt: vote.voteEndAt,
     });
@@ -176,16 +183,21 @@ function VoteCard({ vote, onDelete, onRefresh }: { vote: VoteItem; onDelete: (id
     // PATCH /admin/votes/{voteId}
     const handleSave = async () => {
         try {
-            await api.patch(`/admin/votes/${vote.voteId}`, editForm);
+            await api.patch(`/admin/votes/${vote.voteId}`, {
+                ...editForm,
+                capacity: Number(editForm.capacity) || 0,
+            });
             setEditing(false);
             onRefresh();
+            showToast('투표가 수정되었습니다.', 'success');
         } catch {
-            alert('수정에 실패했습니다.');
+            showToast('수정에 실패했습니다.', 'error');
         }
     };
 
     const status = STATUS_CONFIG[vote.status];
     const typeLabel = ACTIVITY_TYPE_LABEL[vote.activityType] || vote.activityType;
+    const isCompleted = vote.status === 'COMPLETED';
 
     if (editing) {
         return (
@@ -215,6 +227,17 @@ function VoteCard({ vote, onDelete, onRefresh }: { vote: VoteItem; onDelete: (id
                     <div>
                         <label className="block text-xs text-gray-400 mb-1">장소</label>
                         <input value={editForm.location} onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} className="w-full p-2 border rounded-lg text-sm" />
+                    </div>
+                    <div>
+                        <label className="block text-xs text-gray-400 mb-1">정원</label>
+                        <input
+                            type="text"
+                            inputMode="numeric"
+                            value={editForm.capacity}
+                            onChange={(e) => setEditForm({ ...editForm, capacity: e.target.value.replace(/\D/g, '') })}
+                            className="w-full p-2 border rounded-lg text-sm"
+                            placeholder="예: 25"
+                        />
                     </div>
                     <div>
                         <label className="block text-xs text-gray-400 mb-1">메모</label>
@@ -254,16 +277,20 @@ function VoteCard({ vote, onDelete, onRefresh }: { vote: VoteItem; onDelete: (id
                     <span className={`px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold ${status.color}`}>
                         {status.text}
                     </span>
-                    <button onClick={() => setEditing(true)} className="text-gray-400 hover:text-blue-500 hover:bg-blue-50 p-1.5 rounded-lg transition">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
-                        </svg>
-                    </button>
-                    <button onClick={() => onDelete(vote.voteId)} className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                        </svg>
-                    </button>
+                    {!isCompleted && (
+                        <>
+                            <button onClick={() => setEditing(true)} className="text-gray-400 hover:text-blue-500 hover:bg-blue-50 p-1.5 rounded-lg transition">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                                </svg>
+                            </button>
+                            <button onClick={() => onDelete(vote.voteId)} className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                </svg>
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -271,7 +298,7 @@ function VoteCard({ vote, onDelete, onRefresh }: { vote: VoteItem; onDelete: (id
                 <InfoField label="날짜" value={vote.activityDate} />
                 <InfoField label="시간" value={vote.activityTime} />
                 <InfoField label="장소" value={vote.location} />
-                <InfoField label="참가자" value={`${vote.attendance.totalParticipants}명 (회원 ${vote.attendance.currentAttendees} + 게스트 ${vote.attendance.currentGuests})`} />
+                <InfoField label="참가자" value={`${vote.attendance.totalParticipants} / ${vote.capacity}명 (회원 ${vote.attendance.currentAttendees} + 게스트 ${vote.attendance.currentGuests})`} />
             </div>
 
             <div className="border-t border-gray-100 pt-4 space-y-2 text-[12px] sm:text-sm text-gray-500">

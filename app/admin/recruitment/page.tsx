@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/axios';
+import { useToast } from '@/components/ui/Toast';
 
 interface RecruitmentListItem {
     recruitmentId: number;
@@ -46,6 +47,7 @@ const emptyForm: RecruitmentForm = {
 };
 
 export default function RecruitmentPage() {
+    const { showToast } = useToast();
     const [viewMode, setViewMode] = useState<'list' | 'add' | 'detail'>('list');
     const [schedules, setSchedules] = useState<RecruitmentListItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -127,7 +129,10 @@ export default function RecruitmentPage() {
 
     // POST /admin/recruitments or PATCH /admin/recruitments/{id}
     const handleSubmit = async () => {
-        if (!form.term) return alert('기수 정보를 입력해주세요.');
+        if (!form.term) {
+            showToast('기수 정보를 입력해주세요.', 'error');
+            return;
+        }
         setSaving(true);
         try {
             const payload = {
@@ -140,13 +145,13 @@ export default function RecruitmentPage() {
             } else if (selectedId) {
                 await api.patch(`/admin/recruitments/${selectedId}`, payload);
             }
-            alert('모집 일정이 성공적으로 저장되었습니다.');
+            showToast('모집 일정이 저장되었습니다.', 'success');
             setViewMode('list');
             setForm(emptyForm);
             setSelectedId(null);
             fetchList();
         } catch {
-            alert('저장 중 오류가 발생했습니다.');
+            showToast('저장 중 오류가 발생했습니다.', 'error');
         } finally {
             setSaving(false);
         }

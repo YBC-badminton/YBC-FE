@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import api from '../../lib/axios';
+import { useToast } from './Toast';
 
 interface ModalProps {
     isOpen: boolean;
@@ -46,6 +47,7 @@ function parseUsageMonth(durationStr: string): number {
 }
 
 export default function CreateReviewModal({ isOpen, onClose }: ModalProps) {
+    const { showToast } = useToast();
     const [selectedCategory, setSelectedCategory] = useState('라켓');
     const [brandName, setBrandName] = useState('');
     const [productName, setProductName] = useState('');
@@ -64,7 +66,7 @@ export default function CreateReviewModal({ isOpen, onClose }: ModalProps) {
     const handleSubmit = async () => {
         // 필수 필드 유효성 검증 가드
         if (!brandName.trim() || !productName.trim() || !duration.trim() || rating === 0 || !content.trim()) {
-            alert('필수(*) 항목을 모두 올바르게 입력해주세요.');
+            showToast('필수(*) 항목을 모두 올바르게 입력해주세요.', 'error');
             return;
         }
 
@@ -84,7 +86,7 @@ export default function CreateReviewModal({ isOpen, onClose }: ModalProps) {
             const response = await api.post('/reviews', payload);
             
             if (response.status === 201 || response.status === 200) {
-                alert('장비 후기가 성공적으로 등록되었습니다.');
+                showToast('장비 후기가 등록되었습니다.', 'success');
                 
                 // 등록 성공 후 입력 폼 초기화
                 setBrandName('');
@@ -101,7 +103,7 @@ export default function CreateReviewModal({ isOpen, onClose }: ModalProps) {
             // 명세서 Fail Response 구조 디버깅 대응
             const message = (err as { response?: { data?: { message?: string } } })
                 ?.response?.data?.message || '후기 등록 중 오류가 발생했습니다. 입력 정보를 확인해주세요.';
-            alert(message);
+            showToast(message, 'error');
         } finally {
             setIsSubmitting(false);
         }

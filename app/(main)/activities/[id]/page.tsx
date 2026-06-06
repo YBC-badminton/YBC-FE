@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import api from '../../../../lib/axios';
+import { useToast } from '../../../../components/ui/Toast';
 
 // API 응답 타입
 interface VoteDetail {
@@ -20,10 +21,49 @@ interface VoteDetail {
     currentParticipantCount: number;
 }
 
+interface AttendanceStatusResponse {
+    attendanceStatus: boolean | null;
+}
+
+interface MemberShort {
+    memberId: number;
+    nickname: string;
+}
+
+interface AttendeesResponse {
+    totalAttendeeCount: number;
+    attendees: MemberShort[];
+}
+
+interface AbsenteesResponse {
+    totalAttendeeCount: number;
+    // BE는 현재 /absentees 응답에서도 키를 `attendees`로 내려보내므로 둘 다 허용
+    absentees?: MemberShort[];
+    attendees?: MemberShort[];
+}
+
+interface GuestItem {
+    guestId: number;
+    inviterName: string;
+    guestName: string;
+    gender: 'MALE' | 'FEMALE';
+    level: string;
+}
+
+interface GuestsResponse {
+    totalGuestCount: number;
+    guests: GuestItem[];
+}
+
 const TYPE_LABEL: Record<string, string> = {
     'REGULAR': '정기모임',
     'FLUSH': '번개모임',
     'EVENT': '이벤트',
+};
+
+const GENDER_LABEL: Record<string, string> = {
+    'MALE': '남',
+    'FEMALE': '여',
 };
 
 // "2026-04-10" → "2026.04.10 (목)"
@@ -42,12 +82,26 @@ function formatDateTime(dateStr: string): string {
 export default function ActivityVotePage() {
     const params = useParams();
     const voteId = params.id;
+    const { showToast } = useToast();
 
     const [activity, setActivity] = useState<VoteDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
-    const [submitError, setSubmitError] = useState<string | null>(null);
+
+    const [myAttendance, setMyAttendance] = useState<boolean | null>(null);
+    const [attendees, setAttendees] = useState<MemberShort[]>([]);
+    const [absentees, setAbsentees] = useState<MemberShort[]>([]);
+    const [guests, setGuests] = useState<GuestItem[]>([]);
+    const [totalGuestCount, setTotalGuestCount] = useState(0);
+
+    // 게스트 폼 상태
+    const [guestName, setGuestName] = useState('');
+    const [guestGender, setGuestGender] = useState('');
+    const [guestLevel, setGuestLevel] = useState('');
+    const [guestSubmitting, setGuestSubmitting] = useState(false);
+    const [showAttending, setShowAttending] = useState(false);
+    const [showAbsent, setShowAbsent] = useState(false);
 
     // 투표 진행 중 여부
     const isVoteActive = activity
@@ -58,9 +112,11 @@ export default function ActivityVotePage() {
         ? Math.round((activity.currentParticipantCount / activity.capacity) * 100)
         : 0;
 
-    const fetchDetail = async () => {
-        setLoading(true);
-        setError(null);
+    const absentRate = activity && activity.capacity > 0
+        ? Math.round((absentees.length / activity.capacity) * 100)
+        : 0;
+
+    const fetchDetail = useCallback(async () => {
         try {
             const res = await api.get<VoteDetail>(`/votes/${voteId}`);
             setActivity(res.data);
@@ -68,64 +124,103 @@ export default function ActivityVotePage() {
             const message = (err as { response?: { data?: { message?: string } } })
                 ?.response?.data?.message || '활동 정보를 불러오는 중 오류가 발생했습니다.';
             setError(message);
-        } finally {
-            setLoading(false);
         }
-    };
+    }, [voteId]);
+
+    const fetchMyAttendance = useCallback(async () => {
+        try {
+            const res = await api.get<AttendanceStatusResponse>(`/votes/${voteId}/attendance`);
+            setMyAttendance(res.data.attendanceStatus);
+        } catch {
+            // 미참여 상태로 유지
+        }
+    }, [voteId]);
+
+    const fetchAttendees = useCallback(async () => {
+        try {
+            const res = await api.get<AttendeesResponse>(`/votes/${voteId}/attendees`);
+            setAttendees(res.data.attendees ?? []);
+        } catch {
+            setAttendees([]);
+        }
+    }, [voteId]);
+
+    const fetchAbsentees = useCallback(async () => {
+        try {
+            const res = await api.get<AbsenteesResponse>(`/votes/${voteId}/absentees`);
+            setAbsentees(res.data.absentees ?? res.data.attendees ?? []);
+        } catch {
+            setAbsentees([]);
+        }
+    }, [voteId]);
+
+    const fetchGuests = useCallback(async () => {
+        try {
+            const res = await api.get<GuestsResponse>(`/votes/${voteId}/guests`);
+            setGuests(res.data.guests ?? []);
+            setTotalGuestCount(res.data.totalGuestCount ?? 0);
+        } catch {
+            setGuests([]);
+            setTotalGuestCount(0);
+        }
+    }, [voteId]);
 
     useEffect(() => {
-        fetchDetail();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [voteId]);
+        setLoading(true);
+        setError(null);
+        Promise.all([
+            fetchDetail(),
+            fetchMyAttendance(),
+            fetchAttendees(),
+            fetchAbsentees(),
+            fetchGuests(),
+        ]).finally(() => setLoading(false));
+    }, [fetchDetail, fetchMyAttendance, fetchAttendees, fetchAbsentees, fetchGuests]);
 
     const submitAttendance = async (attendanceStatus: boolean) => {
         if (submitting) return;
         setSubmitting(true);
-        setSubmitError(null);
         try {
-            await api.post(`/sessions/${voteId}/attendance`, { attendanceStatus });
-            // 참여인원 수 갱신을 위해 상세 재조회
-            const res = await api.get<VoteDetail>(`/votes/${voteId}`);
-            setActivity(res.data);
+            await api.put(`/votes/${voteId}/attendance`, { attendanceStatus });
+            showToast(attendanceStatus ? '참석으로 제출되었습니다.' : '불참으로 제출되었습니다.', 'success');
+            // 참석/불참 명단 및 내 상태 갱신
+            await Promise.all([
+                fetchDetail(),
+                fetchMyAttendance(),
+                fetchAttendees(),
+                fetchAbsentees(),
+            ]);
         } catch (err: unknown) {
             const message = (err as { response?: { data?: { message?: string } } })
                 ?.response?.data?.message || '참여 여부 제출 중 오류가 발생했습니다.';
-            setSubmitError(message);
+            showToast(message, 'error');
         } finally {
             setSubmitting(false);
         }
     };
 
-    // 게스트 폼 상태
-    const [guestName, setGuestName] = useState('');
-    const [guestGender, setGuestGender] = useState('');
-    const [guestLevel, setGuestLevel] = useState('');
-    const [guestSubmitting, setGuestSubmitting] = useState(false);
-    const [guestError, setGuestError] = useState<string | null>(null);
-    const [showAttending, setShowAttending] = useState(false);
-    const [showAbsent, setShowAbsent] = useState(false);
-
     const submitGuest = async () => {
         if (guestSubmitting) return;
         if (!guestName.trim() || !guestGender || !guestLevel) {
-            setGuestError('이름, 성별, 실력을 모두 입력해 주세요.');
+            showToast('이름, 성별, 실력을 모두 입력해 주세요.', 'error');
             return;
         }
         setGuestSubmitting(true);
-        setGuestError(null);
         try {
-            await api.post(`/sessions/${voteId}/guest`, {
+            await api.post(`/votes/${voteId}/guests`, {
                 name: guestName.trim(),
                 gender: guestGender,
                 level: guestLevel,
             });
+            showToast(`게스트 "${guestName.trim()}"님이 등록되었습니다.`, 'success');
             setGuestName('');
             setGuestGender('');
             setGuestLevel('');
+            await fetchGuests();
         } catch (err: unknown) {
             const message = (err as { response?: { data?: { message?: string } } })
                 ?.response?.data?.message || '게스트 등록 중 오류가 발생했습니다.';
-            setGuestError(message);
+            showToast(message, 'error');
         } finally {
             setGuestSubmitting(false);
         }
@@ -163,7 +258,7 @@ export default function ActivityVotePage() {
             ← 목록으로 돌아가기
             </Link>
 
-            {/* --- [1] 활동 요약 카드 (API 연동) --- */}
+            {/* --- [1] 활동 요약 카드 --- */}
             <section className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-8 space-y-6">
             <div className="flex items-center gap-2">
                 <span className="bg-[#4B7332] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">
@@ -172,7 +267,7 @@ export default function ActivityVotePage() {
                 <h1 className="text-3xl font-black text-slate-800">{activity.name}</h1>
             </div>
 
-            <div className="bg-[#F2F8E1] p-6 rounded-2xl grid grid-cols-2 gap-y-6">
+            <div className="bg-[#F2F8E1] p-6 rounded-2xl grid grid-cols-2 gap-x-4 gap-y-6">
                 <InfoItem icon="📍" label="장소" value={activity.location} />
                 <InfoItem icon="⏰" label="시간" value={activity.activityTime} />
                 <InfoItem icon="📅" label="활동 날짜" value={formatDate(activity.activityDate)} />
@@ -202,7 +297,7 @@ export default function ActivityVotePage() {
             </div>
             </section>
 
-            {/* --- [2] 참석/불참 현황 (참석자 목록 API 추후 연동) --- */}
+            {/* --- [2] 참석/불참 현황 --- */}
             <section className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-8 space-y-8 relative z-10">
             <h3 className="text-xl font-black text-slate-800">참석/불참 현황</h3>
 
@@ -230,8 +325,18 @@ export default function ActivityVotePage() {
                 </div>
 
                 {showAttending && (
-                    <div className="bg-slate-50 rounded-2xl border border-gray-100 p-6 mt-6 text-center">
-                        <p className="text-sm text-slate-400 font-bold">참석자 목록 API 연동 예정</p>
+                    <div className="bg-slate-50 rounded-2xl border border-gray-100 p-6 mt-6">
+                        {attendees.length === 0 ? (
+                            <p className="text-sm text-slate-400 font-bold text-center">아직 참석자가 없습니다.</p>
+                        ) : (
+                            <ul className="flex flex-wrap gap-2">
+                                {attendees.map((m) => (
+                                    <li key={m.memberId} className="px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm font-bold text-slate-700">
+                                        {m.nickname}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                     </div>
                 )}
                 </div>
@@ -248,14 +353,27 @@ export default function ActivityVotePage() {
                         {showAbsent ? '▲ 명단 접기' : '▼ 명단 보기'}
                     </span>
                     </div>
+                    <span className="text-2xl font-black text-slate-800 transition-transform group-hover:scale-105">
+                    {absentees.length}명
+                    </span>
                 </div>
                 <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden shadow-inner">
-                    <div className="h-full bg-slate-400 w-[5%]" />
+                    <div className="h-full bg-slate-400 transition-all duration-700" style={{ width: `${absentRate}%` }} />
                 </div>
 
                 {showAbsent && (
-                    <div className="bg-slate-50 rounded-2xl border border-gray-100 p-6 mt-6 text-center">
-                        <p className="text-sm text-slate-400 font-bold">불참자 목록 API 연동 예정</p>
+                    <div className="bg-slate-50 rounded-2xl border border-gray-100 p-6 mt-6">
+                        {absentees.length === 0 ? (
+                            <p className="text-sm text-slate-400 font-bold text-center">아직 불참자가 없습니다.</p>
+                        ) : (
+                            <ul className="flex flex-wrap gap-2">
+                                {absentees.map((m) => (
+                                    <li key={m.memberId} className="px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm font-bold text-slate-500">
+                                        {m.nickname}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                     </div>
                 )}
                 </div>
@@ -265,36 +383,70 @@ export default function ActivityVotePage() {
             {/* --- [3] 참석 여부 선택 버튼 --- */}
             {isVoteActive && (
                 <div className="space-y-3 relative z-10">
+                <div className="text-sm font-bold text-slate-500">
+                    {myAttendance === true && <span className="text-green-700">현재 상태: 참석</span>}
+                    {myAttendance === false && <span className="text-slate-600">현재 상태: 불참</span>}
+                    {myAttendance === null && <span className="text-slate-400">아직 투표하지 않았습니다.</span>}
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                 <button
                     onClick={() => submitAttendance(false)}
-                    disabled={submitting}
-                    className="py-5 bg-white border border-gray-200 text-slate-800 font-black rounded-2xl hover:bg-slate-50 transition-all shadow-sm active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={submitting || myAttendance === false}
+                    aria-pressed={myAttendance === false}
+                    className={`py-5 font-black rounded-2xl transition-all shadow-sm active:scale-[0.98] disabled:cursor-not-allowed ${
+                        myAttendance === false
+                            ? 'bg-slate-800 text-white ring-2 ring-slate-800 opacity-100'
+                            : 'bg-white border border-gray-200 text-slate-800 hover:bg-slate-50 disabled:opacity-50'
+                    }`}
                 >
-                    불참
+                    불참{myAttendance === false && ' (선택됨)'}
                 </button>
                 <button
                     onClick={() => submitAttendance(true)}
-                    disabled={submitting}
-                    className="py-5 bg-[#4B7332] text-white font-black rounded-2xl hover:bg-[#3d5d28] transition-all shadow-md active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={submitting || myAttendance === true}
+                    aria-pressed={myAttendance === true}
+                    className={`py-5 font-black rounded-2xl transition-all shadow-md active:scale-[0.98] disabled:cursor-not-allowed ${
+                        myAttendance === true
+                            ? 'bg-[#3d5d28] text-white ring-2 ring-[#3d5d28] opacity-100'
+                            : 'bg-[#4B7332] text-white hover:bg-[#3d5d28] disabled:opacity-50'
+                    }`}
                 >
-                    참석
+                    참석{myAttendance === true && ' (선택됨)'}
                 </button>
                 </div>
-                {submitError && (
-                    <div className="bg-red-50 border border-red-200 text-red-600 text-sm font-bold px-5 py-3 rounded-xl">
-                        {submitError}
-                    </div>
-                )}
                 </div>
             )}
 
-            {/* --- [4] 게스트 신청 리스트 (API 추후 연동) --- */}
+            {/* --- [4] 게스트 신청 리스트 --- */}
             <section className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-8 space-y-6">
-            <h3 className="text-xl font-black text-slate-800">게스트 신청</h3>
-            <div className="bg-slate-50 rounded-2xl border border-gray-100 p-6 text-center">
-                <p className="text-sm text-slate-400 font-bold">게스트 목록 API 연동 예정</p>
+            <div className="flex justify-between items-center">
+                <h3 className="text-xl font-black text-slate-800">게스트 신청</h3>
+                <span className="text-sm font-bold text-slate-500">총 {totalGuestCount}명</span>
             </div>
+            {guests.length === 0 ? (
+                <div className="bg-slate-50 rounded-2xl border border-gray-100 p-6 text-center">
+                    <p className="text-sm text-slate-400 font-bold">아직 신청된 게스트가 없습니다.</p>
+                </div>
+            ) : (
+                <ul className="space-y-2">
+                    {guests.map((g) => (
+                        <li key={g.guestId} className="flex justify-between items-center bg-slate-50 rounded-2xl border border-gray-100 px-5 py-3">
+                            <div className="flex flex-col">
+                                <span className="font-black text-slate-800 text-[15px]">{g.guestName}</span>
+                                <span className="text-xs font-bold text-slate-400">초대자: {g.inviterName}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-black text-slate-500 px-2 py-0.5 bg-white rounded-full border border-gray-200">
+                                    {GENDER_LABEL[g.gender] || g.gender}
+                                </span>
+                                <span className="text-xs font-black text-slate-500 px-2 py-0.5 bg-white rounded-full border border-gray-200">
+                                    {g.level}
+                                </span>
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            )}
             </section>
 
             {/* --- [5] 게스트 추가 폼 --- */}
@@ -328,17 +480,14 @@ export default function ActivityVotePage() {
                         disabled={guestSubmitting}
                     >
                         <option value="">실력</option>
-                        <option value="A">A (최상)</option>
-                        <option value="B">B (상)</option>
-                        <option value="C">C (중)</option>
-                        <option value="D">D (하)</option>
+                        <option value="왕초심">왕초심</option>
+                        <option value="초심">초심</option>
+                        <option value="D">D</option>
+                        <option value="C">C</option>
+                        <option value="B">B</option>
+                        <option value="A">A</option>
                     </select>
                     </div>
-                    {guestError && (
-                        <div className="bg-red-50 border border-red-200 text-red-600 text-sm font-bold px-5 py-3 rounded-xl">
-                            {guestError}
-                        </div>
-                    )}
                     <button
                         onClick={submitGuest}
                         disabled={guestSubmitting}
@@ -359,7 +508,7 @@ export default function ActivityVotePage() {
 function InfoItem({ icon, label, value }: { icon: string; label: string; value: string }) {
     return (
         <div className="flex items-start gap-3">
-        <span className="text-lg">{icon}</span>
+        <span className="text-lg w-6 text-center shrink-0 leading-7">{icon}</span>
         <div className="flex flex-col">
             <span className="text-xs font-bold text-slate-400">{label}</span>
             <span className="text-[15px] font-black text-slate-700">{value}</span>

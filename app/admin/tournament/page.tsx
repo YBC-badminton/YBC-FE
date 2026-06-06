@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import api from '../../../lib/axios';
+import { useToast } from '../../../components/ui/Toast';
 
 // --- 명세서 Success Response 기반 데이터 인터페이스 정의 ---
 interface Participant {
@@ -62,6 +63,7 @@ interface LocalParticipant {
 type BracketRow = (LocalParticipant | null)[];
 
 export default function TournamentPage() {
+    const { showToast } = useToast();
     // API 통신 상태 제어
     const [activities, setActivities] = useState<AdminActivity[]>([]);
     const [selectedActivity, setSelectedActivity] = useState<AdminActivity | null>(null);
@@ -222,7 +224,7 @@ export default function TournamentPage() {
 
         } catch (err) {
             console.error('❌ [Fetch Tournament Details Fatal Error]:', err);
-            alert('해당 모임의 참가자 명단 및 세부 정보를 불러오지 못했습니다.');
+            showToast('해당 모임의 참가자 명단 및 세부 정보를 불러오지 못했습니다.', 'error');
         } finally {
             setLoading(false);
         }
@@ -266,7 +268,7 @@ export default function TournamentPage() {
         if (data) {
             const person: LocalParticipant = JSON.parse(data);
             if (courtBrackets[currentCourt][row].some(cell => cell?.participantId === person.participantId)) {
-                alert(`[중복] ${person.name}님은 이미 이 경기에 배치되어 있습니다.`);
+                showToast(`${person.name}님은 이미 이 경기에 배치되어 있습니다.`, 'error');
                 return;
             }
             setCourtBrackets(prev => {
@@ -280,7 +282,10 @@ export default function TournamentPage() {
     // 랜덤 배치 엔진 로직
     const handleRandomAssign = () => {
         const currentMembers = assignments[currentCourt];
-        if (currentMembers.length < 4) return alert('최소 4명의 멤버가 필요합니다.');
+        if (currentMembers.length < 4) {
+            showToast('최소 4명의 멤버가 필요합니다.', 'error');
+            return;
+        }
         
         const rowCount = courtBrackets[currentCourt].length;
         const newBracket: BracketRow[] = [];
@@ -346,14 +351,14 @@ export default function TournamentPage() {
                 // 수정 모드: PATCH /admin/matches/{matchId}
                 const response = await api.patch(`/admin/matches/${matchId}`, payload);
                 if (response.status === 200 || response.status === 204) {
-                    alert('대진 정보가 성공적으로 수정되었습니다.');
+                    showToast('대진 정보가 수정되었습니다.', 'success');
                 }
             } else {
                 // 신규 모드: POST /admin/votes/{voteId}/matches
                 const targetVoteId = selectedActivity.voteId;
                 const response = await api.post(`/admin/votes/${targetVoteId}/matches`, payload);
                 if (response.status === 200 || response.status === 201 || response.status === 204) {
-                    alert('대진 정보가 서버에 최초 저장되었습니다.');
+                    showToast('대진 정보가 저장되었습니다.', 'success');
                 }
             }
 
@@ -362,7 +367,7 @@ export default function TournamentPage() {
 
         } catch (err) {
             console.error('❌ [Save Tournament Error]:', err);
-            alert('대진 정보를 전송하는 중 오류가 발생했습니다.');
+            showToast('대진 정보를 전송하는 중 오류가 발생했습니다.', 'error');
         } finally {
             setLoading(false);
         }

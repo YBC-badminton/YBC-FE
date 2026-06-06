@@ -59,13 +59,13 @@ export default function CreateLightningModal({ isOpen, onClose }: ModalProps) {
 
             <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-black text-slate-500">
-                <span>$</span> 참여비
+                <span className="inline-flex w-5 justify-center shrink-0">💰</span> 참여비
                 </label>
                 <div className="relative">
                 <input
                     type="text"
                     placeholder="10000"
-                    className="w-full px-4 py-3 sm:py-3.5 bg-white border border-gray-200 rounded-xl sm:rounded-2xl font-bold focus:outline-none focus:ring-2 focus:ring-green-500/20 pr-12"
+                    className="w-full px-4 py-3 sm:py-3.5 bg-white border border-gray-200 rounded-xl sm:rounded-2xl font-bold placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-green-500/20 pr-12"
                 />
                 <span className="absolute right-5 top-1/2 -translate-y-1/2 font-black text-slate-400">원</span>
                 </div>
@@ -94,7 +94,7 @@ export default function CreateLightningModal({ isOpen, onClose }: ModalProps) {
     return (
         <div className="space-y-2">
         <label className="flex items-center gap-2 text-sm font-black text-slate-500">
-            <span>{icon}</span> {label}
+            <span className="inline-flex w-5 justify-center shrink-0">{icon}</span> {label}
         </label>
         <input
             type={type}

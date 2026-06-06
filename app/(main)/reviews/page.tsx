@@ -136,7 +136,7 @@ export default function ReviewPage() {
 
                 {/* --- [2] 필터 및 작성 버튼 섹션 --- */}
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-                    <div className="flex bg-white p-1 rounded-xl shadow-sm border border-gray-100 overflow-x-auto gap-1">
+                    <div className="flex bg-white p-1 rounded-xl shadow-sm border border-gray-100 overflow-x-auto scrollbar-hide gap-1">
                         {categories.map((tab) => (
                             <button
                                 key={tab}
@@ -231,7 +231,7 @@ function ReviewCard({ review }: { review: Review }) {
 
             {/* 카드 본문: 내용 */}
             <div className="py-4 border-t border-slate-50 min-h-[120px]">
-                <p className="text-[15px] font-medium text-slate-600 leading-relaxed break-keep whitespace-pre-wrap">
+                <p className="text-[15px] font-medium text-slate-600 leading-relaxed break-words [overflow-wrap:anywhere] whitespace-pre-wrap">
                     {review.content}
                 </p>
             </div>

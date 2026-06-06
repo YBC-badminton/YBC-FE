@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import api from "../../../lib/axios";
+import { useToast } from "../../../components/ui/Toast";
 
 interface FormData {
   name: string;
@@ -45,6 +46,7 @@ const DISCOVERY_SOURCE_MAP: Record<string, string> = {
 const REFERRAL_OPTIONS = ["에브리타임", "캠퍼스픽", "인스타그램", "기타"];
 
 export default function ApplyPage() {
+  const { showToast } = useToast();
   const [form, setForm] = useState<FormData>({
     name: "",
     gender: "",
@@ -101,12 +103,12 @@ export default function ApplyPage() {
       form.interviewTimes.length === 0 ||
       !form.referral
     ) {
-      alert("모든 필수 항목을 입력해 주세요.");
+      showToast("모든 필수 항목을 입력해 주세요.", "error");
       return;
     }
 
     if (form.referral === "기타" && !form.referralDetail) {
-      alert("기타 경로를 입력해 주세요.");
+      showToast("기타 경로를 입력해 주세요.", "error");
       return;
     }
 
@@ -138,7 +140,7 @@ export default function ApplyPage() {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message || "제출 중 오류가 발생했습니다. 다시 시도해 주세요.";
-      alert(message);
+      showToast(message, "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -192,6 +194,54 @@ export default function ApplyPage() {
             양배추 배드민턴 동아리에 오신 것을 환영합니다! 아래 양식을 작성하여
             지원해 주세요.
           </p>
+        </div>
+
+        {/* 모집 안내 - 구글 폼처럼 지원서 상단에 줄글로 정보 제공 */}
+        <div className="max-w-3xl mx-auto bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 sm:p-10 space-y-5 text-slate-600">
+          <div className="border-l-4 border-[#4B7332] pl-4">
+            <h2 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">
+              양배추(YBC) 배드민턴 동아리 신규 부원 모집 안내
+            </h2>
+            <p className="text-sm text-slate-400 font-bold mt-1">
+              지원서를 작성하기 전, 아래 안내를 꼭 읽어주세요.
+            </p>
+          </div>
+
+          <div className="space-y-4 text-sm sm:text-[15px] font-medium leading-relaxed break-keep">
+            <p>
+              안녕하세요, &lsquo;양질의 배드민턴 추구&rsquo;를 목표로 하는 YBC
+              배드민턴 클럽입니다. 실력보다 열정을 가진 새로운 가족을 언제나
+              기다리고 있습니다.
+            </p>
+
+            <div>
+              <p className="font-black text-slate-800 mb-1">🏸 정기 활동 안내</p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>화요일 · 마곡실내배드민턴장 (16:00 - 19:00)</li>
+                <li>토요일 · 망원나들목체육관 (13:30 - 15:30 / 16:00 - 18:00)</li>
+                <li>정기 운동 외에도 번개 모임 및 다양한 이벤트가 진행됩니다.</li>
+              </ul>
+            </div>
+
+            <div>
+              <p className="font-black text-slate-800 mb-1">📝 모집 및 면접 절차</p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>아래 지원서를 작성해 제출해 주세요.</li>
+                <li>제출해 주신 내용을 바탕으로 대면 면접을 진행합니다.</li>
+                <li>가능한 면접 시간에 모두 체크해 주시면 일정 조율에 도움이 됩니다.</li>
+                <li>합격 및 면접 일정은 입력하신 전화번호로 개별 안내드립니다.</li>
+              </ul>
+            </div>
+
+            <div>
+              <p className="font-black text-slate-800 mb-1">✅ 유의 사항</p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>배드민턴화는 필수이며, 라켓은 없으셔도 지원 가능합니다.</li>
+                <li>제출 후에는 내용 수정이 불가하오니 꼼꼼히 확인해 주세요.</li>
+                <li>* 표시 항목은 모두 필수 입력 항목입니다.</li>
+              </ul>
+            </div>
+          </div>
         </div>
 
         {/* 폼 - 가독성을 위해 max-w-3xl 제한 */}

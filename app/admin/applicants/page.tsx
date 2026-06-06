@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/axios';
+import { useToast } from '@/components/ui/Toast';
 
 // API 응답 타입 (spec 기준)
 type ApplicationStatus = 'NONE' | 'FIRST_PASS' | 'FINAL_PASS' | 'FAIL' | 'HOLD';
@@ -64,11 +65,13 @@ const STATUS_COLOR: Record<ApplicationStatus, string> = {
 };
 
 export default function ApplicantsPage() {
+    const { showToast } = useToast();
     const [applicants, setApplicants] = useState<ApplicantListItem[]>([]);
     const [totalCount, setTotalCount] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [termFilter, setTermFilter] = useState('all');
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [detail, setDetail] = useState<ApplicantDetail | null>(null);
     const [detailLoading, setDetailLoading] = useState(false);
@@ -123,16 +126,21 @@ export default function ApplicantsPage() {
             if (detail && detail.applicationId === applicationId) {
                 setDetail({ ...detail, status });
             }
+            showToast('지원자 상태가 변경되었습니다.', 'success');
         } catch {
-            alert('상태 변경에 실패했습니다.');
+            showToast('상태 변경에 실패했습니다.', 'error');
         }
     };
 
+    const termOptions = Array.from(new Set(applicants.map((a) => a.term).filter(Boolean)))
+        .sort((a, b) => b.localeCompare(a, 'ko', { numeric: true }));
+
     const filteredApplicants = applicants.filter(
         (a) =>
-            a.name.includes(searchQuery) ||
-            a.university.includes(searchQuery) ||
-            a.major.includes(searchQuery)
+            (termFilter === 'all' || a.term === termFilter) &&
+            (a.name.includes(searchQuery) ||
+                a.university.includes(searchQuery) ||
+                a.major.includes(searchQuery))
     );
 
     const firstPassCount = filteredApplicants.filter(a => a.status === 'FIRST_PASS').length;
@@ -179,6 +187,16 @@ export default function ApplicantsPage() {
                         className="w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
                     />
                 </div>
+                <select
+                    value={termFilter}
+                    onChange={(e) => setTermFilter(e.target.value)}
+                    className="px-4 py-2.5 border border-gray-200 rounded-xl bg-white text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer sm:w-40"
+                >
+                    <option value="all">전체 기수</option>
+                    {termOptions.map((term) => (
+                        <option key={term} value={term}>{term}</option>
+                    ))}
+                </select>
             </div>
 
             <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-8">
