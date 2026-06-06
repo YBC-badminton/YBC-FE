@@ -7,6 +7,7 @@ import api from '../../../lib/axios';
 import { useAuth } from '../../../context/AuthContext';
 import CreateLightningModal from '../../../components/ui/CreateLightningModal';
 import LoginRequiredModal from '../../../components/ui/LoginRequiredModal';
+import { MapPin, Calendar as CalendarIcon } from 'lucide-react'; // 💡 아이콘 임포트
 
 // API 응답 타입
 interface VoteItem {
@@ -95,7 +96,6 @@ export default function ActivitiesPage() {
         fetchVotes();
     }, [fetchVotes]);
 
-    // 클라이언트 사이드 탭 필터링
     const filterByTab = (items: VoteItem[]) => {
         if (activeTab === '전체') return items;
         return items.filter(item => TYPE_LABEL[item.type] === activeTab);
@@ -129,19 +129,16 @@ export default function ActivitiesPage() {
                     </button>
                 </div>
 
-                {/* 에러 표시 */}
                 {error && (
                     <div className="bg-red-50 border border-red-200 text-red-600 text-sm font-bold px-5 py-4 rounded-xl">
                         {error}
                     </div>
                 )}
 
-                {/* 로딩 */}
                 {loading ? (
                     <div className="py-20 text-center text-slate-400 font-bold">불러오는 중...</div>
                 ) : (
                     <>
-                        {/* 참여 가능 활동 */}
                         <section className="space-y-6">
                             <div className="flex justify-between items-end">
                                 <h2 className="text-2xl font-black text-slate-800 tracking-tight">참여 가능 활동</h2>
@@ -162,7 +159,6 @@ export default function ActivitiesPage() {
                             </div>
                         </section>
 
-                        {/* 이전 활동 */}
                         <section className="space-y-6">
                             <div className="flex justify-between items-end">
                                 <h2 className="text-2xl font-black text-slate-800 tracking-tight">이전 활동</h2>
@@ -195,22 +191,14 @@ export default function ActivitiesPage() {
 /** 공용 활동 카드 컴포넌트 **/
 function ActivityCard({ data, isPast }: { data: VoteItem; isPast: boolean }) {
     const router = useRouter();
-    const percentage = data.capacity > 0
-        ? (data.currentParticipantCount / data.capacity) * 100
-        : 0;
+    const percentage = data.capacity > 0 ? (data.currentParticipantCount / data.capacity) * 100 : 0;
     const typeLabel = TYPE_LABEL[data.type] || data.type;
-
-    const handleCardClick = () => {
-        if (!isPast) {
-            router.push(`/activities/${data.voteId}`);
-        }
-    };
 
     return (
         <div className="relative group">
             <div
-                onClick={handleCardClick}
-                className={`bg-white p-5 sm:p-6 rounded-[24px] shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 hover:shadow-md transition-all relative ${isPast ? 'cursor-default' : 'cursor-pointer hover:-translate-y-0.5'}`}
+                onClick={() => router.push(`/activities/${data.voteId}`)}
+                className={`bg-white p-5 sm:p-6 rounded-[24px] shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 hover:shadow-md transition-all relative cursor-pointer hover:-translate-y-0.5`}
             >
                 <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl flex-shrink-0 ${isPast ? 'bg-slate-300' : 'bg-[#3D6B2C]'}`} />
 
@@ -219,23 +207,22 @@ function ActivityCard({ data, isPast }: { data: VoteItem; isPast: boolean }) {
                         <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-black uppercase">
                             {typeLabel}
                         </span>
-                        <h3 className="text-base sm:text-lg font-black text-slate-800">{data.name}</h3>
+                        <h3 className="text-base sm:text-lg font-black text-slate-800 truncate">{data.name}</h3>
 
                         {!isPast && (
                             <Link
                                 href={`/activities/${data.voteId}/tournament`}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                }}
+                                onClick={(e) => e.stopPropagation()}
                                 className="bg-[#4B7332] text-white text-[11px] font-bold px-3 py-1 rounded-full whitespace-nowrap drop-shadow-sm hover:bg-[#3d5d28] transition-colors z-20"
                             >
                                 대진
                             </Link>
                         )}
                     </div>
-                    <div className="flex flex-col gap-1 text-xs sm:text-sm font-bold text-slate-400">
-                        <p>📍 {data.location}</p>
-                        <p>📅 {formatDate(data.voteEndAt)} {data.activityTime}</p>
+                    {/* 💡 아이콘 적용 및 모바일 레이아웃 최적화 */}
+                    <div className="flex flex-col gap-1 text-xs font-bold text-slate-400">
+                        <p className="flex items-center gap-1 truncate"><MapPin className="w-3 h-3" /> {data.location}</p>
+                        <p className="flex items-center gap-1 truncate"><CalendarIcon className="w-3 h-3" /> {formatDate(data.voteEndAt)} {data.activityTime}</p>
                     </div>
                 </div>
 
