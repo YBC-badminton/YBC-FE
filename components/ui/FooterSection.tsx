@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 // TODO: 실제 운영진 연락처/채널 정보로 교체
 const CONTACT_EMAIL = 'contact@ybc-badminton.com';
-const INSTAGRAM_URL = 'https://instagram.com/ybc_badminton';
+const INSTAGRAM_URL = 'https://www.instagram.com/ybc_badmintonclub/';
 const KAKAO_CHANNEL_URL = 'https://pf.kakao.com/_ybc';
 
 export default function FooterSection() {
