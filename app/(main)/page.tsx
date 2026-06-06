@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Sansita } from "next/font/google";
-import api from "../../../lib/axios";
+import api from "../../lib/axios"; // API 호출을 위한 axios 임포트 추가
 
 // 폰트 설정 (이탤릭이 기본 포함된 굵은 서체입니다)
 const sansita = Sansita({
@@ -12,7 +12,7 @@ const sansita = Sansita({
   display: "swap",
 });
 
-// 서버에서 넘어올 정기모임 투표 데이터 인터페이스
+// 서버에서 넘어올 정기모임 투표 데이터 인터페이스 추가
 interface VoteData {
   voteId: number;
   name?: string;
@@ -29,14 +29,14 @@ interface VoteData {
 }
 
 export default function YBCMainPage() {
+  // 정기모임 데이터 상태 추가
   const [recentVotes, setRecentVotes] = useState<VoteData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // [추가] 정기 모임(투표중) 데이터 로드 로직
+  // 진행 중인 정기모임 데이터 로드 로직 추가
   useEffect(() => {
     const fetchActiveVotes = async () => {
       try {
-        // 현재 모집/투표 중인 리스트 호출 (엔드포인트는 백엔드 사양에 맞춰 /votes 로 지정)
         const response = await api.get("/votes?status=VOTING");
         
         let data = [];
@@ -52,7 +52,6 @@ export default function YBCMainPage() {
         setRecentVotes(data.slice(0, 2));
       } catch (error) {
         console.warn("진행 중인 투표를 불러오지 못했습니다. 기본 활성 데이터를 노출합니다.", error);
-        // 비회원 접근 시 권한 에러(401)가 뜨거나 데이터가 없을 때를 대비한 든든한 폴백 데이터
         setRecentVotes([
           {
             voteId: 998,
@@ -212,7 +211,7 @@ export default function YBCMainPage() {
         </div>
       </section>
 
-      {/* --- 정기모임 (수정됨) --- */}
+      {/* --- 정기모임 (동적 데이터 연동) --- */}
       <section className="w-full bg-white py-14 sm:py-20 px-6 sm:px-12 max-w-screen-2xl mx-auto">
         <div className="mb-8 sm:mb-12 flex flex-col gap-3">
           <h2 className="text-3xl sm:text-5xl font-black text-green-800 tracking-tight">
