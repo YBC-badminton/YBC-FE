@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
+import { Zap, Calendar, Clock, Users, MapPin, CreditCard, X } from 'lucide-react'; // 💡 아이콘 임포트
 
 interface ModalProps {
     isOpen: boolean;
@@ -27,14 +28,12 @@ export default function CreateLightningModal({ isOpen, onClose }: ModalProps) {
                 onClick={onClose}
                 className="absolute top-5 right-5 sm:top-8 sm:right-8 text-white/80 hover:text-white transition-colors"
             >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="w-6 h-6" />
             </button>
 
             <div className="flex items-center gap-3 mb-2 sm:mb-3">
-                <div className="bg-white/20 p-2 rounded-xl text-2xl sm:text-3xl">
-                    ⚡
+                <div className="bg-white/20 p-2 rounded-xl">
+                    <Zap className="w-7 h-7 sm:w-8 sm:h-8 text-white fill-current" />
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-black tracking-tight">번개 모임 열기</h2>
             </div>
@@ -44,20 +43,20 @@ export default function CreateLightningModal({ isOpen, onClose }: ModalProps) {
             {/* --- [2] 폼 섹션 (입력창) --- */}
             <div className="px-6 py-6 sm:px-10 sm:py-8 space-y-5 overflow-y-auto custom-scrollbar flex-1 min-h-0">
 
-            <InputGroup icon="⚡" label="번개 모임 이름" placeholder="예) 목요일 저녁 번개" />
-            <InputGroup icon="📅" label="날짜" type="date" />
+            <InputGroup icon={<Zap className="w-5 h-5" />} label="번개 모임 이름" placeholder="예) 목요일 저녁 번개" />
+            <InputGroup icon={<Calendar className="w-5 h-5" />} label="날짜" type="date" />
 
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                <InputGroup icon="🕒" label="시작 시간" type="time" />
-                <InputGroup icon="🕒" label="종료 시간" type="time" />
+                <InputGroup icon={<Clock className="w-5 h-5" />} label="시작 시간" type="time" />
+                <InputGroup icon={<Clock className="w-5 h-5" />} label="종료 시간" type="time" />
             </div>
 
-            <InputGroup icon="👤" label="최대 참여 인원" placeholder="예) 18" type="number" />
-            <InputGroup icon="📍" label="장소" placeholder="예) 강남구민체육센터" />
+            <InputGroup icon={<Users className="w-5 h-5" />} label="최대 참여 인원" placeholder="예) 18" type="number" />
+            <InputGroup icon={<MapPin className="w-5 h-5" />} label="장소" placeholder="예) 강남구민체육센터" />
 
             <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-black text-slate-500">
-                <span className="inline-flex w-5 justify-center shrink-0">💰</span> 참여비
+                    <span className="inline-flex w-5 justify-center shrink-0"><CreditCard className="w-5 h-5" /></span> 참여비
                 </label>
                 <div className="relative">
                 <input
@@ -88,7 +87,7 @@ export default function CreateLightningModal({ isOpen, onClose }: ModalProps) {
 }
 
 /** 아이콘과 라벨이 포함된 공용 입력창 **/
-function InputGroup({ icon, label, placeholder, type = "text" }: { icon: string; label: string; placeholder?: string; type?: string }) {
+function InputGroup({ icon, label, placeholder, type = "text" }: { icon: React.ReactNode; label: string; placeholder?: string; type?: string }) {
     return (
         <div className="space-y-2">
         <label className="flex items-center gap-2 text-sm font-black text-slate-500">
