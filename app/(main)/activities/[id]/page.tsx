@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import api from '../../../../lib/axios';
 import { useToast } from '../../../../components/ui/Toast';
+import { MapPin, Clock, Calendar as CalendarIcon, Users } from 'lucide-react';
 
 // API 응답 타입
 interface VoteDetail {
@@ -33,7 +34,6 @@ interface MemberShort {
 interface AttendeesResponse {
     totalAttendeeCount?: number;
     attendees?: MemberShort[];
-    // 서버가 배열 형태를 반환할 수도 있는 상황을 대비한 인터페이스 유연성 확보
 }
 
 interface AbsenteesResponse {
@@ -141,11 +141,9 @@ export default function ActivityVotePage() {
         }
     }, [voteId]);
 
-    // 💡 참석 인원 조회 로직
     const fetchAttendees = useCallback(async () => {
         try {
             const res = await api.get<AttendeesResponse | MemberShort[]>(`/votes/${voteId}/attendees`);
-            // 응답이 순수 배열일 경우와 객체 내에 담겨올 경우를 모두 방어
             if (Array.isArray(res.data)) {
                 setAttendees(res.data);
             } else if (res.data && Array.isArray((res.data as AttendeesResponse).attendees)) {
@@ -158,11 +156,9 @@ export default function ActivityVotePage() {
         }
     }, [voteId]);
 
-    // 💡 불참 인원 조회 로직
     const fetchAbsentees = useCallback(async () => {
         try {
             const res = await api.get<AbsenteesResponse | MemberShort[]>(`/votes/${voteId}/absentees`);
-            // 응답이 순수 배열일 경우와 객체 내에 담겨올 경우를 모두 방어
             if (Array.isArray(res.data)) {
                 setAbsentees(res.data);
             } else if (res.data) {
@@ -207,7 +203,6 @@ export default function ActivityVotePage() {
         try {
             await api.put(`/votes/${voteId}/attendance`, { attendanceStatus });
             showToast(attendanceStatus ? '참석으로 제출되었습니다.' : '불참으로 제출되었습니다.', 'success');
-            // 참석/불참 명단 및 내 상태 갱신
             await Promise.all([
                 fetchDetail(),
                 fetchMyAttendance(),
@@ -274,7 +269,7 @@ export default function ActivityVotePage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#F8F9FA] py-10 px-6 lg:px-24 font-sans select-none relative pb-32">
+        <div className="min-h-screen bg-[#F8F9FA] py-10 px-4 sm:px-6 lg:px-24 font-sans select-none relative pb-32">
         <div className="max-w-3xl mx-auto space-y-8">
 
             {/* 상단 뒤로가기 */}
@@ -283,38 +278,44 @@ export default function ActivityVotePage() {
             </Link>
 
             {/* --- [1] 활동 요약 카드 --- */}
-            <section className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-8 space-y-6">
-            <div className="flex items-center gap-2">
-                <span className="bg-[#4B7332] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">
+            <section className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6 sm:p-8 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                <span className="bg-[#4B7332] text-white text-[11px] font-black px-2.5 py-1 rounded w-fit uppercase">
                 {TYPE_LABEL[activity.type] || activity.type}
                 </span>
-                <h1 className="text-3xl font-black text-slate-800">{activity.name}</h1>
+                <h1 className="text-2xl sm:text-3xl font-black text-slate-800 break-keep">{activity.name}</h1>
             </div>
 
-            <div className="bg-[#F2F8E1] p-6 rounded-2xl grid grid-cols-2 gap-x-4 gap-y-6">
-                <InfoItem icon="📍" label="장소" value={activity.location} />
-                <InfoItem icon="⏰" label="시간" value={activity.activityTime} />
-                <InfoItem icon="📅" label="활동 날짜" value={formatDate(activity.activityDate)} />
-                <InfoItem icon="👥" label="인원제한" value={`${activity.capacity}명`} />
+            {/* 💡 모바일 화면 깨짐 현상 수정을 위한 그리드 반응형 및 flex 설정 변경 */}
+            <div className="bg-[#F2F8E1] p-5 sm:p-6 rounded-2xl grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-y-6 sm:gap-x-8">
+                <InfoItem icon={<MapPin className="w-5 h-5 text-green-700" />} label="장소" value={activity.location} />
+                <InfoItem icon={<Clock className="w-5 h-5 text-green-700" />} label="시간" value={activity.activityTime} />
+                <InfoItem icon={<CalendarIcon className="w-5 h-5 text-green-700" />} label="활동 날짜" value={formatDate(activity.activityDate)} />
+                <InfoItem icon={<Users className="w-5 h-5 text-green-700" />} label="인원제한" value={`${activity.capacity}명`} />
             </div>
 
             {activity.memo && (
-                <div className="bg-slate-50 p-4 rounded-2xl">
-                    <p className="text-sm font-medium text-slate-500">{activity.memo}</p>
+                <div className="bg-slate-50 p-4 sm:p-5 rounded-2xl">
+                    <p className="text-sm font-medium text-slate-600 whitespace-pre-line break-keep">{activity.memo}</p>
                 </div>
             )}
 
             {/* 투표 기간 안내 */}
-            <div className="bg-white border border-gray-100 p-5 rounded-2xl space-y-2">
-                <div className="flex items-center gap-2 text-slate-500 font-bold text-sm">
-                <span>📅</span> 투표 기간: {formatDateTime(activity.voteStartAt)} ~ {formatDateTime(activity.voteEndAt)}
+            <div className="bg-white border border-gray-100 p-4 sm:p-5 rounded-2xl space-y-2">
+                <div className="flex items-center gap-2 text-slate-500 font-bold text-xs sm:text-sm">
+                <CalendarIcon className="w-4 h-4 text-slate-400 shrink-0" />
+                <span className="truncate">투표 기간: {formatDateTime(activity.voteStartAt)} ~ {formatDateTime(activity.voteEndAt)}</span>
                 </div>
                 {isVoteActive ? (
-                    <div className="flex items-center gap-2 text-green-700 font-black text-sm">
-                    <span className="animate-pulse">⏱️</span> 투표 진행 중!
+                    <div className="flex items-center gap-2 text-green-700 font-black text-xs sm:text-sm">
+                    <div className="relative flex h-3 w-3 ml-0.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-green-600"></span>
+                    </div>
+                    투표 진행 중!
                     </div>
                 ) : (
-                    <div className="flex items-center gap-2 text-slate-400 font-bold text-sm">
+                    <div className="flex items-center gap-2 text-slate-400 font-bold text-xs sm:text-sm">
                     <span>🔒</span> 투표가 마감되었습니다.
                     </div>
                 )}
@@ -322,7 +323,7 @@ export default function ActivityVotePage() {
             </section>
 
             {/* --- [2] 참석/불참 현황 --- */}
-            <section className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-8 space-y-8 relative z-10">
+            <section className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6 sm:p-8 space-y-8 relative z-10">
             <h3 className="text-xl font-black text-slate-800">참석/불참 현황</h3>
 
             <div className="space-y-10">
@@ -349,13 +350,13 @@ export default function ActivityVotePage() {
                 </div>
 
                 {showAttending && (
-                    <div className="bg-slate-50 rounded-2xl border border-gray-100 p-6 mt-6">
+                    <div className="bg-slate-50 rounded-2xl border border-gray-100 p-4 sm:p-6 mt-6">
                         {attendees.length === 0 ? (
                             <p className="text-sm text-slate-400 font-bold text-center">아직 참석자가 없습니다.</p>
                         ) : (
                             <ul className="flex flex-wrap gap-2">
                                 {attendees.map((m) => (
-                                    <li key={m.memberId} className="px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm font-bold text-slate-700">
+                                    <li key={m.memberId} className="px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm font-bold text-slate-700 shadow-sm">
                                         {m.nickname}
                                     </li>
                                 ))}
@@ -386,13 +387,13 @@ export default function ActivityVotePage() {
                 </div>
 
                 {showAbsent && (
-                    <div className="bg-slate-50 rounded-2xl border border-gray-100 p-6 mt-6">
+                    <div className="bg-slate-50 rounded-2xl border border-gray-100 p-4 sm:p-6 mt-6">
                         {absentees.length === 0 ? (
                             <p className="text-sm text-slate-400 font-bold text-center">아직 불참자가 없습니다.</p>
                         ) : (
                             <ul className="flex flex-wrap gap-2">
                                 {absentees.map((m) => (
-                                    <li key={m.memberId} className="px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm font-bold text-slate-500">
+                                    <li key={m.memberId} className="px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm font-bold text-slate-500 shadow-sm">
                                         {m.nickname}
                                     </li>
                                 ))}
@@ -407,17 +408,17 @@ export default function ActivityVotePage() {
             {/* --- [3] 참석 여부 선택 버튼 --- */}
             {isVoteActive && (
                 <div className="space-y-3 relative z-10">
-                <div className="text-sm font-bold text-slate-500">
+                <div className="text-sm font-bold text-slate-500 px-1">
                     {myAttendance === true && <span className="text-green-700">현재 상태: 참석</span>}
                     {myAttendance === false && <span className="text-slate-600">현재 상태: 불참</span>}
                     {myAttendance === null && <span className="text-slate-400">아직 투표하지 않았습니다.</span>}
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <button
                     onClick={() => submitAttendance(false)}
                     disabled={submitting || myAttendance === false}
                     aria-pressed={myAttendance === false}
-                    className={`py-5 font-black rounded-2xl transition-all shadow-sm active:scale-[0.98] disabled:cursor-not-allowed ${
+                    className={`py-4 sm:py-5 font-black rounded-2xl transition-all shadow-sm active:scale-[0.98] disabled:cursor-not-allowed ${
                         myAttendance === false
                             ? 'bg-slate-800 text-white ring-2 ring-slate-800 opacity-100'
                             : 'bg-white border border-gray-200 text-slate-800 hover:bg-slate-50 disabled:opacity-50'
@@ -429,7 +430,7 @@ export default function ActivityVotePage() {
                     onClick={() => submitAttendance(true)}
                     disabled={submitting || myAttendance === true}
                     aria-pressed={myAttendance === true}
-                    className={`py-5 font-black rounded-2xl transition-all shadow-md active:scale-[0.98] disabled:cursor-not-allowed ${
+                    className={`py-4 sm:py-5 font-black rounded-2xl transition-all shadow-md active:scale-[0.98] disabled:cursor-not-allowed ${
                         myAttendance === true
                             ? 'bg-[#3d5d28] text-white ring-2 ring-[#3d5d28] opacity-100'
                             : 'bg-[#4B7332] text-white hover:bg-[#3d5d28] disabled:opacity-50'
@@ -442,7 +443,7 @@ export default function ActivityVotePage() {
             )}
 
             {/* --- [4] 게스트 신청 리스트 --- */}
-            <section className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-8 space-y-6">
+            <section className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6 sm:p-8 space-y-6">
             <div className="flex justify-between items-center">
                 <h3 className="text-xl font-black text-slate-800">게스트 신청</h3>
                 <span className="text-sm font-bold text-slate-500">총 {totalGuestCount}명</span>
@@ -452,18 +453,18 @@ export default function ActivityVotePage() {
                     <p className="text-sm text-slate-400 font-bold">아직 신청된 게스트가 없습니다.</p>
                 </div>
             ) : (
-                <ul className="space-y-2">
+                <ul className="space-y-3">
                     {guests.map((g) => (
-                        <li key={g.guestId} className="flex justify-between items-center bg-slate-50 rounded-2xl border border-gray-100 px-5 py-3">
-                            <div className="flex flex-col">
-                                <span className="font-black text-slate-800 text-[15px]">{g.guestName}</span>
-                                <span className="text-xs font-bold text-slate-400">초대자: {g.inviterName}</span>
+                        <li key={g.guestId} className="flex justify-between items-center bg-slate-50 rounded-2xl border border-gray-100 px-4 sm:px-5 py-3 sm:py-4">
+                            <div className="flex flex-col min-w-0 mr-3">
+                                <span className="font-black text-slate-800 text-[14px] sm:text-[15px] truncate">{g.guestName}</span>
+                                <span className="text-[11px] sm:text-xs font-bold text-slate-400 truncate">초대자: {g.inviterName}</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs font-black text-slate-500 px-2 py-0.5 bg-white rounded-full border border-gray-200">
+                            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                                <span className="text-[11px] sm:text-xs font-black text-slate-500 px-2 sm:px-2.5 py-1 bg-white rounded-full border border-gray-200">
                                     {GENDER_LABEL[g.gender] || g.gender}
                                 </span>
-                                <span className="text-xs font-black text-slate-500 px-2 py-0.5 bg-white rounded-full border border-gray-200">
+                                <span className="text-[11px] sm:text-xs font-black text-slate-500 px-2 sm:px-2.5 py-1 bg-white rounded-full border border-gray-200">
                                     {g.level}
                                 </span>
                             </div>
@@ -475,20 +476,20 @@ export default function ActivityVotePage() {
 
             {/* --- [5] 게스트 추가 폼 --- */}
             {isVoteActive && (
-                <section className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-8 space-y-6 mb-10">
+                <section className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6 sm:p-8 space-y-6 mb-10">
                 <h3 className="text-xl font-black text-slate-800">게스트 추가</h3>
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                     <input
                     type="text"
                     placeholder="게스트 이름"
-                    className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                    className="w-full p-3.5 sm:p-4 border border-gray-200 rounded-xl text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500/20"
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
                     disabled={guestSubmitting}
                     />
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
                     <select
-                        className="p-4 border border-gray-200 rounded-xl text-slate-700 font-bold bg-white focus:outline-none cursor-pointer disabled:opacity-50"
+                        className="p-3.5 sm:p-4 border border-gray-200 rounded-xl text-sm sm:text-base text-slate-700 font-bold bg-white focus:outline-none cursor-pointer disabled:opacity-50"
                         value={guestGender}
                         onChange={(e) => setGuestGender(e.target.value)}
                         disabled={guestSubmitting}
@@ -498,7 +499,7 @@ export default function ActivityVotePage() {
                         <option value="FEMALE">여</option>
                     </select>
                     <select
-                        className="p-4 border border-gray-200 rounded-xl text-slate-700 font-bold bg-white focus:outline-none cursor-pointer disabled:opacity-50"
+                        className="p-3.5 sm:p-4 border border-gray-200 rounded-xl text-sm sm:text-base text-slate-700 font-bold bg-white focus:outline-none cursor-pointer disabled:opacity-50"
                         value={guestLevel}
                         onChange={(e) => setGuestLevel(e.target.value)}
                         disabled={guestSubmitting}
@@ -515,7 +516,7 @@ export default function ActivityVotePage() {
                     <button
                         onClick={submitGuest}
                         disabled={guestSubmitting}
-                        className="w-full py-5 bg-[#4B7332] text-white font-black rounded-2xl shadow-md hover:bg-[#3d5d28] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full py-4 sm:py-5 bg-[#4B7332] text-white font-black rounded-2xl shadow-md hover:bg-[#3d5d28] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                     >
                     {guestSubmitting ? '등록 중...' : '등록'}
                     </button>
@@ -528,14 +529,16 @@ export default function ActivityVotePage() {
     );
 }
 
-// 정보 아이템 컴포넌트
-function InfoItem({ icon, label, value }: { icon: string; label: string; value: string }) {
+// 정보 아이템 컴포넌트 (모바일 레이아웃 및 lucide-react 적용 완료)
+function InfoItem({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
     return (
-        <div className="flex items-start gap-3">
-        <span className="text-lg w-6 text-center shrink-0 leading-7">{icon}</span>
-        <div className="flex flex-col">
-            <span className="text-xs font-bold text-slate-400">{label}</span>
-            <span className="text-[15px] font-black text-slate-700">{value}</span>
+        <div className="flex items-start gap-3 w-full">
+        <div className="shrink-0 mt-0.5 bg-white p-1.5 rounded-lg shadow-sm border border-green-100">
+            {icon}
+        </div>
+        <div className="flex flex-col min-w-0 flex-1 justify-center">
+            <span className="text-[11px] sm:text-xs font-bold text-slate-400 mb-0.5">{label}</span>
+            <span className="text-[14px] sm:text-[15px] font-black text-slate-700 break-words break-keep leading-snug">{value}</span>
         </div>
         </div>
     );
