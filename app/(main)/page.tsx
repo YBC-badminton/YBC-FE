@@ -1,9 +1,20 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Script from "next/script";
 import { Sansita } from "next/font/google";
 import api from "../../lib/axios"; // API 호출을 위한 axios 임포트 추가
+
+// Kakao Maps SDK는 전역 window.kakao 객체로 노출됩니다.
+declare global {
+  interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    kakao: any;
+  }
+}
+
+const KAKAO_MAP_API_KEY = process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY;
 
 // 폰트 설정 (이탤릭이 기본 포함된 굵은 서체입니다)
 const sansita = Sansita({
@@ -38,7 +49,7 @@ export default function YBCMainPage() {
     const fetchActiveVotes = async () => {
       try {
         const response = await api.get("/votes?status=VOTING");
-        
+
         let data = [];
         if (Array.isArray(response.data)) {
           data = response.data;
@@ -218,7 +229,7 @@ export default function YBCMainPage() {
             정기모임
           </h2>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10">
           {isLoading ? (
             // 로딩 중 스켈레톤 UI
@@ -247,8 +258,8 @@ export default function YBCMainPage() {
               const progressRatio = Math.min((currentCount / maxCount) * 100, 100);
 
               return (
-                <div 
-                  key={vote.voteId || idx} 
+                <div
+                  key={vote.voteId || idx}
                   className="bg-white border border-gray-100 rounded-[30px] sm:rounded-[40px] p-6 sm:p-8 shadow-sm flex flex-col gap-6 transition-transform hover:-translate-y-1 hover:shadow-md"
                 >
                   <div className="flex items-center gap-3">
@@ -260,12 +271,12 @@ export default function YBCMainPage() {
                       {vote.activityDate}
                     </span>
                   </div>
-                  
+
                   <div className="w-full bg-[#F8F9FA] rounded-[20px] sm:rounded-[30px] p-6 sm:p-8 flex flex-col justify-center min-h-[192px] sm:min-h-[288px] gap-4 sm:gap-6">
                     <h3 className="text-xl sm:text-3xl font-black text-slate-800 break-keep leading-tight">
                       {title}
                     </h3>
-                    
+
                     <div className="space-y-1 sm:space-y-2 text-sm sm:text-base font-bold text-slate-500">
                       <p className="flex items-center gap-2">
                         <span className="text-lg">장소</span> {vote.location}
@@ -283,9 +294,9 @@ export default function YBCMainPage() {
                         </span>
                       </div>
                       <div className="w-full h-3 sm:h-4 bg-gray-200 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-r from-green-400 to-[#4B7332] transition-all duration-1000 ease-out" 
-                          style={{ width: `${progressRatio}%` }} 
+                        <div
+                          className="h-full bg-gradient-to-r from-green-400 to-[#4B7332] transition-all duration-1000 ease-out"
+                          style={{ width: `${progressRatio}%` }}
                         />
                       </div>
                     </div>
@@ -355,7 +366,11 @@ type Gym = {
   scheduleLabel: string;
   scheduleTime: string[];
   directions: string[];
-  placeQuery: string;
+  // 카카오맵 장소 ID (place.map.kakao.com/{placeId}). 마커를 정확한 등록 장소에 고정합니다.
+  placeId: string;
+  // 지도 초기 중심 좌표 (WGS84). 장소 검색 실패 시 폴백으로 사용됩니다.
+  lat: number;
+  lng: number;
 };
 
 const GYMS: { magok: Gym; mangwon: Gym } = {
@@ -368,7 +383,9 @@ const GYMS: { magok: Gym; mangwon: Gym } = {
     directions: [
       "주차장 이용 가능",
     ],
-    placeQuery: "place_id:ChIJNwJpmXicfDURx9pvbAFHmgM",
+    placeId: "7856404",
+    lat: 37.5675,
+    lng: 126.8405,
   },
   mangwon: {
     name: "망원나들목체육관",
@@ -379,15 +396,56 @@ const GYMS: { magok: Gym; mangwon: Gym } = {
     directions: [
       "주차장 이용 가능 (망원한강공원 주차장)",
     ],
-    placeQuery: "place_id:ChIJe4XAnIWZfDURf4mpO8Zml-U",
+    placeId: "1227651208",
+    lat: 37.5556,
+    lng: 126.9015,
   },
 };
 
-function GymMapCard({ gym }: { gym: Gym }) {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-  const embedSrc = apiKey
-    ? `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodeURIComponent(gym.placeQuery)}&language=ko&region=KR`
-    : null;
+type KakaoPlace = { id: string; x: string; y: string };
+
+function GymMapCard({ gym, sdkReady }: { gym: Gym; sdkReady: boolean }) {
+  const mapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!sdkReady || !mapRef.current) return;
+
+    const { kakao } = window;
+    const map = new kakao.maps.Map(mapRef.current, {
+      center: new kakao.maps.LatLng(gym.lat, gym.lng),
+      level: 4,
+    });
+
+    const placeMarker = (lat: number, lng: number) => {
+      const position = new kakao.maps.LatLng(lat, lng);
+      map.setCenter(position);
+      const marker = new kakao.maps.Marker({ map, position });
+      // 마커를 클릭하면 카카오맵 장소 상세 페이지로 이동합니다.
+      kakao.maps.event.addListener(marker, "click", () => {
+        window.open(`https://place.map.kakao.com/${gym.placeId}`, "_blank");
+      });
+    };
+
+    // 장소명으로 검색한 뒤, place_id 가 일치하는 결과의 정확한 좌표에 핀을 찍습니다.
+    // (keywordSearch 결과의 id 는 place.map.kakao.com/{id} 의 id 와 동일합니다.)
+    const places = new kakao.maps.services.Places();
+    places.keywordSearch(gym.name, (data: KakaoPlace[], status: string) => {
+      if (status === kakao.maps.services.Status.OK && data.length > 0) {
+        const exact = data.find((p) => p.id === gym.placeId) ?? data[0];
+        placeMarker(Number(exact.y), Number(exact.x));
+        return;
+      }
+      // 검색 실패 시 주소로 보정하고, 그래도 실패하면 기본 좌표에 표시합니다.
+      const geocoder = new kakao.maps.services.Geocoder();
+      geocoder.addressSearch(gym.address, (result: { x: string; y: string }[], st: string) => {
+        if (st === kakao.maps.services.Status.OK && result[0]) {
+          placeMarker(Number(result[0].y), Number(result[0].x));
+        } else {
+          placeMarker(gym.lat, gym.lng);
+        }
+      });
+    });
+  }, [sdkReady, gym]);
 
   return (
     <div className="bg-white border-[1.5px] border-[#E9ECEF] rounded-[30px] sm:rounded-[40px] shadow-sm overflow-hidden flex flex-col">
@@ -397,21 +455,16 @@ function GymMapCard({ gym }: { gym: Gym }) {
           {gym.scheduleLabel} 운동 장소
         </span>
       </div>
-      <div className="w-full bg-[#E9ECEF] relative mt-4 sm:mt-5">
-        {embedSrc ? (
-          <iframe
-            key={gym.placeQuery}
+      <div className="w-full bg-[#E9ECEF] relative mt-4 sm:mt-5 min-h-[260px] sm:min-h-[340px]">
+        {KAKAO_MAP_API_KEY ? (
+          <div
+            ref={mapRef}
             title={`${gym.name} 지도`}
-            src={embedSrc}
             className="w-full h-full min-h-[260px] sm:min-h-[340px]"
-            style={{ border: 0 }}
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            allowFullScreen
           />
         ) : (
           <div className="w-full h-full min-h-[260px] sm:min-h-[340px] flex items-center justify-center text-slate-400 text-sm font-medium px-6 text-center">
-            NEXT_PUBLIC_GOOGLE_MAPS_API_KEY 설정 후 지도가 표시됩니다.
+            NEXT_PUBLIC_KAKAO_MAP_API_KEY 설정 후 지도가 표시됩니다.
           </div>
         )}
       </div>
@@ -447,8 +500,19 @@ function GymMapCard({ gym }: { gym: Gym }) {
 }
 
 function GymLocationSection() {
+  const [sdkReady, setSdkReady] = useState(false);
+
   return (
     <section className="w-full bg-white py-16 sm:py-24 px-6 sm:px-12 max-w-screen-2xl mx-auto space-y-10 sm:space-y-16">
+      {/* Kakao Maps SDK (services 라이브러리로 장소/주소 검색) — autoload=false 후 kakao.maps.load로 초기화 */}
+      {KAKAO_MAP_API_KEY && (
+        <Script
+          src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&libraries=services&autoload=false`}
+          strategy="afterInteractive"
+          onReady={() => window.kakao.maps.load(() => setSdkReady(true))}
+        />
+      )}
+
       <div className="text-center space-y-3 sm:space-y-4">
         <h2 className="text-3xl sm:text-5xl font-black text-green-800 tracking-tight">
           체육관 위치
@@ -460,8 +524,8 @@ function GymLocationSection() {
 
       {/* 마곡 / 망원 두 체육관을 모두 표시 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-stretch">
-        <GymMapCard gym={GYMS.magok} />
-        <GymMapCard gym={GYMS.mangwon} />
+        <GymMapCard gym={GYMS.magok} sdkReady={sdkReady} />
+        <GymMapCard gym={GYMS.mangwon} sdkReady={sdkReady} />
       </div>
 
       <div className="bg-[#F2F8E1] p-6 sm:p-10 rounded-[30px] sm:rounded-[40px]">
