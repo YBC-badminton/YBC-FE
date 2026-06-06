@@ -316,7 +316,7 @@ export default function ActivityVotePage() {
                     </div>
                 ) : (
                     <div className="flex items-center gap-2 text-slate-400 font-bold text-xs sm:text-sm">
-                    <span>🔒</span> 투표가 마감되었습니다.
+                    투표가 마감되었습니다.
                     </div>
                 )}
             </div>
