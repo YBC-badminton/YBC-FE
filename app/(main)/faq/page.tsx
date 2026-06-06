@@ -29,7 +29,7 @@ const FAQ_DATA = [
     },
 ];
 
-const KAKAO_CHANNEL_URL = 'https://pf.kakao.com/_xnxaxcG';
+const KAKAO_CHANNEL_URL = 'https://open.kakao.com/o/sf2p7ipg';
 
 export default function InquiryPage() {
     const [openIndex, setOpenIndex] = useState<number | null>(null);
