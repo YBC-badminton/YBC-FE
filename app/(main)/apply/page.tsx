@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import api from "../../../lib/axios";
 import { useToast } from "../../../components/ui/Toast";
+import { Calendar, FileText, CheckCircle } from "lucide-react"; // 💡 아이콘 임포트
 
 interface FormData {
   name: string;
@@ -207,7 +208,7 @@ export default function ApplyPage() {
             </p>
           </div>
 
-          <div className="space-y-4 text-sm sm:text-[15px] font-medium leading-relaxed break-keep">
+          <div className="space-y-5 text-sm sm:text-[15px] font-medium leading-relaxed break-keep">
             <p>
               안녕하세요, &lsquo;양질의 배드민턴 추구&rsquo;를 목표로 하는 YBC
               배드민턴 클럽입니다. 실력보다 열정을 가진 새로운 가족을 언제나
@@ -215,7 +216,10 @@ export default function ApplyPage() {
             </p>
 
             <div>
-              <p className="font-black text-slate-800 mb-1">🏸 정기 활동 안내</p>
+              <div className="flex items-center gap-1.5 mb-3">
+                <Calendar className="w-4 h-4 text-[#4B7332]" />
+                <p className="font-black text-slate-800">정기 활동 안내</p>
+              </div>
               <ul className="list-disc pl-5 space-y-1">
                 <li>화요일 · 마곡실내배드민턴장 (16:00 - 19:00)</li>
                 <li>토요일 · 망원나들목체육관 (13:30 - 15:30 / 16:00 - 18:00)</li>
@@ -224,7 +228,10 @@ export default function ApplyPage() {
             </div>
 
             <div>
-              <p className="font-black text-slate-800 mb-1">📝 모집 및 면접 절차</p>
+              <div className="flex items-center gap-1.5 mb-3">
+                <FileText className="w-4 h-4 text-[#4B7332]" />
+                <p className="font-black text-slate-800">모집 및 면접 절차</p>
+              </div>
               <ul className="list-disc pl-5 space-y-1">
                 <li>아래 지원서를 작성해 제출해 주세요.</li>
                 <li>제출해 주신 내용을 바탕으로 대면 면접을 진행합니다.</li>
@@ -234,7 +241,10 @@ export default function ApplyPage() {
             </div>
 
             <div>
-              <p className="font-black text-slate-800 mb-1">✅ 유의 사항</p>
+              <div className="flex items-center gap-1.5 mb-3">
+                <CheckCircle className="w-4 h-4 text-[#4B7332]" />
+                <p className="font-black text-slate-800">유의 사항</p>
+              </div>
               <ul className="list-disc pl-5 space-y-1">
                 <li>배드민턴화는 필수이며, 라켓은 없으셔도 지원 가능합니다.</li>
                 <li>제출 후에는 내용 수정이 불가하오니 꼼꼼히 확인해 주세요.</li>
