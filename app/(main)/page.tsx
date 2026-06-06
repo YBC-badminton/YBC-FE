@@ -217,9 +217,6 @@ export default function YBCMainPage() {
           <h2 className="text-3xl sm:text-5xl font-black text-green-800 tracking-tight">
             정기모임
           </h2>
-          <p className="text-base sm:text-lg font-bold text-slate-500">
-            현재 활발하게 참여 투표가 진행 중인 정기 운동입니다.
-          </p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10">
@@ -271,10 +268,10 @@ export default function YBCMainPage() {
                     
                     <div className="space-y-1 sm:space-y-2 text-sm sm:text-base font-bold text-slate-500">
                       <p className="flex items-center gap-2">
-                        <span className="text-lg">📍</span> {vote.location}
+                        <span className="text-lg">장소</span> {vote.location}
                       </p>
                       <p className="flex items-center gap-2">
-                        <span className="text-lg">⏰</span> {vote.activityTime || "19:00"}
+                        <span className="text-lg">운동 시간</span> {vote.activityTime || "19:00"}
                       </p>
                     </div>
 
