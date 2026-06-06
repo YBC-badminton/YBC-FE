@@ -502,6 +502,19 @@ function GymMapCard({ gym, sdkReady }: { gym: Gym; sdkReady: boolean }) {
 function GymLocationSection() {
   const [sdkReady, setSdkReady] = useState(false);
 
+  // SDK 초기화. window.kakao 가 아직 없을 수 있으므로 항상 옵셔널 체이닝으로 보호합니다.
+  const initKakaoSdk = () => {
+    window.kakao?.maps?.load(() => setSdkReady(true));
+  };
+
+  // 클라이언트 네비게이션으로 재진입한 경우 onLoad 가 다시 발생하지 않으므로,
+  // 마운트 시 이미 로드된 SDK 가 있으면 직접 초기화합니다.
+  useEffect(() => {
+    if (window.kakao?.maps) {
+      initKakaoSdk();
+    }
+  }, []);
+
   return (
     <section className="w-full bg-white py-16 sm:py-24 px-6 sm:px-12 max-w-screen-2xl mx-auto space-y-10 sm:space-y-16">
       {/* Kakao Maps SDK (services 라이브러리로 장소/주소 검색) — autoload=false 후 kakao.maps.load로 초기화 */}
@@ -509,7 +522,7 @@ function GymLocationSection() {
         <Script
           src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&libraries=services&autoload=false`}
           strategy="afterInteractive"
-          onReady={() => window.kakao.maps.load(() => setSdkReady(true))}
+          onLoad={initKakaoSdk}
         />
       )}
 
