@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 
 interface ModalProps {
     isOpen: boolean;
@@ -33,10 +33,8 @@ export default function CreateLightningModal({ isOpen, onClose }: ModalProps) {
             </button>
 
             <div className="flex items-center gap-3 mb-2 sm:mb-3">
-                <div className="bg-white/20 p-2 rounded-xl">
-                <svg className="w-7 h-7 sm:w-8 sm:h-8 text-white fill-current" viewBox="0 0 24 24">
-                    <path d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+                <div className="bg-white/20 p-2 rounded-xl text-2xl sm:text-3xl">
+                    ⚡
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-black tracking-tight">번개 모임 열기</h2>
             </div>
@@ -87,10 +85,10 @@ export default function CreateLightningModal({ isOpen, onClose }: ModalProps) {
         </div>
         </div>
     );
-    }
+}
 
-    /** 아이콘과 라벨이 포함된 공용 입력창 **/
-    function InputGroup({ icon, label, placeholder, type = "text" }: { icon: string; label: string; placeholder?: string; type?: string }) {
+/** 아이콘과 라벨이 포함된 공용 입력창 **/
+function InputGroup({ icon, label, placeholder, type = "text" }: { icon: string; label: string; placeholder?: string; type?: string }) {
     return (
         <div className="space-y-2">
         <label className="flex items-center gap-2 text-sm font-black text-slate-500">
