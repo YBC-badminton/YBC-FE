@@ -61,23 +61,15 @@ export default function InquiryPage() {
                     </div>
 
                     <div className="flex gap-3">
-                        <div className="flex-1 relative">
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="양배추 공식 소통창구"
-                                className="w-full px-5 py-3.5 bg-slate-50 border border-gray-200 rounded-xl text-sm font-medium text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#4B7332]/20 focus:border-[#4B7332]/40 transition"
-                            />
-                        </div>
-                        <a
-                            href={KAKAO_CHANNEL_URL}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="bg-slate-800 text-white px-6 py-3.5 rounded-xl font-bold text-sm hover:bg-slate-900 transition-all shadow-sm whitespace-nowrap flex items-center"
+                        <button
+                            onClick={() => window.open(KAKAO_CHANNEL_URL, '_blank')}
+                            className="w-full flex items-center justify-center gap-3 bg-[#FEE500] text-[#191919] font-bold py-4 rounded-2xl hover:brightness-95 active:scale-[0.98] transition-all duration-200 disabled:opacity-50"
                         >
-                            문의하기
-                        </a>
+                            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 3C6.48 3 2 6.36 2 10.44c0 2.62 1.74 4.93 4.36 6.24-.14.52-.9 3.37-.93 3.58 0 0-.02.17.09.23.11.07.23.03.23.03.31-.04 3.56-2.33 4.12-2.73.7.1 1.42.15 2.13.15 5.52 0 10-3.36 10-7.5S17.52 3 12 3z" />
+                            </svg>
+                            카카오 채널로 문의하기
+                        </button>
                     </div>
                 </div>
 
