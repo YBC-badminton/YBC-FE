@@ -31,13 +31,13 @@ interface MemberShort {
 }
 
 interface AttendeesResponse {
-    totalAttendeeCount: number;
-    attendees: MemberShort[];
+    totalAttendeeCount?: number;
+    attendees?: MemberShort[];
+    // 서버가 배열 형태를 반환할 수도 있는 상황을 대비한 인터페이스 유연성 확보
 }
 
 interface AbsenteesResponse {
-    totalAttendeeCount: number;
-    // BE는 현재 /absentees 응답에서도 키를 `attendees`로 내려보내므로 둘 다 허용
+    totalAttendeeCount?: number;
     absentees?: MemberShort[];
     attendees?: MemberShort[];
 }
@@ -100,6 +100,8 @@ export default function ActivityVotePage() {
     const [guestGender, setGuestGender] = useState('');
     const [guestLevel, setGuestLevel] = useState('');
     const [guestSubmitting, setGuestSubmitting] = useState(false);
+    
+    // 명단 토글
     const [showAttending, setShowAttending] = useState(false);
     const [showAbsent, setShowAbsent] = useState(false);
 
@@ -108,13 +110,16 @@ export default function ActivityVotePage() {
         ? new Date() >= new Date(activity.voteStartAt) && new Date() <= new Date(activity.voteEndAt)
         : false;
 
+    // 진행률 계산
     const attendanceRate = activity && activity.capacity > 0
-        ? Math.round((activity.currentParticipantCount / activity.capacity) * 100)
+        ? Math.round((attendees.length / activity.capacity) * 100)
         : 0;
 
     const absentRate = activity && activity.capacity > 0
         ? Math.round((absentees.length / activity.capacity) * 100)
         : 0;
+
+    // --- API 호출 함수들 ---
 
     const fetchDetail = useCallback(async () => {
         try {
@@ -132,23 +137,40 @@ export default function ActivityVotePage() {
             const res = await api.get<AttendanceStatusResponse>(`/votes/${voteId}/attendance`);
             setMyAttendance(res.data.attendanceStatus);
         } catch {
-            // 미참여 상태로 유지
+            setMyAttendance(null);
         }
     }, [voteId]);
 
+    // 💡 참석 인원 조회 로직
     const fetchAttendees = useCallback(async () => {
         try {
-            const res = await api.get<AttendeesResponse>(`/votes/${voteId}/attendees`);
-            setAttendees(res.data.attendees ?? []);
+            const res = await api.get<AttendeesResponse | MemberShort[]>(`/votes/${voteId}/attendees`);
+            // 응답이 순수 배열일 경우와 객체 내에 담겨올 경우를 모두 방어
+            if (Array.isArray(res.data)) {
+                setAttendees(res.data);
+            } else if (res.data && Array.isArray((res.data as AttendeesResponse).attendees)) {
+                setAttendees((res.data as AttendeesResponse).attendees || []);
+            } else {
+                setAttendees([]);
+            }
         } catch {
             setAttendees([]);
         }
     }, [voteId]);
 
+    // 💡 불참 인원 조회 로직
     const fetchAbsentees = useCallback(async () => {
         try {
-            const res = await api.get<AbsenteesResponse>(`/votes/${voteId}/absentees`);
-            setAbsentees(res.data.absentees ?? res.data.attendees ?? []);
+            const res = await api.get<AbsenteesResponse | MemberShort[]>(`/votes/${voteId}/absentees`);
+            // 응답이 순수 배열일 경우와 객체 내에 담겨올 경우를 모두 방어
+            if (Array.isArray(res.data)) {
+                setAbsentees(res.data);
+            } else if (res.data) {
+                const data = res.data as AbsenteesResponse;
+                setAbsentees(data.absentees ?? data.attendees ?? []);
+            } else {
+                setAbsentees([]);
+            }
         } catch {
             setAbsentees([]);
         }
@@ -176,6 +198,8 @@ export default function ActivityVotePage() {
             fetchGuests(),
         ]).finally(() => setLoading(false));
     }, [fetchDetail, fetchMyAttendance, fetchAttendees, fetchAbsentees, fetchGuests]);
+
+    // --- 액션 함수들 ---
 
     const submitAttendance = async (attendanceStatus: boolean) => {
         if (submitting) return;
@@ -228,8 +252,8 @@ export default function ActivityVotePage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#F8F9FA] py-10 px-6 lg:px-24 font-sans select-none">
-                <div className="max-w-3xl mx-auto py-20 text-center text-slate-400 font-bold">불러오는 중...</div>
+            <div className="min-h-screen bg-[#F8F9FA] py-10 px-6 lg:px-24 font-sans select-none flex items-center justify-center">
+                <div className="text-center text-slate-400 font-bold">불러오는 중...</div>
             </div>
         );
     }
@@ -315,7 +339,7 @@ export default function ActivityVotePage() {
                     </span>
                     </div>
                     <span className="text-2xl font-black text-slate-800 transition-transform group-hover:scale-105">
-                    {activity.currentParticipantCount}명
+                    {attendees.length}명
                     </span>
                 </div>
 

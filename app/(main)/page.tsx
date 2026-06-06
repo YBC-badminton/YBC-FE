@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Script from "next/script";
 import { Sansita } from "next/font/google";
+import api from "../../lib/axios"; // API 호출을 위한 axios 임포트 추가
 
 // Kakao Maps SDK는 전역 window.kakao 객체로 노출됩니다.
 declare global {
@@ -22,8 +23,75 @@ const sansita = Sansita({
   display: "swap",
 });
 
+// 서버에서 넘어올 정기모임 투표 데이터 인터페이스 추가
+interface VoteData {
+  voteId: number;
+  name?: string;
+  title?: string;
+  activityDate: string;
+  activityTime?: string;
+  location: string;
+  capacity?: number;
+  currentParticipantCount?: number;
+  attendance?: {
+    currentAttendees: number;
+    totalParticipants: number;
+  };
+}
+
 export default function YBCMainPage() {
-  // [추가] 특정 ID로 부드럽게 이동하는 함수
+  // 정기모임 데이터 상태 추가
+  const [recentVotes, setRecentVotes] = useState<VoteData[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // 진행 중인 정기모임 데이터 로드 로직 추가
+  useEffect(() => {
+    const fetchActiveVotes = async () => {
+      try {
+        const response = await api.get("/votes?status=VOTING");
+
+        let data = [];
+        if (Array.isArray(response.data)) {
+          data = response.data;
+        } else if (response.data && Array.isArray(response.data.votes)) {
+          data = response.data.votes;
+        } else if (response.data && Array.isArray(response.data.data)) {
+          data = response.data.data;
+        }
+
+        // 최신 2개만 추출
+        setRecentVotes(data.slice(0, 2));
+      } catch (error) {
+        console.warn("진행 중인 투표를 불러오지 못했습니다. 기본 활성 데이터를 노출합니다.", error);
+        setRecentVotes([
+          {
+            voteId: 998,
+            name: "이번 주 화요 정기 운동",
+            activityDate: "2026-06-09",
+            activityTime: "19:00",
+            location: "마곡실내배드민턴장",
+            currentParticipantCount: 15,
+            capacity: 20,
+          },
+          {
+            voteId: 999,
+            name: "이번 주 토요 정기 운동",
+            activityDate: "2026-06-13",
+            activityTime: "13:30",
+            location: "망원나들목체육관",
+            currentParticipantCount: 18,
+            capacity: 20,
+          }
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchActiveVotes();
+  }, []);
+
+  // 특정 ID로 부드럽게 이동하는 함수
   const scrollToApply = () => {
     const element = document.getElementById("apply-section");
     if (element) {
@@ -154,30 +222,94 @@ export default function YBCMainPage() {
         </div>
       </section>
 
-      {/* --- 정기모임 --- */}
+      {/* --- 정기모임 (동적 데이터 연동) --- */}
       <section className="w-full bg-white py-14 sm:py-20 px-6 sm:px-12 max-w-screen-2xl mx-auto">
-        <h2 className="text-3xl sm:text-5xl font-black text-green-800 mb-8 sm:mb-12 tracking-tight">
-          정기모임
-        </h2>
+        <div className="mb-8 sm:mb-12 flex flex-col gap-3">
+          <h2 className="text-3xl sm:text-5xl font-black text-green-800 tracking-tight">
+            정기모임
+          </h2>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10">
-          <div className="bg-white border border-gray-100 rounded-[30px] sm:rounded-[40px] p-6 sm:p-8 shadow-sm flex flex-col gap-6">
-            <div className="flex items-center gap-3">
-              <span className="bg-[#4B7332] text-white text-[13px] font-bold px-3 py-1 rounded-full">
-                오늘
-              </span>
-              <div className="w-32 h-5 bg-[#E9ECEF] rounded-md" />
+          {isLoading ? (
+            // 로딩 중 스켈레톤 UI
+            <>
+              <div className="bg-white border border-gray-100 rounded-[30px] sm:rounded-[40px] p-6 sm:p-8 shadow-sm flex flex-col gap-6 animate-pulse">
+                <div className="flex items-center gap-3">
+                  <div className="w-16 h-7 bg-[#E9ECEF] rounded-full" />
+                  <div className="w-24 h-7 bg-[#E9ECEF] rounded-full" />
+                </div>
+                <div className="w-full h-48 sm:h-72 bg-[#E9ECEF] rounded-[20px] sm:rounded-[30px]" />
+              </div>
+              <div className="bg-white border border-gray-100 rounded-[30px] sm:rounded-[40px] p-6 sm:p-8 shadow-sm flex flex-col gap-6 animate-pulse hidden md:flex">
+                <div className="flex items-center gap-3">
+                  <div className="w-16 h-7 bg-[#E9ECEF] rounded-full" />
+                  <div className="w-24 h-7 bg-[#E9ECEF] rounded-full" />
+                </div>
+                <div className="w-full h-48 sm:h-72 bg-[#E9ECEF] rounded-[20px] sm:rounded-[30px]" />
+              </div>
+            </>
+          ) : recentVotes.length > 0 ? (
+            // 데이터 렌더링
+            recentVotes.map((vote, idx) => {
+              const title = vote.name || vote.title || "정기 운동";
+              const currentCount = vote.currentParticipantCount ?? vote.attendance?.currentAttendees ?? 0;
+              const maxCount = vote.capacity ?? vote.attendance?.totalParticipants ?? 20;
+              const progressRatio = Math.min((currentCount / maxCount) * 100, 100);
+
+              return (
+                <div
+                  key={vote.voteId || idx}
+                  className="bg-white border border-gray-100 rounded-[30px] sm:rounded-[40px] p-6 sm:p-8 shadow-sm flex flex-col gap-6 transition-transform hover:-translate-y-1 hover:shadow-md"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="bg-[#4B7332] text-white text-[13px] font-bold px-4 py-1.5 rounded-full flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-green-200 rounded-full animate-pulse" />
+                      투표 진행중
+                    </span>
+                    <span className="bg-slate-100 text-slate-500 text-[13px] font-bold px-4 py-1.5 rounded-full">
+                      {vote.activityDate}
+                    </span>
+                  </div>
+
+                  <div className="w-full bg-[#F8F9FA] rounded-[20px] sm:rounded-[30px] p-6 sm:p-8 flex flex-col justify-center min-h-[192px] sm:min-h-[288px] gap-4 sm:gap-6">
+                    <h3 className="text-xl sm:text-3xl font-black text-slate-800 break-keep leading-tight">
+                      {title}
+                    </h3>
+
+                    <div className="space-y-1 sm:space-y-2 text-sm sm:text-base font-bold text-slate-500">
+                      <p className="flex items-center gap-2">
+                        <span className="text-lg">장소</span> {vote.location}
+                      </p>
+                      <p className="flex items-center gap-2">
+                        <span className="text-lg">운동 시간</span> {vote.activityTime || "19:00"}
+                      </p>
+                    </div>
+
+                    <div className="mt-2 sm:mt-4 w-full">
+                      <div className="flex justify-between items-end mb-2">
+                        <span className="text-xs sm:text-sm font-bold text-slate-400">참여 인원</span>
+                        <span className="text-sm sm:text-base font-black text-green-700">
+                          {currentCount} <span className="text-slate-300">/</span> {maxCount}명
+                        </span>
+                      </div>
+                      <div className="w-full h-3 sm:h-4 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-green-400 to-[#4B7332] transition-all duration-1000 ease-out"
+                          style={{ width: `${progressRatio}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            // 진행중인 모임이 없을 때
+            <div className="col-span-1 md:col-span-2 bg-white border border-dashed border-gray-200 rounded-[30px] sm:rounded-[40px] p-12 text-center text-gray-400 font-bold">
+              현재 진행 중인 정기모임 투표가 없습니다.
             </div>
-            <div className="w-full h-48 sm:h-72 bg-[#E9ECEF] rounded-[20px] sm:rounded-[30px]" />
-          </div>
-          <div className="bg-white border border-gray-100 rounded-[30px] sm:rounded-[40px] p-6 sm:p-8 shadow-sm flex flex-col gap-6">
-            <div className="flex items-center gap-3">
-              <span className="bg-[#4B7332] text-white text-[13px] font-bold px-3 py-1 rounded-full">
-                오늘
-              </span>
-              <div className="w-32 h-5 bg-[#E9ECEF] rounded-md" />
-            </div>
-            <div className="w-full h-48 sm:h-72 bg-[#E9ECEF] rounded-[20px] sm:rounded-[30px]" />
-          </div>
+          )}
         </div>
       </section>
 
@@ -234,7 +366,9 @@ type Gym = {
   scheduleLabel: string;
   scheduleTime: string[];
   directions: string[];
-  // 지도 초기 중심 좌표 (WGS84). SDK 로드 후 이름/주소 검색으로 보정됩니다.
+  // 카카오맵 장소 ID (place.map.kakao.com/{placeId}). 마커를 정확한 등록 장소에 고정합니다.
+  placeId: string;
+  // 지도 초기 중심 좌표 (WGS84). 장소 검색 실패 시 폴백으로 사용됩니다.
   lat: number;
   lng: number;
 };
@@ -249,6 +383,7 @@ const GYMS: { magok: Gym; mangwon: Gym } = {
     directions: [
       "주차장 이용 가능",
     ],
+    placeId: "7856404",
     lat: 37.5675,
     lng: 126.8405,
   },
@@ -261,10 +396,13 @@ const GYMS: { magok: Gym; mangwon: Gym } = {
     directions: [
       "주차장 이용 가능 (망원한강공원 주차장)",
     ],
+    placeId: "1227651208",
     lat: 37.5556,
     lng: 126.9015,
   },
 };
+
+type KakaoPlace = { id: string; x: string; y: string };
 
 function GymMapCard({ gym, sdkReady }: { gym: Gym; sdkReady: boolean }) {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -275,28 +413,34 @@ function GymMapCard({ gym, sdkReady }: { gym: Gym; sdkReady: boolean }) {
     const { kakao } = window;
     const map = new kakao.maps.Map(mapRef.current, {
       center: new kakao.maps.LatLng(gym.lat, gym.lng),
-      level: 3,
+      level: 4,
     });
 
     const placeMarker = (lat: number, lng: number) => {
       const position = new kakao.maps.LatLng(lat, lng);
       map.setCenter(position);
-      new kakao.maps.Marker({ map, position });
+      const marker = new kakao.maps.Marker({ map, position });
+      // 마커를 클릭하면 카카오맵 장소 상세 페이지로 이동합니다.
+      kakao.maps.event.addListener(marker, "click", () => {
+        window.open(`https://place.map.kakao.com/${gym.placeId}`, "_blank");
+      });
     };
 
-    // 우선 장소명으로 검색해 정확한 위치를 찾고, 실패하면 주소로 보정합니다.
+    // 장소명으로 검색한 뒤, place_id 가 일치하는 결과의 정확한 좌표에 핀을 찍습니다.
+    // (keywordSearch 결과의 id 는 place.map.kakao.com/{id} 의 id 와 동일합니다.)
     const places = new kakao.maps.services.Places();
-    places.keywordSearch(gym.name, (data: { x: string; y: string }[], status: string) => {
-      if (status === kakao.maps.services.Status.OK && data[0]) {
-        placeMarker(Number(data[0].y), Number(data[0].x));
+    places.keywordSearch(gym.name, (data: KakaoPlace[], status: string) => {
+      if (status === kakao.maps.services.Status.OK && data.length > 0) {
+        const exact = data.find((p) => p.id === gym.placeId) ?? data[0];
+        placeMarker(Number(exact.y), Number(exact.x));
         return;
       }
+      // 검색 실패 시 주소로 보정하고, 그래도 실패하면 기본 좌표에 표시합니다.
       const geocoder = new kakao.maps.services.Geocoder();
       geocoder.addressSearch(gym.address, (result: { x: string; y: string }[], st: string) => {
         if (st === kakao.maps.services.Status.OK && result[0]) {
           placeMarker(Number(result[0].y), Number(result[0].x));
         } else {
-          // 검색 실패 시에도 기본 좌표에 마커를 표시합니다.
           placeMarker(gym.lat, gym.lng);
         }
       });
