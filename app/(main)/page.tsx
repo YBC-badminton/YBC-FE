@@ -5,6 +5,7 @@ import Link from "next/link";
 import Script from "next/script";
 import { Sansita } from "next/font/google";
 import api from "../../lib/axios"; // API 호출을 위한 axios 임포트 추가
+import { useAuth } from "../../context/AuthContext";
 
 // Kakao Maps SDK는 전역 window.kakao 객체로 노출됩니다.
 declare global {
@@ -43,6 +44,7 @@ export default function YBCMainPage() {
   // 정기모임 데이터 상태 추가
   const [recentVotes, setRecentVotes] = useState<VoteData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { user, loginKakao, isLoading: isAuthLoading } = useAuth();
 
   // 진행 중인 정기모임 데이터 로드 로직 추가
   useEffect(() => {
@@ -139,17 +141,34 @@ export default function YBCMainPage() {
               양질의 배드민턴 추구
             </p>
 
-            <div
-              onClick={scrollToApply}
-              className="bg-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-full shadow-md flex items-center gap-3 border border-gray-100 mt-2 sm:mt-4 transition-transform hover:scale-105 cursor-pointer active:scale-95"
-            >
-              <span className="relative flex h-4 w-4">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-4 w-4 bg-green-500"></span>
-              </span>
-              <span className="text-base sm:text-lg font-bold text-gray-900 tracking-tight">
-                모집중
-              </span>
+            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mt-2 sm:mt-4">
+              <div
+                onClick={scrollToApply}
+                className="bg-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-full shadow-md flex items-center gap-3 border border-gray-100 transition-transform hover:scale-105 cursor-pointer active:scale-95"
+              >
+                <span className="relative flex h-4 w-4">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-4 w-4 bg-green-500"></span>
+                </span>
+                <span className="text-base sm:text-lg font-bold text-gray-900 tracking-tight">
+                  모집중
+                </span>
+              </div>
+
+              {!user && (
+                <button
+                  onClick={() => loginKakao()}
+                  disabled={isAuthLoading}
+                  className="bg-[#FEE500] px-6 sm:px-8 py-2.5 sm:py-3 rounded-full shadow-md flex items-center gap-2 transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
+                >
+                  <svg className="w-5 h-5 text-[#191919]" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 3C6.48 3 2 6.36 2 10.44c0 2.62 1.74 4.93 4.36 6.24-.14.52-.9 3.37-.93 3.58 0 0-.02.17.09.23.11.07.23.03.23.03.31-.04 3.56-2.33 4.12-2.73.7.1 1.42.15 2.13.15 5.52 0 10-3.36 10-7.5S17.52 3 12 3z" />
+                  </svg>
+                  <span className="text-base sm:text-lg font-bold text-[#191919] tracking-tight">
+                    {isAuthLoading ? '로그인 중...' : '카카오 로그인'}
+                  </span>
+                </button>
+              )}
             </div>
           </div>
         </div>
