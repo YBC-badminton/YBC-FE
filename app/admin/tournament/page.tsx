@@ -310,6 +310,44 @@ export default function TournamentPage() {
         setCourtBrackets(prev => ({ ...prev, [currentCourt]: newBracket }));
     };
 
+    // [API] 서버 랜덤 대진 생성 (POST /admin/votes/{voteId}/matches/generate)
+    // 코트별 배정 인원을 서버로 보내 성비/최소 게임수 규칙에 맞춰 랜덤 배치 후, 확정된 대진을 다시 로드한다.
+    const handleServerGenerate = async () => {
+        if (!selectedActivity) return;
+
+        const courtAssignments = Object.entries(assignments)
+            .filter(([, members]) => members.length > 0)
+            .map(([courtName, members]) => ({
+                courtNumber: parseInt(courtName.replace(/[^0-9]/g, ''), 10) || 1,
+                participants: members.map(m => ({
+                    participantType: m.participantType,
+                    participantId: m.participantId,
+                })),
+            }));
+
+        if (courtAssignments.length === 0) {
+            showToast('코트에 배정된 인원이 없습니다.', 'error');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            await api.post(`/admin/votes/${selectedActivity.voteId}/matches/generate`, {
+                courtCount: courtAssignments.length,
+                courtAssignments,
+            });
+            showToast('서버에서 대진이 랜덤 생성되었습니다.', 'success');
+            // 확정·저장된 대진을 캐노니컬 데이터로 다시 불러와 대진표에 반영
+            await handleSelectActivity(selectedActivity);
+        } catch (err: unknown) {
+            const message = (err as { response?: { data?: { message?: string } } })
+                ?.response?.data?.message || '대진 랜덤 생성 중 오류가 발생했습니다.';
+            showToast(message, 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // [API 3] 대진 확정 저장 및 전체 전송 (수정 모드 분기 처리)
     const handleSaveTournament = async () => {
         if (!selectedActivity) return;
@@ -543,8 +581,9 @@ export default function TournamentPage() {
                                             <button onClick={() => handleMatchCount('plus')} className="w-8 h-8 flex items-center justify-center bg-white border rounded-lg font-black hover:bg-gray-100 transition-colors">+</button>
                                         </div>
                                     </div>
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-2 flex-wrap">
                                         <button onClick={handleRandomAssign} className="bg-blue-600 text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex-1 sm:flex-none transition hover:bg-blue-700 shadow-sm">랜덤 배치</button>
+                                        <button onClick={handleServerGenerate} className="bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex-1 sm:flex-none transition hover:bg-indigo-700 shadow-sm">서버 랜덤 배치</button>
                                         <button onClick={() => setCourtBrackets(prev => ({ ...prev, [currentCourt]: initialBracket() }))} className="bg-white border text-red-600 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex-1 sm:flex-none hover:bg-red-50 transition shadow-sm">비우기</button>
                                     </div>
                                 </div>
