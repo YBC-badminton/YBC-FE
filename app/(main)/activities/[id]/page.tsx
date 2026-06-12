@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import api from '../../../../lib/axios';
 import { useToast } from '../../../../components/ui/Toast';
-import { MapPin, Clock, Calendar as CalendarIcon, Users } from 'lucide-react';
+import { useAuth } from '../../../../context/AuthContext';
+import { MapPin, Clock, Calendar as CalendarIcon, Users, Pencil, Trash2, X, Check } from 'lucide-react';
 
 // API 응답 타입
 interface VoteDetail {
@@ -83,6 +84,7 @@ export default function ActivityVotePage() {
     const params = useParams();
     const voteId = params.id;
     const { showToast } = useToast();
+    const { user } = useAuth();
 
     const [activity, setActivity] = useState<VoteDetail | null>(null);
     const [loading, setLoading] = useState(true);
@@ -100,6 +102,12 @@ export default function ActivityVotePage() {
     const [guestGender, setGuestGender] = useState('');
     const [guestLevel, setGuestLevel] = useState('');
     const [guestSubmitting, setGuestSubmitting] = useState(false);
+
+    // 게스트 수정 상태
+    const [editingGuestId, setEditingGuestId] = useState<number | null>(null);
+    const [editGuestName, setEditGuestName] = useState('');
+    const [editGuestGender, setEditGuestGender] = useState('');
+    const [editGuestLevel, setEditGuestLevel] = useState('');
     
     // 명단 토글
     const [showAttending, setShowAttending] = useState(false);
@@ -242,6 +250,54 @@ export default function ActivityVotePage() {
             showToast(message, 'error');
         } finally {
             setGuestSubmitting(false);
+        }
+    };
+
+    const startEditGuest = (g: GuestItem) => {
+        setEditingGuestId(g.guestId);
+        setEditGuestName(g.guestName);
+        setEditGuestGender(g.gender);
+        setEditGuestLevel(g.level);
+    };
+
+    const cancelEditGuest = () => {
+        setEditingGuestId(null);
+        setEditGuestName('');
+        setEditGuestGender('');
+        setEditGuestLevel('');
+    };
+
+    const saveEditGuest = async (guestId: number) => {
+        if (!editGuestName.trim() || !editGuestGender || !editGuestLevel) {
+            showToast('이름, 성별, 실력을 모두 입력해 주세요.', 'error');
+            return;
+        }
+        try {
+            await api.patch(`/votes/${voteId}/guests/${guestId}`, {
+                name: editGuestName.trim(),
+                gender: editGuestGender,
+                level: editGuestLevel,
+            });
+            showToast('게스트 정보가 수정되었습니다.', 'success');
+            cancelEditGuest();
+            await fetchGuests();
+        } catch (err: unknown) {
+            const message = (err as { response?: { data?: { message?: string } } })
+                ?.response?.data?.message || '게스트 수정 중 오류가 발생했습니다.';
+            showToast(message, 'error');
+        }
+    };
+
+    const deleteGuest = async (guestId: number, name: string) => {
+        if (!confirm(`게스트 "${name}"님을 취소하시겠습니까?`)) return;
+        try {
+            await api.delete(`/votes/${voteId}/guests/${guestId}`);
+            showToast(`게스트 "${name}"님이 취소되었습니다.`, 'success');
+            await fetchGuests();
+        } catch (err: unknown) {
+            const message = (err as { response?: { data?: { message?: string } } })
+                ?.response?.data?.message || '게스트 취소 중 오류가 발생했습니다.';
+            showToast(message, 'error');
         }
     };
 
@@ -455,22 +511,75 @@ export default function ActivityVotePage() {
                 </div>
             ) : (
                 <ul className="space-y-3">
-                    {guests.map((g) => (
-                        <li key={g.guestId} className="flex justify-between items-center bg-slate-50 rounded-2xl border border-gray-100 px-4 sm:px-5 py-3 sm:py-4">
-                            <div className="flex flex-col min-w-0 mr-3">
-                                <span className="font-black text-slate-800 text-[14px] sm:text-[15px] truncate">{g.guestName}</span>
-                                <span className="text-[11px] sm:text-xs font-bold text-slate-400 truncate">초대자: {g.inviterName}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                                <span className="text-[11px] sm:text-xs font-black text-slate-500 px-2 sm:px-2.5 py-1 bg-white rounded-full border border-gray-200">
-                                    {GENDER_LABEL[g.gender] || g.gender}
-                                </span>
-                                <span className="text-[11px] sm:text-xs font-black text-slate-500 px-2 sm:px-2.5 py-1 bg-white rounded-full border border-gray-200">
-                                    {g.level}
-                                </span>
-                            </div>
-                        </li>
-                    ))}
+                    {guests.map((g) => {
+                        const canManage = !!user && user.name === g.inviterName;
+                        const isEditing = editingGuestId === g.guestId;
+
+                        if (isEditing) {
+                            return (
+                                <li key={g.guestId} className="bg-slate-50 rounded-2xl border border-gray-100 px-4 sm:px-5 py-3 sm:py-4 space-y-3">
+                                    <input
+                                        type="text"
+                                        value={editGuestName}
+                                        onChange={(e) => setEditGuestName(e.target.value)}
+                                        placeholder="게스트 이름"
+                                        className="w-full p-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                                    />
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <select value={editGuestGender} onChange={(e) => setEditGuestGender(e.target.value)} className="p-2.5 border border-gray-200 rounded-xl text-sm font-bold bg-white focus:outline-none cursor-pointer">
+                                            <option value="">성별</option>
+                                            <option value="MALE">남</option>
+                                            <option value="FEMALE">여</option>
+                                        </select>
+                                        <select value={editGuestLevel} onChange={(e) => setEditGuestLevel(e.target.value)} className="p-2.5 border border-gray-200 rounded-xl text-sm font-bold bg-white focus:outline-none cursor-pointer">
+                                            <option value="">실력</option>
+                                            <option value="왕초심">왕초심</option>
+                                            <option value="초심">초심</option>
+                                            <option value="D">D</option>
+                                            <option value="C">C</option>
+                                            <option value="B">B</option>
+                                            <option value="A">A</option>
+                                        </select>
+                                    </div>
+                                    <div className="flex justify-end gap-2">
+                                        <button onClick={cancelEditGuest} className="flex items-center gap-1 px-3 py-1.5 text-xs font-black text-slate-500 bg-white border border-gray-200 rounded-full hover:bg-gray-100">
+                                            <X className="w-3.5 h-3.5" /> 취소
+                                        </button>
+                                        <button onClick={() => saveEditGuest(g.guestId)} className="flex items-center gap-1 px-3 py-1.5 text-xs font-black text-white bg-[#4B7332] rounded-full hover:bg-[#3d5d28]">
+                                            <Check className="w-3.5 h-3.5" /> 저장
+                                        </button>
+                                    </div>
+                                </li>
+                            );
+                        }
+
+                        return (
+                            <li key={g.guestId} className="flex justify-between items-center bg-slate-50 rounded-2xl border border-gray-100 px-4 sm:px-5 py-3 sm:py-4">
+                                <div className="flex flex-col min-w-0 mr-3">
+                                    <span className="font-black text-slate-800 text-[14px] sm:text-[15px] truncate">{g.guestName}</span>
+                                    <span className="text-[11px] sm:text-xs font-bold text-slate-400 truncate">초대자: {g.inviterName}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                                    <span className="text-[11px] sm:text-xs font-black text-slate-500 px-2 sm:px-2.5 py-1 bg-white rounded-full border border-gray-200">
+                                        {GENDER_LABEL[g.gender] || g.gender}
+                                    </span>
+                                    <span className="text-[11px] sm:text-xs font-black text-slate-500 px-2 sm:px-2.5 py-1 bg-white rounded-full border border-gray-200">
+                                        {g.level}
+                                    </span>
+                                    {canManage && (
+                                        <>
+                                            <button onClick={() => startEditGuest(g)} className="text-slate-400 hover:text-[#4B7332] p-1" aria-label="게스트 수정">
+                                                <Pencil className="w-4 h-4" />
+                                            </button>
+                                            <button onClick={() => deleteGuest(g.guestId, g.guestName)} className="text-slate-400 hover:text-red-500 p-1" aria-label="게스트 취소">
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
+                            </li>
+                        );
+                    })}
                 </ul>
             )}
             </section>
