@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Calendar, Clock, MapPin } from 'lucide-react';
 import api from '@/lib/axios';
 
 interface VoteQueueItem {
@@ -51,8 +52,8 @@ export default function ReservationQueue() {
                             {ACTIVITY_TYPE_LABEL[item.activityType] || item.activityType}
                         </span>
                         <p className="font-bold">{item.title}</p>
-                        <p className="text-sm text-gray-500">📅 {item.activityDate} | 🕒 {item.activityTime}</p>
-                        <p className="text-sm text-gray-500">📍 {item.location}</p>
+                        <p className="text-sm text-gray-500 flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 shrink-0" /> {item.activityDate} <span className="text-gray-300">|</span> <Clock className="w-3.5 h-3.5 shrink-0" /> {item.activityTime}</p>
+                        <p className="text-sm text-gray-500 flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 shrink-0" /> {item.location}</p>
                     </div>
                     <div className="text-right text-xs text-gray-400">
                         <p>투표: {item.voteStartAt?.slice(0, 16)} ~ {item.voteEndAt?.slice(0, 16)}</p>

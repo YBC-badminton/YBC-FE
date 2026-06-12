@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { Users } from 'lucide-react';
 import api from '@/lib/axios';
 
 interface MatchParticipant {
@@ -113,7 +114,7 @@ export default function TournamentPage() {
                                             {court.courtNumber}코트
                                         </span>
                                         <div className="flex items-center gap-1 text-slate-400 font-bold text-sm">
-                                            <span>👥</span> {uniqueNames.length}명
+                                            <Users className="w-4 h-4" /> {uniqueNames.length}명
                                         </div>
                                     </div>
                                     <span className={`text-slate-300 transition-transform duration-300 ${openCourt === court.courtNumber ? 'rotate-180' : ''}`}>

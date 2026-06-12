@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { Calendar, MapPin } from 'lucide-react';
 import api from '../../../lib/axios';
 import { useToast } from '../../../components/ui/Toast';
 
@@ -401,8 +402,8 @@ export default function TournamentPage() {
                                         <span className="absolute top-4 right-6 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">완료</span>
                                     )}
                                     <h3 className="text-xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors">{activity.title}</h3>
-                                    <p className="text-sm text-gray-400 mt-2 font-medium">
-                                        📅 날짜: {activity.activityDate} ({activity.activityDay}) | 📍 장소: {activity.location}
+                                    <p className="text-sm text-gray-400 mt-2 font-medium flex items-center gap-1.5 flex-wrap">
+                                        <Calendar className="w-3.5 h-3.5 shrink-0" /> 날짜: {activity.activityDate} ({activity.activityDay}) <span className="text-gray-300">|</span> <MapPin className="w-3.5 h-3.5 shrink-0" /> 장소: {activity.location}
                                     </p>
                                     <div className="mt-3 flex items-center gap-3 text-xs font-bold text-gray-500">
                                         <span className="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-md">회원 {activity.attendance.currentAttendees}명</span>

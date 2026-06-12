@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Calendar, MapPin } from 'lucide-react';
 import api from '@/lib/axios';
 import { useAxios } from '@/hooks/useAxios';
 import { useToast } from '@/components/ui/Toast';
@@ -127,7 +128,7 @@ export default function VoteReservationPage() {
                                         {ACTIVITY_TYPE_LABEL[item.activityType] || item.activityType}
                                     </span>
                                     <p className="font-bold text-gray-800">{item.title}</p>
-                                    <p className="text-sm text-gray-500">📅 {item.activityDate} | 📍 {item.location}</p>
+                                    <p className="text-sm text-gray-500 flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 shrink-0" /> {item.activityDate} <span className="text-gray-300">|</span> <MapPin className="w-3.5 h-3.5 shrink-0" /> {item.location}</p>
                                 </div>
                                 <div className="text-right text-xs text-gray-400">
                                     <p>운동 시간: {item.activityTime}</p>
