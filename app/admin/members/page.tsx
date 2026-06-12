@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { Search, Pencil, Trash2 } from 'lucide-react';
 import api from '@/lib/axios';
 import { useToast } from '@/components/ui/Toast';
 
@@ -46,6 +47,7 @@ export default function MembersPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [termFilter, setTermFilter] = useState('all');
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editForm, setEditForm] = useState<Partial<MemberForm>>({});
     const [showAddForm, setShowAddForm] = useState(false);
@@ -144,11 +146,24 @@ export default function MembersPage() {
         });
     };
 
-    const filteredMembers = searchQuery && !loading
+    // 기수별 인원 집계 및 필터 옵션
+    const termCounts = members.reduce<Record<string, number>>((acc, m) => {
+        if (m.term) acc[m.term] = (acc[m.term] || 0) + 1;
+        return acc;
+    }, {});
+    const termOptions = Object.keys(termCounts).sort((a, b) => {
+        const na = parseInt(a, 10);
+        const nb = parseInt(b, 10);
+        if (!isNaN(na) && !isNaN(nb)) return nb - na;
+        return a.localeCompare(b);
+    });
+
+    const filteredMembers = (searchQuery && !loading
         ? members
         : members.filter(m =>
             m.name.includes(searchQuery) || m.university.includes(searchQuery)
-        );
+        )
+    ).filter(m => termFilter === 'all' || m.term === termFilter);
 
     if (loading && members.length === 0) {
         return (
@@ -174,25 +189,51 @@ export default function MembersPage() {
             </div>
 
             {/* 현황 카드 */}
-            <div className="mb-8">
+            <div className="mb-8 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-100 shadow-sm text-center sm:text-left">
                     <p className="text-[10px] sm:text-sm text-gray-500 mb-1 whitespace-nowrap">전체 부원</p>
-                    <p className="text-lg sm:text-2xl font-bold text-gray-800">{summary?.totalMembers ?? 0}명</p>
+                    <p className="text-lg sm:text-2xl font-bold text-gray-800">{summary?.totalMembers ?? members.length}명</p>
                 </div>
+                {termOptions.map((term) => (
+                    <button
+                        key={term}
+                        onClick={() => setTermFilter(termFilter === term ? 'all' : term)}
+                        className={`p-4 sm:p-6 rounded-xl border shadow-sm text-center sm:text-left transition ${
+                            termFilter === term
+                                ? 'bg-blue-600 border-blue-600 text-white'
+                                : 'bg-white border-gray-100 text-gray-800 hover:border-blue-300'
+                        }`}
+                    >
+                        <p className={`text-[10px] sm:text-sm mb-1 whitespace-nowrap ${termFilter === term ? 'text-blue-100' : 'text-gray-500'}`}>{term}</p>
+                        <p className="text-lg sm:text-2xl font-bold">{termCounts[term]}명</p>
+                    </button>
+                ))}
             </div>
 
             {/* 검색 및 추가 버튼 */}
             <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
-                <div className="relative w-full sm:w-96 flex gap-2">
-                    <input
-                        type="text"
-                        placeholder="이름으로 검색"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                        className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                    />
-                    <span className="absolute left-3 top-2.5 text-gray-400">🔍</span>
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                    <div className="relative w-full sm:w-72">
+                        <input
+                            type="text"
+                            placeholder="이름으로 검색"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        />
+                        <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+                    </div>
+                    <select
+                        value={termFilter}
+                        onChange={(e) => setTermFilter(e.target.value)}
+                        className="w-full sm:w-40 px-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
+                    >
+                        <option value="all">전체 기수</option>
+                        {termOptions.map((term) => (
+                            <option key={term} value={term}>{term} ({termCounts[term]}명)</option>
+                        ))}
+                    </select>
                 </div>
                 <button
                     onClick={() => setShowAddForm(!showAddForm)}
@@ -272,8 +313,8 @@ export default function MembersPage() {
                                         <td className="p-4 text-sm text-gray-600 truncate max-w-[200px]">{member.email}</td>
                                         <td className="p-4">{member.term}</td>
                                         <td className="p-4 text-center space-x-2">
-                                            <button onClick={() => startEdit(member)} className="text-gray-400 hover:text-blue-600 text-xl">✏️</button>
-                                            <button onClick={() => handleDelete(member.memberId, member.name)} className="text-gray-400 hover:text-red-500 text-xl">🗑️</button>
+                                            <button onClick={() => startEdit(member)} className="text-gray-400 hover:text-blue-600 inline-flex"><Pencil className="w-4 h-4" /></button>
+                                            <button onClick={() => handleDelete(member.memberId, member.name)} className="text-gray-400 hover:text-red-500 inline-flex"><Trash2 className="w-4 h-4" /></button>
                                         </td>
                                     </>
                                 )}
@@ -294,10 +335,10 @@ export default function MembersPage() {
                             </div>
                             <div className="flex items-center gap-2">
                                 <button onClick={() => startEdit(member)} className="p-2 bg-gray-50 text-gray-500 rounded-xl hover:bg-gray-100 active:scale-95 transition-all">
-                                    <span className="text-xs">✏️</span>
+                                    <Pencil className="w-4 h-4" />
                                 </button>
                                 <button onClick={() => handleDelete(member.memberId, member.name)} className="p-2 bg-gray-50 text-gray-500 rounded-xl hover:bg-red-50 active:scale-95 transition-all">
-                                    <span className="text-xs">🗑️</span>
+                                    <Trash2 className="w-4 h-4" />
                                 </button>
                             </div>
                         </div>
