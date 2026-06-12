@@ -1,22 +1,88 @@
 'use client';
 
-import React from 'react';
-import { Zap, Calendar, Clock, Users, MapPin, CreditCard, X } from 'lucide-react'; // 💡 아이콘 임포트
+import React, { useState } from 'react';
+import { Zap, Calendar, Clock, Users, MapPin, CreditCard, FileText, X } from 'lucide-react';
+import api from '../../lib/axios';
+import { useToast } from './Toast';
 
 interface ModalProps {
     isOpen: boolean;
     onClose: () => void;
+    onCreated?: () => void;
 }
 
-export default function CreateLightningModal({ isOpen, onClose }: ModalProps) {
+export default function CreateLightningModal({ isOpen, onClose, onCreated }: ModalProps) {
+    const { showToast } = useToast();
+    const [title, setTitle] = useState('');
+    const [date, setDate] = useState('');
+    const [startTime, setStartTime] = useState('');
+    const [endTime, setEndTime] = useState('');
+    const [capacity, setCapacity] = useState('');
+    const [location, setLocation] = useState('');
+    const [fee, setFee] = useState('');
+    const [memo, setMemo] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
     if (!isOpen) return null;
+
+    const resetForm = () => {
+        setTitle(''); setDate(''); setStartTime(''); setEndTime('');
+        setCapacity(''); setLocation(''); setFee(''); setMemo('');
+    };
+
+    const handleSubmit = async () => {
+        if (!title.trim() || !date || !startTime || !endTime || !location.trim() || !capacity) {
+            showToast('필수 항목을 모두 입력해주세요.', 'error');
+            return;
+        }
+
+        const start = new Date(`${date}T${startTime}:00`);
+        const end = new Date(`${date}T${endTime}:00`);
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            showToast('날짜와 시간을 올바르게 입력해주세요.', 'error');
+            return;
+        }
+
+        // 메모: 사용자가 입력한 메모와 참여비를 함께 보관
+        const memoParts = [];
+        if (memo.trim()) memoParts.push(memo.trim());
+        if (fee.trim()) memoParts.push(`참여비 ${fee.trim()}원`);
+
+        setIsSubmitting(true);
+        try {
+            const payload = {
+                title: title.trim(),
+                activityDate: date,
+                activityTime: `${startTime} ~ ${endTime}`,
+                location: location.trim(),
+                memo: memoParts.join(' / '),
+                voteStartAt: new Date().toISOString(),
+                voteEndAt: start.toISOString(),
+                capacity: Number(capacity),
+            };
+
+            const response = await api.post('/votes/flash', payload);
+            if (response.status === 201 || response.status === 200) {
+                showToast('번개 모임이 생성되었습니다.', 'success');
+                resetForm();
+                onCreated?.();
+                onClose();
+            }
+        } catch (err: unknown) {
+            const message = (err as { response?: { data?: { message?: string } } })
+                ?.response?.data?.message || '번개 모임 생성 중 오류가 발생했습니다.';
+            showToast(message, 'error');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center">
         {/* 배경 오버레이 */}
-        <div 
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm" 
-            onClick={onClose} 
+        <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={onClose}
         />
 
         {/* 모달 컨테이너 */}
@@ -43,24 +109,27 @@ export default function CreateLightningModal({ isOpen, onClose }: ModalProps) {
             {/* --- [2] 폼 섹션 (입력창) --- */}
             <div className="px-6 py-6 sm:px-10 sm:py-8 space-y-5 overflow-y-auto custom-scrollbar flex-1 min-h-0">
 
-            <InputGroup icon={<Zap className="w-5 h-5" />} label="번개 모임 이름" placeholder="예) 목요일 저녁 번개" />
-            <InputGroup icon={<Calendar className="w-5 h-5" />} label="날짜" type="date" />
+            <InputGroup icon={<Zap className="w-5 h-5" />} label="번개 모임 이름" placeholder="예) 목요일 저녁 번개" value={title} onChange={setTitle} />
+            <InputGroup icon={<Calendar className="w-5 h-5" />} label="날짜" type="date" value={date} onChange={setDate} />
 
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                <InputGroup icon={<Clock className="w-5 h-5" />} label="시작 시간" type="time" />
-                <InputGroup icon={<Clock className="w-5 h-5" />} label="종료 시간" type="time" />
+                <InputGroup icon={<Clock className="w-5 h-5" />} label="시작 시간" type="time" value={startTime} onChange={setStartTime} />
+                <InputGroup icon={<Clock className="w-5 h-5" />} label="종료 시간" type="time" value={endTime} onChange={setEndTime} />
             </div>
 
-            <InputGroup icon={<Users className="w-5 h-5" />} label="최대 참여 인원" placeholder="예) 18" type="number" />
-            <InputGroup icon={<MapPin className="w-5 h-5" />} label="장소" placeholder="예) 강남구민체육센터" />
+            <InputGroup icon={<Users className="w-5 h-5" />} label="최대 참여 인원" placeholder="예) 18" type="number" value={capacity} onChange={setCapacity} />
+            <InputGroup icon={<MapPin className="w-5 h-5" />} label="장소" placeholder="예) 강남구민체육센터" value={location} onChange={setLocation} />
+            <InputGroup icon={<FileText className="w-5 h-5" />} label="메모 (선택)" placeholder="예) 셔틀콕 지참, 초보 환영" value={memo} onChange={setMemo} />
 
             <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-black text-slate-500">
-                    <span className="inline-flex w-5 justify-center shrink-0"><CreditCard className="w-5 h-5" /></span> 참여비
+                    <span className="inline-flex w-5 justify-center shrink-0"><CreditCard className="w-5 h-5" /></span> 참여비 (선택)
                 </label>
                 <div className="relative">
                 <input
                     type="text"
+                    value={fee}
+                    onChange={(e) => setFee(e.target.value)}
                     placeholder="10000"
                     className="w-full px-4 py-3 sm:py-3.5 bg-white border border-gray-200 rounded-xl sm:rounded-2xl font-bold placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-green-500/20 pr-12"
                 />
@@ -73,12 +142,17 @@ export default function CreateLightningModal({ isOpen, onClose }: ModalProps) {
             <div className="px-6 py-5 sm:px-10 sm:py-6 border-t border-gray-100 grid grid-cols-2 gap-3 sm:gap-4 shrink-0">
             <button
                 onClick={onClose}
-                className="py-3.5 bg-[#F1F3F5] text-slate-600 font-black rounded-xl sm:rounded-2xl hover:bg-gray-200 transition-all"
+                disabled={isSubmitting}
+                className="py-3.5 bg-[#F1F3F5] text-slate-600 font-black rounded-xl sm:rounded-2xl hover:bg-gray-200 transition-all disabled:opacity-50"
             >
                 취소
             </button>
-            <button className="py-3.5 bg-[#3D6B2C] text-white font-black rounded-xl sm:rounded-2xl shadow-lg hover:bg-[#2D5A27] transition-all">
-                번개 모임 만들기
+            <button
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="py-3.5 bg-[#3D6B2C] text-white font-black rounded-xl sm:rounded-2xl shadow-lg hover:bg-[#2D5A27] transition-all disabled:opacity-50"
+            >
+                {isSubmitting ? '생성 중...' : '번개 모임 만들기'}
             </button>
             </div>
         </div>
@@ -87,7 +161,7 @@ export default function CreateLightningModal({ isOpen, onClose }: ModalProps) {
 }
 
 /** 아이콘과 라벨이 포함된 공용 입력창 **/
-function InputGroup({ icon, label, placeholder, type = "text" }: { icon: React.ReactNode; label: string; placeholder?: string; type?: string }) {
+function InputGroup({ icon, label, placeholder, type = "text", value, onChange }: { icon: React.ReactNode; label: string; placeholder?: string; type?: string; value: string; onChange: (v: string) => void }) {
     return (
         <div className="space-y-2">
         <label className="flex items-center gap-2 text-sm font-black text-slate-500">
@@ -95,6 +169,8 @@ function InputGroup({ icon, label, placeholder, type = "text" }: { icon: React.R
         </label>
         <input
             type={type}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
             className="w-full px-4 py-3 sm:py-3.5 bg-white border border-gray-200 rounded-xl sm:rounded-2xl font-bold placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-green-500/20 transition-all"
         />

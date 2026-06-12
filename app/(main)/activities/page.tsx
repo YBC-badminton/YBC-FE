@@ -179,6 +179,7 @@ export default function ActivitiesPage() {
             <CreateLightningModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
+                onCreated={fetchVotes}
             />
             <LoginRequiredModal
                 isOpen={showLoginModal}
