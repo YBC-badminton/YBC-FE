@@ -110,7 +110,7 @@ export default function ActivitiesPage() {
 
                 {/* 상단 탭 및 버튼 바 */}
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-                    <div className="flex bg-white p-1 rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+                    <div className="flex bg-white p-1 rounded-xl shadow-sm border border-gray-100 overflow-x-auto scrollbar-hide">
                         {['전체', '정기모임', '번개모임'].map((tab) => (
                             <button
                                 key={tab}
