@@ -125,7 +125,7 @@ export default function ReviewPage() {
     }, [fetchReviews]);
 
     return (
-        <div className="min-h-screen bg-[#F8F9FA] py-12 px-6 lg:px-24 font-sans select-none text-left">
+        <div className="min-h-screen bg-[#F8F9FA] py-12 px-6 lg:px-24 font-sans text-left">
             <div className="max-w-screen-xl mx-auto space-y-8 sm:space-y-12">
 
                 {/* --- [1] 헤더 섹션 --- */}
