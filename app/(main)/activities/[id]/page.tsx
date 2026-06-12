@@ -302,9 +302,9 @@ export default function ActivityVotePage() {
 
             {/* 투표 기간 안내 */}
             <div className="bg-white border border-gray-100 p-4 sm:p-5 rounded-2xl space-y-2">
-                <div className="flex items-center gap-2 text-slate-500 font-bold text-xs sm:text-sm">
-                <CalendarIcon className="w-4 h-4 text-slate-400 shrink-0" />
-                <span className="truncate">투표 기간: {formatDateTime(activity.voteStartAt)} ~ {formatDateTime(activity.voteEndAt)}</span>
+                <div className="flex items-start gap-2 text-slate-500 font-bold text-xs sm:text-sm">
+                <CalendarIcon className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                <span className="break-keep leading-relaxed">투표 기간: {formatDateTime(activity.voteStartAt)} ~ {formatDateTime(activity.voteEndAt)}</span>
                 </div>
                 {isVoteActive ? (
                     <div className="flex items-center gap-2 text-green-700 font-black text-xs sm:text-sm">
@@ -382,8 +382,9 @@ export default function ActivityVotePage() {
                     {absentees.length}명
                     </span>
                 </div>
-                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden shadow-inner">
+                <div className="w-full h-8 bg-slate-100 rounded-lg overflow-hidden relative shadow-inner">
                     <div className="h-full bg-slate-400 transition-all duration-700" style={{ width: `${absentRate}%` }} />
+                    <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-black drop-shadow-sm">{absentRate}%</span>
                 </div>
 
                 {showAbsent && (
