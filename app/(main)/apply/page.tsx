@@ -536,7 +536,7 @@ function FormTextarea({
 }) {
   return (
     <div className="space-y-2">
-      <label className="text-sm font-bold text-slate-600">
+      <label className="text-sm font-bold text-slate-600 mb-3">
         {label}
         {required && <span className="text-red-400 ml-1">*</span>}
       </label>
