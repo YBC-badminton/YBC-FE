@@ -107,12 +107,16 @@ export default function MembersPage() {
     };
 
     const handleAdd = async () => {
+        if (!addForm.name || !addForm.phone) {
+            showToast('이름과 전화번호는 필수입니다.', 'error');
+            return;
+        }
         try {
             await api.post('/admin/members', addForm);
             setShowAddForm(false);
             setAddForm({ name: '', university: '', phone: '', email: '', gender: 'MALE', age: '', term: '' });
             fetchMembers();
-            showToast('부원이 추가되었습니다.', 'success');
+            showToast('부원이 성공적으로 추가되었습니다.', 'success');
         } catch {
             showToast('부원 추가에 실패했습니다.', 'error');
         }
@@ -214,6 +218,29 @@ export default function MembersPage() {
                     </button>
                 </div>
             </div>
+
+            {/* 부원 추가 폼 */}
+            {showAddForm && (
+                <div className="bg-white border border-blue-100 rounded-xl p-6 mb-6 shadow-sm animate-in fade-in zoom-in duration-200">
+                    <h3 className="font-black text-gray-800 mb-4">새 부원 추가</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <input placeholder="이름" value={addForm.name} onChange={(e) => setAddForm({ ...addForm, name: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
+                        <input placeholder="학교" value={addForm.university} onChange={(e) => setAddForm({ ...addForm, university: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
+                        <input placeholder="전화번호" value={addForm.phone} onChange={(e) => setAddForm({ ...addForm, phone: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
+                        <input placeholder="이메일" value={addForm.email} onChange={(e) => setAddForm({ ...addForm, email: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
+                        <select value={addForm.gender} onChange={(e) => setAddForm({ ...addForm, gender: e.target.value as 'MALE' | 'FEMALE' })} className="p-2.5 border rounded-lg text-sm bg-white">
+                            <option value="MALE">남성</option>
+                            <option value="FEMALE">여성</option>
+                        </select>
+                        <input placeholder="나이(예: 01)" value={addForm.age} onChange={(e) => setAddForm({ ...addForm, age: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
+                        <input placeholder="기수(예: 10)" value={addForm.term} onChange={(e) => setAddForm({ ...addForm, term: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
+                    </div>
+                    <div className="flex gap-2 mt-4 justify-end">
+                        <button onClick={() => setShowAddForm(false)} className="px-4 py-2 text-sm text-gray-500 border rounded-lg hover:bg-gray-50">취소</button>
+                        <button onClick={handleAdd} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">추가 완료</button>
+                    </div>
+                </div>
+            )}
 
             {/* 리스트 (데스크탑/모바일 생략 없이 작성) */}
             <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
