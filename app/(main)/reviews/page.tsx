@@ -184,15 +184,23 @@ function ReviewDetailModal({ review, onClose, isAuthor, onChanged, showToast }: 
     const [editContent, setEditContent] = useState(review.content);
     const [busy, setBusy] = useState(false);
 
+    const saveEdit = async () => {
+        setBusy(true);
+        try {
+            await api.patch(`/reviews/${review.reviewId}`, { rating: review.rating, content: editContent, usageMonth: review.usageMonth });
+            showToast('수정되었습니다.', 'success');
+            setIsEditing(false);
+            onChanged();
+        } catch { showToast('오류 발생', 'error'); } finally { setBusy(false); }
+    };
+
     const handleDelete = async () => {
         if (!confirm('삭제하시겠습니까?')) return;
         try {
             await api.delete(`/reviews/${review.reviewId}`);
             showToast('삭제되었습니다.', 'success');
             onChanged();
-        } catch {
-            showToast('오류 발생', 'error');
-        }
+        } catch { showToast('오류 발생', 'error'); }
     };
 
     return (
@@ -221,19 +229,37 @@ function ReviewDetailModal({ review, onClose, isAuthor, onChanged, showToast }: 
                 </div>
 
                 <div className="py-8 border-y border-slate-100 min-h-[250px]">
-                    <p className="text-lg text-slate-600 leading-relaxed whitespace-pre-wrap break-all">
-                        {review.content}
-                    </p>
+                    {isEditing ? (
+                        <textarea 
+                            value={editContent} 
+                            onChange={(e) => setEditContent(e.target.value)} 
+                            rows={5} 
+                            className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#4B7332] outline-none" 
+                        />
+                    ) : (
+                        <p className="text-lg text-slate-600 leading-relaxed whitespace-pre-wrap break-all">
+                            {review.content}
+                        </p>
+                    )}
                 </div>
 
+                {/* 💡 복구된 수정/삭제 버튼 */}
                 {isAuthor && (
-                    <div className="flex gap-2 justify-end pt-8">
-                        <button 
-                            onClick={handleDelete} 
-                            className="px-6 py-3 bg-red-50 text-red-600 rounded-full font-bold hover:bg-red-100 transition"
-                        >
-                            삭제
-                        </button>
+                    <div className="flex gap-4 justify-end pt-8">
+                        {isEditing ? (
+                            <button onClick={saveEdit} disabled={busy} className="flex items-center gap-2 px-6 py-3 bg-[#4B7332] text-white rounded-full font-bold hover:bg-[#3d5d28]">
+                                <Check className="w-5 h-5" /> 저장
+                            </button>
+                        ) : (
+                            <>
+                                <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-6 py-3 bg-gray-100 text-slate-600 rounded-full font-bold hover:bg-gray-200">
+                                    <Pencil className="w-5 h-5" /> 수정
+                                </button>
+                                <button onClick={handleDelete} className="flex items-center gap-2 px-6 py-3 bg-red-50 text-red-600 rounded-full font-bold hover:bg-red-100">
+                                    <Trash2 className="w-5 h-5" /> 삭제
+                                </button>
+                            </>
+                        )}
                     </div>
                 )}
             </div>
