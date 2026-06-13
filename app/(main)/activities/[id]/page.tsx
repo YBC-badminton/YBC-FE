@@ -30,6 +30,7 @@ interface AttendanceStatusResponse {
 interface MemberShort {
     memberId: number;
     nickname: string;
+    isWaiting?: boolean;
 }
 
 interface AttendeesResponse {
@@ -120,8 +121,8 @@ export default function ActivityVotePage() {
 
     // 진행률 계산
     const attendanceRate = activity && activity.capacity > 0
-        ? Math.round((attendees.length / activity.capacity) * 100)
-        : 0;
+    ? Math.min(Math.round((attendees.length / activity.capacity) * 100), 100)
+    : 0;
 
     const absentRate = activity && activity.capacity > 0
         ? Math.round((absentees.length / activity.capacity) * 100)
@@ -406,17 +407,22 @@ export default function ActivityVotePage() {
                 </div>
 
                 {showAttending && (
-                    <div className="bg-slate-50 rounded-2xl border border-gray-100 p-4 sm:p-6 mt-6">
+                    <div className="bg-slate-50 rounded-2xl border border-gray-100 p-4 sm:p-6 mt-6 space-y-2">
                         {attendees.length === 0 ? (
                             <p className="text-sm text-slate-400 font-bold text-center">아직 참석자가 없습니다.</p>
                         ) : (
-                            <ul className="flex flex-wrap gap-2">
-                                {attendees.map((m) => (
-                                    <li key={m.memberId} className="px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm font-bold text-slate-700 shadow-sm">
-                                        {m.nickname}
-                                    </li>
-                                ))}
-                            </ul>
+                            attendees.map((m, idx) => (
+                                <div key={m.memberId} className="flex justify-between items-center p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
+                                    {/* 💡 번호와 닉네임 */}
+                                    <span className="font-bold text-slate-700 text-sm">
+                                        {idx + 1}. {m.nickname}
+                                    </span>
+                                    {/* 💡 isWaiting에 따른 뱃지 */}
+                                    <span className={`text-[10px] font-black px-2.5 py-1 rounded-full ${m.isWaiting ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
+                                        {m.isWaiting ? '대기' : '참가'}
+                                    </span>
+                                </div>
+                            ))
                         )}
                     </div>
                 )}
