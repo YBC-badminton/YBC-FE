@@ -6,24 +6,17 @@ import Link from "next/link";
 // 하드코딩된 활동 데이터
 const HARDCODED_ACTIVITIES = [
     {
-        id: "regular", // regular (정식 복식 경기)
+        id: "regular", // regular (정기 운동)
         subtitle: "매주 화, 토요일마다",
-        title: "정기 복식 경기",
+        title: "정기운동",
         imageUrl: "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?q=80&w=1200&auto=format&fit=crop", 
         heightClass: "h-[280px] sm:h-[320px]",
     },
     {
-        id: "tournament", // tournament (자체 경기)
+        id: "event", // event (이벤트)
         subtitle: "부원들끼리 실력을 판가름하는",
-        title: "자체 경기",
+        title: "이벤트",
         imageUrl: "https://images.unsplash.com/photo-1599474924187-334a4ae5bd3c?q=80&w=800&auto=format&fit=crop",
-        heightClass: "h-[240px] sm:h-[260px]",
-    },
-    {
-        id: "cabbage-day", // cabbage-day (양배추의 날)
-        subtitle: "부원들끼리 친목을 다지는",
-        title: "양배추의 날",
-        imageUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=800&auto=format&fit=crop",
         heightClass: "h-[240px] sm:h-[260px]",
     },
     {
@@ -32,14 +25,7 @@ const HARDCODED_ACTIVITIES = [
         title: "뒷풀이",
         imageUrl: "https://images.unsplash.com/photo-1528605248644-14dd04022da1?q=80&w=800&auto=format&fit=crop",
         heightClass: "h-[240px] sm:h-[260px]",
-    },
-    {
-        id: "flash", // flash (번개 운동)
-        subtitle: "마음이 맞는 부원끼리",
-        title: "번개 운동",
-        imageUrl: "https://images.unsplash.com/photo-1611250282006-4484dd3fba6b?q=80&w=800&auto=format&fit=crop",
-        heightClass: "h-[240px] sm:h-[260px]",
-    },
+    }
 ];
 
 export default function PastActivitiesPage() {
