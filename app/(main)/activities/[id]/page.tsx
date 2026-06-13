@@ -50,6 +50,7 @@ interface GuestItem {
     guestName: string;
     gender: 'MALE' | 'FEMALE';
     level: string;
+    isWaiting?: boolean;
 }
 
 interface GuestsResponse {
@@ -562,8 +563,14 @@ export default function ActivityVotePage() {
                         return (
                             <li key={g.guestId} className="flex justify-between items-center bg-slate-50 rounded-2xl border border-gray-100 px-4 sm:px-5 py-3 sm:py-4">
                                 <div className="flex flex-col min-w-0 mr-3">
-                                    <span className="font-black text-slate-800 text-[14px] sm:text-[15px] truncate">{g.guestName}</span>
-                                    <span className="text-[11px] sm:text-xs font-bold text-slate-400 truncate">초대자: {g.inviterName}</span>
+                                    {/* 💡 수정된 부분: 이름 옆에 대기/참석 뱃지 추가 */}
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-black text-slate-800 text-[14px] sm:text-[15px] truncate">{g.guestName}</span>
+                                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${g.isWaiting ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
+                                            {g.isWaiting ? '대기' : '참석'}
+                                        </span>
+                                    </div>
+                                    <span className="text-[11px] sm:text-xs font-bold text-slate-400 truncate mt-0.5">초대자: {g.inviterName}</span>
                                 </div>
                                 <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                                     <span className="text-[11px] sm:text-xs font-black text-slate-500 px-2 sm:px-2.5 py-1 bg-white rounded-full border border-gray-200">
