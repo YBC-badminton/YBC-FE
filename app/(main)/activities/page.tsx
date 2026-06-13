@@ -195,6 +195,10 @@ function ActivityCard({ data, isPast }: { data: VoteItem; isPast: boolean }) {
     const percentage = data.capacity > 0 ? (data.currentParticipantCount / data.capacity) * 100 : 0;
     const typeLabel = TYPE_LABEL[data.type] || data.type;
 
+    // 💡 data에 matchRegistered 속성이 없다면 VoteItem 인터페이스에 추가해 주세요.
+    // 만약 API 응답에 이 값이 포함되어 있다면 아래처럼 조건부 렌더링이 가능합니다.
+    const isMatchRegistered = (data as any).matchRegistered;
+
     return (
         <div className="relative group">
             <div
@@ -210,14 +214,16 @@ function ActivityCard({ data, isPast }: { data: VoteItem; isPast: boolean }) {
                         </span>
                         <h3 className="text-base sm:text-lg font-black text-slate-800 truncate">{data.name}</h3>
 
-                        {/* 💡 수정: 과거 활동(isPast)이어도 대진 버튼이 보이게 변경 */}
-                        <Link
-                            href={`/activities/${data.voteId}/tournament`}
-                            onClick={(e) => e.stopPropagation()}
-                            className="bg-[#4B7332] text-white text-[11px] font-bold px-3 py-1 rounded-full whitespace-nowrap drop-shadow-sm hover:bg-[#3d5d28] transition-colors z-20"
-                        >
-                            대진 확인
-                        </Link>
+                        {/* 💡 matchRegistered가 true일 때만 대진 확인 버튼 노출 */}
+                        {isMatchRegistered && (
+                            <Link
+                                href={`/activities/${data.voteId}/tournament`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="bg-[#4B7332] text-white text-[11px] font-bold px-3 py-1 rounded-full whitespace-nowrap drop-shadow-sm hover:bg-[#3d5d28] transition-colors z-20"
+                            >
+                                대진 확인
+                            </Link>
+                        )}
                     </div>
                     
                     <div className="flex flex-col gap-1 text-xs font-bold text-slate-400">
