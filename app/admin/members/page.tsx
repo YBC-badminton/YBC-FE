@@ -23,7 +23,6 @@ interface Member {
     gender: 'MALE' | 'FEMALE';
     age: string;
     term: string;
-    isMapoResident: boolean; // 💡 마포구 거주 여부 필드 추가
 }
 
 interface MembersResponse {
@@ -49,7 +48,6 @@ export default function MembersPage() {
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [termFilter, setTermFilter] = useState('all');
-    const [showMapoOnly, setShowMapoOnly] = useState(false); // 💡 마포구 필터 상태
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editForm, setEditForm] = useState<Partial<MemberForm>>({});
     const [showAddForm, setShowAddForm] = useState(false);
@@ -57,6 +55,7 @@ export default function MembersPage() {
         name: '', university: '', phone: '', email: '', gender: 'MALE', age: '', term: '',
     });
 
+    // GET /admin/members
     const fetchMembers = useCallback(async () => {
         setLoading(true);
         setError(null);
@@ -77,6 +76,7 @@ export default function MembersPage() {
         fetchMembers();
     }, [fetchMembers]);
 
+    // GET /admin/members/search?name=
     const handleSearch = async () => {
         if (!searchQuery.trim()) {
             fetchMembers();
@@ -85,6 +85,7 @@ export default function MembersPage() {
         setLoading(true);
         try {
             const res = await api.get(`/admin/members/search`, { params: { name: searchQuery } });
+            // search can return single or array
             const data = Array.isArray(res.data) ? res.data : [res.data];
             setMembers(data);
         } catch {
@@ -94,6 +95,7 @@ export default function MembersPage() {
         }
     };
 
+    // PATCH /admin/members/{memberId}
     const handleSaveEdit = async (memberId: number) => {
         try {
             await api.patch(`/admin/members/${memberId}`, editForm);
@@ -106,22 +108,20 @@ export default function MembersPage() {
         }
     };
 
+    // POST /admin/members
     const handleAdd = async () => {
-        if (!addForm.name || !addForm.phone) {
-            showToast('이름과 전화번호는 필수입니다.', 'error');
-            return;
-        }
         try {
             await api.post('/admin/members', addForm);
             setShowAddForm(false);
             setAddForm({ name: '', university: '', phone: '', email: '', gender: 'MALE', age: '', term: '' });
             fetchMembers();
-            showToast('부원이 성공적으로 추가되었습니다.', 'success');
+            showToast('부원이 추가되었습니다.', 'success');
         } catch {
             showToast('부원 추가에 실패했습니다.', 'error');
         }
     };
 
+    // DELETE /admin/members/{memberId}
     const handleDelete = async (memberId: number, name: string) => {
         if (!confirm(`${name} 부원을 삭제하시겠습니까?`)) return;
         try {
@@ -136,153 +136,233 @@ export default function MembersPage() {
     const startEdit = (member: Member) => {
         setEditingId(member.memberId);
         setEditForm({
-            name: member.name, university: member.university, phone: member.phone,
-            email: member.email, gender: member.gender, age: member.age, term: member.term,
+            name: member.name,
+            university: member.university,
+            phone: member.phone,
+            email: member.email,
+            gender: member.gender,
+            age: member.age,
+            term: member.term,
         });
     };
 
-    // 필터링 및 통계 계산
+    // 기수별 인원 집계 및 필터 옵션
     const termCounts = members.reduce<Record<string, number>>((acc, m) => {
         if (m.term) acc[m.term] = (acc[m.term] || 0) + 1;
         return acc;
     }, {});
-    
     const termOptions = Object.keys(termCounts).sort((a, b) => {
         const na = parseInt(a, 10);
         const nb = parseInt(b, 10);
-        return !isNaN(na) && !isNaN(nb) ? nb - na : a.localeCompare(b);
+        if (!isNaN(na) && !isNaN(nb)) return nb - na;
+        return a.localeCompare(b);
     });
 
-    const filteredMembers = members.filter(m => {
-        const matchesSearch = searchQuery === '' || m.name.includes(searchQuery) || m.university.includes(searchQuery);
-        const matchesTerm = termFilter === 'all' || m.term === termFilter;
-        const matchesMapo = !showMapoOnly || m.isMapoResident === true;
-        return matchesSearch && matchesTerm && matchesMapo;
-    });
+    const filteredMembers = (searchQuery && !loading
+        ? members
+        : members.filter(m =>
+            m.name.includes(searchQuery) || m.university.includes(searchQuery)
+        )
+    ).filter(m => termFilter === 'all' || m.term === termFilter);
 
-    if (loading && members.length === 0) return <div className="py-20 text-center text-slate-400 font-bold">불러오는 중...</div>;
-    if (error) return <div className="p-10 text-red-500 font-bold text-center">{error}</div>;
+    if (loading && members.length === 0) {
+        return (
+            <div className="max-w-6xl mx-auto px-4 py-6">
+                <div className="py-20 text-center text-slate-400 font-bold">불러오는 중...</div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="max-w-6xl mx-auto px-4 py-6">
+                <div className="bg-red-50 border border-red-200 text-red-600 text-sm font-bold px-5 py-4 rounded-xl">{error}</div>
+            </div>
+        );
+    }
 
     return (
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="mb-8">
-                <h1 className="text-2xl font-black text-gray-800">부원 명단</h1>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="mb-6 sm:mb-8">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-800">부원 명단</h1>
                 <p className="text-sm text-gray-500 mt-1">동아리 부원 정보를 관리하세요.</p>
             </div>
 
-            {/* 필터 및 검색 바 */}
-            <div className="flex flex-col gap-4 mb-6">
-                <div className="flex flex-wrap gap-2 items-center">
-                    {/* 이름/학교 검색창 */}
-                    <div className="relative flex-1 min-w-[200px]">
+            {/* 현황 카드 */}
+            <div className="mb-8 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-100 shadow-sm text-center sm:text-left">
+                    <p className="text-[10px] sm:text-sm text-gray-500 mb-1 whitespace-nowrap">전체 부원</p>
+                    <p className="text-lg sm:text-2xl font-bold text-gray-800">{summary?.totalMembers ?? members.length}명</p>
+                </div>
+                {termOptions.map((term) => (
+                    <button
+                        key={term}
+                        onClick={() => setTermFilter(termFilter === term ? 'all' : term)}
+                        className={`p-4 sm:p-6 rounded-xl border shadow-sm text-center sm:text-left transition ${
+                            termFilter === term
+                                ? 'bg-blue-600 border-blue-600 text-white'
+                                : 'bg-white border-gray-100 text-gray-800 hover:border-blue-300'
+                        }`}
+                    >
+                        <p className={`text-[10px] sm:text-sm mb-1 whitespace-nowrap ${termFilter === term ? 'text-blue-100' : 'text-gray-500'}`}>{term}</p>
+                        <p className="text-lg sm:text-2xl font-bold">{termCounts[term]}명</p>
+                    </button>
+                ))}
+            </div>
+
+            {/* 검색 및 추가 버튼 */}
+            <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                    <div className="relative w-full sm:w-72">
                         <input
                             type="text"
-                            placeholder="이름 또는 학교 검색"
+                            placeholder="이름으로 검색"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm"
+                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                         />
                         <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
                     </div>
-                    
-                    {/* 기수 선택 드롭다운 (버튼들 대신 적용) */}
                     <select
                         value={termFilter}
                         onChange={(e) => setTermFilter(e.target.value)}
-                        className="px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white font-bold text-gray-700"
+                        className="w-full sm:w-40 px-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
                     >
                         <option value="all">전체 기수</option>
-                        {termOptions.map(term => (
-                            <option key={term} value={term}>{term}기 ({termCounts[term]}명)</option>
+                        {termOptions.map((term) => (
+                            <option key={term} value={term}>{term} ({termCounts[term]}명)</option>
                         ))}
                     </select>
-
-                    {/* 마포구 필터 체크박스 */}
-                    <label className="flex items-center gap-2 px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white cursor-pointer hover:bg-gray-50">
-                        <input 
-                            type="checkbox" 
-                            checked={showMapoOnly} 
-                            onChange={(e) => setShowMapoOnly(e.target.checked)} 
-                            className="w-4 h-4 text-blue-600 rounded" 
-                        />
-                        <span className="font-bold text-gray-700">마포구 거주자</span>
-                    </label>
-
-                    {/* 부원 추가 버튼 */}
-                    <button 
-                        onClick={() => setShowAddForm(!showAddForm)} 
-                        className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-md active:scale-95 text-sm"
-                    >
-                        + 부원 추가
-                    </button>
                 </div>
+                <button
+                    onClick={() => setShowAddForm(!showAddForm)}
+                    className="w-full sm:w-auto bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition shadow-md active:scale-95 text-sm"
+                >
+                    + 부원 추가
+                </button>
             </div>
 
             {/* 부원 추가 폼 */}
             {showAddForm && (
-                <div className="bg-white border border-blue-100 rounded-xl p-6 mb-6 shadow-sm animate-in fade-in zoom-in duration-200">
-                    <h3 className="font-black text-gray-800 mb-4">새 부원 추가</h3>
+                <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6 shadow-sm">
+                    <h3 className="font-bold text-gray-800 mb-4">새 부원 추가</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <input placeholder="이름" value={addForm.name} onChange={(e) => setAddForm({ ...addForm, name: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
-                        <input placeholder="학교" value={addForm.university} onChange={(e) => setAddForm({ ...addForm, university: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
-                        <input placeholder="전화번호" value={addForm.phone} onChange={(e) => setAddForm({ ...addForm, phone: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
-                        <input placeholder="이메일" value={addForm.email} onChange={(e) => setAddForm({ ...addForm, email: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
-                        <select value={addForm.gender} onChange={(e) => setAddForm({ ...addForm, gender: e.target.value as 'MALE' | 'FEMALE' })} className="p-2.5 border rounded-lg text-sm bg-white">
+                        <input placeholder="이름" value={addForm.name} onChange={(e) => setAddForm({ ...addForm, name: e.target.value })} className="p-2 border rounded-lg text-sm" />
+                        <input placeholder="학교" value={addForm.university} onChange={(e) => setAddForm({ ...addForm, university: e.target.value })} className="p-2 border rounded-lg text-sm" />
+                        <input placeholder="전화번호" value={addForm.phone} onChange={(e) => setAddForm({ ...addForm, phone: e.target.value })} className="p-2 border rounded-lg text-sm" />
+                        <input placeholder="이메일" value={addForm.email} onChange={(e) => setAddForm({ ...addForm, email: e.target.value })} className="p-2 border rounded-lg text-sm" />
+                        <select value={addForm.gender} onChange={(e) => setAddForm({ ...addForm, gender: e.target.value as 'MALE' | 'FEMALE' })} className="p-2 border rounded-lg text-sm">
                             <option value="MALE">남성</option>
                             <option value="FEMALE">여성</option>
                         </select>
-                        <input placeholder="나이(예: 01)" value={addForm.age} onChange={(e) => setAddForm({ ...addForm, age: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
-                        <input placeholder="기수(예: 10)" value={addForm.term} onChange={(e) => setAddForm({ ...addForm, term: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
+                        <input placeholder="나이 (예: 01)" value={addForm.age} onChange={(e) => setAddForm({ ...addForm, age: e.target.value })} className="p-2 border rounded-lg text-sm" />
+                        <input placeholder="기수 (예: 10기)" value={addForm.term} onChange={(e) => setAddForm({ ...addForm, term: e.target.value })} className="p-2 border rounded-lg text-sm" />
                     </div>
                     <div className="flex gap-2 mt-4 justify-end">
                         <button onClick={() => setShowAddForm(false)} className="px-4 py-2 text-sm text-gray-500 border rounded-lg hover:bg-gray-50">취소</button>
-                        <button onClick={handleAdd} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">추가 완료</button>
+                        <button onClick={handleAdd} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">추가</button>
                     </div>
                 </div>
             )}
 
-            {/* 리스트 (데스크탑/모바일 생략 없이 작성) */}
-            <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
-                <table className="w-full text-left hidden lg:table">
-                    <thead className="bg-gray-50 text-gray-400 text-xs uppercase font-bold">
+            {/* 데스크탑 테이블 */}
+            <div className="hidden lg:block bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+                <table className="w-full text-left">
+                    <thead className="bg-gray-50 text-gray-400 text-sm uppercase font-bold">
                         <tr>
-                            <th className="p-4">이름</th>
-                            <th className="p-4">성별</th>
-                            <th className="p-4">나이</th>
-                            <th className="p-4">학교</th>
-                            <th className="p-4">전화번호</th>
-                            <th className="p-4">기수</th>
-                            <th className="p-4 text-center">관리</th>
+                            <th className="p-4 font-medium">이름</th>
+                            <th className="p-4 font-medium">성별</th>
+                            <th className="p-4 font-medium">나이</th>
+                            <th className="p-4 font-medium">학교</th>
+                            <th className="p-4 font-medium">전화번호</th>
+                            <th className="p-4 font-medium">이메일</th>
+                            <th className="p-4 font-medium">기수</th>
+                            <th className="p-4 font-medium text-center">관리</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100 text-sm">
+                    <tbody className="divide-y divide-gray-100 text-gray-700">
                         {filteredMembers.map((member) => (
-                            <tr key={member.memberId} className="hover:bg-gray-50">
-                                <td className="p-4 font-bold">{member.name}</td>
-                                <td className="p-4">{GENDER_LABEL[member.gender]}</td>
-                                <td className="p-4">{member.age}년생</td>
-                                <td className="p-4">{member.university}</td>
-                                <td className="p-4">{member.phone}</td>
-                                <td className="p-4">{member.term}</td>
-                                <td className="p-4 text-center space-x-2">
-                                    <button onClick={() => handleDelete(member.memberId, member.name)} className="text-red-400 hover:text-red-600"><Trash2 className="w-4 h-4"/></button>
-                                </td>
+                            <tr key={member.memberId} className="hover:bg-gray-50 transition">
+                                {editingId === member.memberId ? (
+                                    <>
+                                        <td className="p-4"><input value={editForm.name || ''} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="p-1 border rounded text-sm w-full" /></td>
+                                        <td className="p-4">
+                                            <select value={editForm.gender || 'MALE'} onChange={(e) => setEditForm({ ...editForm, gender: e.target.value as 'MALE' | 'FEMALE' })} className="p-1 border rounded text-sm">
+                                                <option value="MALE">남</option>
+                                                <option value="FEMALE">여</option>
+                                            </select>
+                                        </td>
+                                        <td className="p-4"><input value={editForm.age || ''} onChange={(e) => setEditForm({ ...editForm, age: e.target.value })} className="p-1 border rounded text-sm w-16" /></td>
+                                        <td className="p-4"><input value={editForm.university || ''} onChange={(e) => setEditForm({ ...editForm, university: e.target.value })} className="p-1 border rounded text-sm w-full" /></td>
+                                        <td className="p-4"><input value={editForm.phone || ''} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className="p-1 border rounded text-sm w-full" /></td>
+                                        <td className="p-4"><input value={editForm.email || ''} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} className="p-1 border rounded text-sm w-full" /></td>
+                                        <td className="p-4"><input value={editForm.term || ''} onChange={(e) => setEditForm({ ...editForm, term: e.target.value })} className="p-1 border rounded text-sm w-20" /></td>
+                                        <td className="p-4 text-center space-x-2">
+                                            <button onClick={() => handleSaveEdit(member.memberId)} className="text-blue-600 text-xs font-bold hover:underline">저장</button>
+                                            <button onClick={() => setEditingId(null)} className="text-gray-400 text-xs font-bold hover:underline">취소</button>
+                                        </td>
+                                    </>
+                                ) : (
+                                    <>
+                                        <td className="p-4 font-medium text-gray-900">{member.name}</td>
+                                        <td className="p-4">{GENDER_LABEL[member.gender] || '-'}</td>
+                                        <td className="p-4">{member.age}년생</td>
+                                        <td className="p-4">{member.university}</td>
+                                        <td className="p-4">{member.phone}</td>
+                                        <td className="p-4 text-sm text-gray-600 truncate max-w-[200px]">{member.email}</td>
+                                        <td className="p-4">{member.term}</td>
+                                        <td className="p-4 text-center space-x-2">
+                                            <button onClick={() => startEdit(member)} className="text-gray-400 hover:text-blue-600 inline-flex"><Pencil className="w-4 h-4" /></button>
+                                            <button onClick={() => handleDelete(member.memberId, member.name)} className="text-gray-400 hover:text-red-500 inline-flex"><Trash2 className="w-4 h-4" /></button>
+                                        </td>
+                                    </>
+                                )}
                             </tr>
                         ))}
                     </tbody>
                 </table>
-                
-                {/* 모바일 뷰 */}
-                <div className="lg:hidden p-4 space-y-4">
-                    {filteredMembers.map((member) => (
-                        <div key={member.memberId} className="border p-4 rounded-xl space-y-2">
-                            <h3 className="font-black text-lg">{member.name}</h3>
-                            <p className="text-sm">{member.university} · {member.term}</p>
-                            <button onClick={() => handleDelete(member.memberId, member.name)} className="w-full py-2 bg-red-50 text-red-600 rounded-lg font-bold text-sm">삭제</button>
+            </div>
+
+            {/* 모바일 카드 리스트 */}
+            <div className="lg:hidden space-y-4">
+                {filteredMembers.map((member) => (
+                    <div key={member.memberId} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4">
+                        <div className="flex justify-between items-start">
+                            <div className="max-w-[60%]">
+                                <h3 className="text-lg font-bold text-gray-900 leading-tight">{member.name}</h3>
+                                <p className="text-xs text-gray-400 mt-1 truncate">{member.university}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button onClick={() => startEdit(member)} className="p-2 bg-gray-50 text-gray-500 rounded-xl hover:bg-gray-100 active:scale-95 transition-all">
+                                    <Pencil className="w-4 h-4" />
+                                </button>
+                                <button onClick={() => handleDelete(member.memberId, member.name)} className="p-2 bg-gray-50 text-gray-500 rounded-xl hover:bg-red-50 active:scale-95 transition-all">
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
-                    ))}
-                </div>
+
+                        <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-sm border-t pt-4">
+                            <div>
+                                <p className="text-[10px] text-gray-400 mb-0.5">기수/나이</p>
+                                <p className="font-medium text-gray-700">{member.term} · {member.age}년생</p>
+                            </div>
+                            <div>
+                                <p className="text-[10px] text-gray-400 mb-0.5">성별</p>
+                                <p className="font-medium text-gray-700">{GENDER_LABEL[member.gender] || '-'}</p>
+                            </div>
+                            <div>
+                                <p className="text-[10px] text-gray-400 mb-0.5">전화번호</p>
+                                <p className="font-medium text-gray-700 text-xs tabular-nums">{member.phone}</p>
+                            </div>
+                            <div className="col-span-2">
+                                <p className="text-[10px] text-gray-400 mb-0.5">이메일</p>
+                                <p className="font-medium text-gray-700 text-xs break-all">{member.email}</p>
+                            </div>
+                        </div>
+                    </div>
+                ))}
             </div>
         </div>
     );
