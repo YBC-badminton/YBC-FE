@@ -40,11 +40,47 @@ interface VoteData {
   };
 }
 
+// API 응답 인터페이스
+interface Availability {
+  recruiting: boolean;
+  term: string | null;
+  startAt: string | null;
+  endAt: string | null;
+}
+
+// 날짜 포맷 함수
+function formatSchedule(start: string | null, end: string | null): string {
+  if (!start || !end) return '';
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return `${d.getMonth() + 1}월 ${d.getDate()}일`;
+  };
+  return `${formatDate(start)} ~ ${formatDate(end)}`;
+}
+
 export default function YBCMainPage() {
   // 정기모임 데이터 상태 추가
   const [recentVotes, setRecentVotes] = useState<VoteData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { user, loginKakao, isLoading: isAuthLoading } = useAuth();
+
+  const [avail, setAvail] = useState<Availability | null>(null);
+
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      try {
+        const res = await api.get<Availability>('/applications/availability');
+        setAvail(res.data);
+      } catch (err) {
+        console.error("모집 정보 로드 실패", err);
+      }
+    };
+    fetchAvailability();
+  }, []);
+
+  // 상태값 변수
+  const isRecruiting = avail?.recruiting;
+  const schedule = avail ? formatSchedule(avail.startAt, avail.endAt) : '';
 
   // 진행 중인 정기모임 데이터 로드 로직 추가
   useEffect(() => {
@@ -104,92 +140,28 @@ export default function YBCMainPage() {
   return (
     <div className="min-h-screen flex flex-col font-sans select-none bg-white">
       <section className="relative w-full min-h-[calc(100vh-80px)] bg-[#F2F8E1] overflow-hidden flex items-center justify-center py-16 sm:py-0">
-        {/* [배경] symbol.png 워터마크 패턴 */}
-        <div className="absolute inset-0 opacity-[0.2] z-0 pointer-events-none">
-          <img
-            src="/images/symbol.png"
-            alt="Background Pattern 1"
-            className="absolute top-[-5%] left-[-3%] w-[30%] sm:w-[20%] max-w-[300px] opacity-[0.9] rotate-[-15deg] object-contain"
-          />
-          <img
-            src="/images/symbol.png"
-            alt="Background Pattern 3"
-            className="absolute top-1/2 left-1/2 max-w-[700px] -translate-x-1/7 -translate-y-1/2 w-[70%] sm:w-[50%] opacity-[0.9] object-contain"
-          />
-        </div>
-
-        {/* 메인 콘텐츠 컨테이너 */}
         <div className="max-w-screen-xl mx-auto px-6 sm:px-12 relative z-10 flex flex-col lg:flex-row items-center w-full gap-8 lg:gap-0">
-          {/* [좌측] mascot.png 캐릭터 */}
           <div className="w-full lg:w-1/3 flex justify-center animate-fade-in-left">
-            <img
-              src="/images/mascot.png"
-              alt="YBC Badminton Mascot"
-              className="w-[200px] sm:w-[300px] lg:w-[400px] h-auto object-contain"
-            />
+            <img src="/images/mascot.png" alt="YBC" className="w-[200px] sm:w-[300px] lg:w-[400px] h-auto object-contain" />
           </div>
 
-          {/* [우측] 텍스트 및 모집 상태 */}
           <div className="w-full lg:w-2/3 text-center flex flex-col items-center gap-5 sm:gap-8 lg:pl-10">
-            <h1
-              className={`${sansita.className} text-4xl sm:text-6xl lg:text-[74px] text-[#00792D] tracking-[0.05em] leading-tight drop-shadow-sm`}
-            >
-              YBC badminton club
-            </h1>
-
-            <p className="text-lg sm:text-2xl font-medium text-green-800 tracking-tight opacity-90">
-              양질의 배드민턴 추구
-            </p>
+            <h1 className="text-4xl sm:text-6xl lg:text-[74px] text-[#00792D] tracking-[0.05em] leading-tight">YBC badminton club</h1>
+            <p className="text-lg sm:text-2xl font-medium text-green-800 tracking-tight opacity-90">양질의 배드민턴 추구</p>
 
             <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mt-2 sm:mt-4">
-              <div
-                onClick={scrollToApply}
-                className="bg-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-full shadow-md flex items-center gap-3 border border-gray-100 transition-transform hover:scale-105 cursor-pointer active:scale-95"
-              >
-                <span className="relative flex h-4 w-4">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-4 w-4 bg-green-500"></span>
-                </span>
-                <span className="text-base sm:text-lg font-bold text-gray-900 tracking-tight">
-                  모집중
-                </span>
-              </div>
-
-              {!user && (
-                <button
-                  onClick={() => loginKakao()}
-                  disabled={isAuthLoading}
-                  className="bg-[#FEE500] px-6 sm:px-8 py-2.5 sm:py-3 rounded-full shadow-md flex items-center gap-2 transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
-                >
-                  <svg className="w-5 h-5 text-[#191919]" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 3C6.48 3 2 6.36 2 10.44c0 2.62 1.74 4.93 4.36 6.24-.14.52-.9 3.37-.93 3.58 0 0-.02.17.09.23.11.07.23.03.23.03.31-.04 3.56-2.33 4.12-2.73.7.1 1.42.15 2.13.15 5.52 0 10-3.36 10-7.5S17.52 3 12 3z" />
-                  </svg>
-                  <span className="text-base sm:text-lg font-bold text-[#191919] tracking-tight">
-                    {isAuthLoading ? '로그인 중...' : '카카오 로그인'}
+              {/* 모집 상태 표시 버튼 */}
+              <div onClick={scrollToApply} className="bg-white px-6 sm:px-8 py-3 rounded-full shadow-md flex flex-col items-center gap-1 border border-gray-100 transition-transform hover:scale-105 cursor-pointer active:scale-95">
+                <div className="flex items-center gap-2">
+                  <span className={`relative flex h-3 w-3 ${isRecruiting ? 'bg-green-500' : 'bg-red-400'} rounded-full`}></span>
+                  <span className="text-base sm:text-lg font-bold text-gray-900 tracking-tight">
+                    {isRecruiting ? '모집중' : '모집마감'}
                   </span>
-                </button>
-              )}
+                </div>
+                {isRecruiting && <span className="text-[10px] text-gray-500 font-bold">{schedule}</span>}
+              </div>
             </div>
           </div>
-        </div>
-
-        <div
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 animate-bounce text-green-800 opacity-50 cursor-pointer"
-          onClick={scrollToApply}
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M19 14l-7 7m0 0l-7-7m7 7V3"
-            ></path>
-          </svg>
         </div>
       </section>
 
@@ -336,21 +308,26 @@ export default function YBCMainPage() {
       <GymLocationSection />
 
       {/* --- [지원하기 섹션] --- */}
-      <section
-        id="apply-section"
-        className="max-w-screen-2xl mx-auto px-6 sm:px-12 py-20 sm:py-32 flex flex-col items-center text-center gap-6 sm:gap-10"
-      >
-        <h2 className="text-3xl sm:text-5xl font-black text-green-800 tracking-tight">
-          지원하기
-        </h2>
-        <p className="text-base sm:text-xl font-medium text-slate-600 max-w-2xl leading-relaxed">
-          YBC 배드민턴 클럽은 실력보다 열정을 가진{" "}
-          <br className="hidden sm:block" />
-          새로운 가족을 언제나 기다리고 있습니다.
-        </p>
-        <Link href="/apply">
-          <button className="bg-[#4B7332] text-white text-sm sm:text-[16px] font-bold px-10 sm:px-14 py-3.5 sm:py-4 rounded-full shadow-lg hover:bg-[#3d5d28] hover:-translate-y-1 transition-all duration-300">
-            지원하기
+      <section id="apply-section" className="max-w-screen-2xl mx-auto px-6 sm:px-12 py-20 sm:py-32 flex flex-col items-center text-center gap-6 sm:gap-10">
+        <h2 className="text-3xl sm:text-5xl font-black text-green-800 tracking-tight">지원하기</h2>
+        <div className="space-y-2">
+          <p className="text-base sm:text-xl font-medium text-slate-600 max-w-2xl leading-relaxed">
+            {isRecruiting 
+              ? `현재 ${avail?.term} 신입 회원을 모집 중입니다 (${schedule})`
+              : "현재 모집 중인 기수가 없습니다. 다음 모집을 기다려주세요!"}
+          </p>
+        </div>
+        
+        <Link href={isRecruiting ? "/apply" : "#"}>
+          <button 
+            className={`px-14 py-4 rounded-full shadow-lg transition-all duration-300 font-bold text-[16px] ${
+              isRecruiting 
+                ? 'bg-[#4B7332] text-white hover:bg-[#3d5d28] hover:-translate-y-1' 
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+            disabled={!isRecruiting}
+          >
+            {isRecruiting ? '지원하기' : '모집 종료'}
           </button>
         </Link>
       </section>
