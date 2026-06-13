@@ -26,6 +26,7 @@ interface AdminActivity {
     activityDate: string;
     location: string;
     attendance: AttendanceSummary;
+    matchRegistered: boolean; // 대진 등록 여부 플래그
 }
 
 interface TeamMember {
@@ -464,18 +465,35 @@ export default function TournamentPage() {
                         {activities.length > 0 ? (
                             activities.map((activity) => (
                                 <div key={activity.voteId} onClick={() => handleSelectActivity(activity)} className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm hover:border-blue-500 cursor-pointer transition-all relative group">
-                                    {completedActivityIds.includes(activity.voteId) && (
+                                    {/* 💡 대진 완료 여부에 따른 뱃지 표시 */}
+                                    {activity.matchRegistered ? (
+                                        <span className="absolute top-4 right-6 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                                            대진 완료
+                                        </span>
+                                    ) : completedActivityIds.includes(activity.voteId) && (
                                         <span className="absolute top-4 right-6 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">완료</span>
                                     )}
-                                    <h3 className="text-xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors">{activity.title}</h3>
+
+                                    <h3 className="text-xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors flex items-center gap-2">
+                                        {activity.title}
+                                        {/* 💡 여기서도 상태에 따라 버튼명 변경 가능하지만, 아래 버튼에서 처리 */}
+                                    </h3>
+
                                     <p className="text-sm text-gray-400 mt-2 font-medium flex items-center gap-1.5 flex-wrap">
-                                        <Calendar className="w-3.5 h-3.5 shrink-0" /> 날짜: {activity.activityDate} ({activity.activityDay}) <span className="text-gray-300">|</span> <MapPin className="w-3.5 h-3.5 shrink-0" /> 장소: {activity.location}
+                                        <Calendar className="w-3.5 h-3.5 shrink-0" /> 날짜: {activity.activityDate} ({activity.activityDay}) 
+                                        <span className="text-gray-300">|</span> 
+                                        <MapPin className="w-3.5 h-3.5 shrink-0" /> 장소: {activity.location}
                                     </p>
-                                    <div className="mt-3 flex items-center gap-3 text-xs font-bold text-gray-500">
-                                        <span className="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-md">회원 {activity.attendance.currentAttendees}명</span>
-                                        <span className="bg-purple-50 text-purple-600 px-2.5 py-1 rounded-md">게스트 {activity.attendance.currentGuests}명</span>
-                                        <span className="text-gray-300">|</span>
-                                        <span className="text-gray-700">총 {activity.attendance.totalParticipants}명 참여 투표 완료</span>
+
+                                    <div className="mt-4 flex items-center justify-between">
+                                        <div className="flex items-center gap-3 text-xs font-bold text-gray-500">
+                                            <span className="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-md">회원 {activity.attendance.currentAttendees}명</span>
+                                            <span className="bg-purple-50 text-purple-600 px-2.5 py-1 rounded-md">게스트 {activity.attendance.currentGuests}명</span>
+                                        </div>
+                                        {/* 💡 조건부 버튼 렌더링 */}
+                                        <div className={`px-4 py-2 rounded-xl text-xs font-bold ${activity.matchRegistered ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+                                            {activity.matchRegistered ? '대진 수정하기' : '대진 작성하기'}
+                                        </div>
                                     </div>
                                 </div>
                             ))
