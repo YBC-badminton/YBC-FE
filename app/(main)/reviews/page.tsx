@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Pencil, Trash2, X, Check, Star } from 'lucide-react';
+import { Pencil, Trash2, X, Check } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import api from '../../../lib/axios';
 import { useToast } from '../../../components/ui/Toast';
@@ -48,7 +48,6 @@ export default function ReviewPage() {
     const [selectedReview, setSelectedReview] = useState<Review | null>(null);
     const { user } = useAuth();
     const { showToast } = useToast();
-
     const [reviews, setReviews] = useState<Review[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -61,8 +60,7 @@ export default function ReviewPage() {
         try {
             const params: Record<string, any> = { page: 0, size: 50, sort: 'desc' };
             if (activeTab !== '전체' && CATEGORY_MAP[activeTab]) params.category = CATEGORY_MAP[activeTab];
-
-            const response = await api.get<ReviewResponse | Review[]>('/reviews', { params });
+            const response = await api.get<any>('/reviews', { params });
             const data = Array.isArray(response.data) ? response.data : (response.data.reviews || []);
             setReviews(data);
         } catch (err: any) {
@@ -100,7 +98,6 @@ export default function ReviewPage() {
                         {reviews.length > 0 ? reviews.map((review) => (
                             <div key={review.reviewId} onClick={() => setSelectedReview(review)} className="bg-white p-5 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm cursor-pointer hover:border-[#4B7332] transition">
                                 <div className="flex items-center gap-4 min-w-0">
-                                    <span className="text-2xl hidden sm:block">🏸</span>
                                     <div className="min-w-0">
                                         <p className="text-xs font-bold text-slate-400">{REVERSE_CATEGORY_MAP[review.category]}</p>
                                         <h3 className="font-black text-slate-800 truncate">{review.brandName} - {review.productName}</h3>
@@ -160,17 +157,32 @@ function ReviewDetailModal({ review, onClose, isAuthor, onChanged, showToast }: 
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
             <div className="bg-white w-full max-w-lg p-8 rounded-[32px] relative shadow-2xl animate-in zoom-in duration-200">
                 <button onClick={onClose} className="absolute top-6 right-6 text-slate-400"><X /></button>
-                <div className="mb-6">
-                    <p className="text-sm font-bold text-slate-400">{REVERSE_CATEGORY_MAP[review.category]}</p>
+                
+                <div className="mb-6 space-y-1">
+                    <p className="text-xs font-black text-slate-400 bg-slate-100 w-fit px-2 py-0.5 rounded uppercase">{REVERSE_CATEGORY_MAP[review.category]}</p>
                     <h2 className="text-2xl font-black">{review.brandName} - {review.productName}</h2>
+                    <div className="flex justify-between items-center text-sm font-bold text-slate-400 pt-2">
+                        <span>작성자: {review.memberNickname}</span>
+                        <span>{formatDate(review.createdAt)}</span>
+                    </div>
                 </div>
-                {isEditing ? (
-                    <textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} rows={5} className="w-full p-4 border rounded-xl mb-4" />
-                ) : (
-                    <p className="text-slate-600 leading-relaxed mb-8 whitespace-pre-line">{review.content}</p>
-                )}
+
+                <div className="flex text-amber-400 text-xl mb-4">
+                    {isEditing ? Array.from({ length: 5 }).map((_, i) => (
+                        <button key={i} onClick={() => setEditRating(i + 1)}>{i < editRating ? '★' : '☆'}</button>
+                    )) : '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating)}
+                </div>
+
+                <div className="py-6 border-y border-slate-100 min-h-[150px]">
+                    {isEditing ? (
+                        <textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} rows={5} className="w-full p-4 border rounded-xl" />
+                    ) : (
+                        <p className="text-slate-600 leading-relaxed whitespace-pre-line">{review.content}</p>
+                    )}
+                </div>
+
                 {isAuthor && (
-                    <div className="flex gap-2 justify-end">
+                    <div className="flex gap-2 justify-end pt-6">
                         {isEditing ? (
                             <button onClick={saveEdit} className="px-6 py-2 bg-[#4B7332] text-white rounded-full font-bold">저장</button>
                         ) : (
