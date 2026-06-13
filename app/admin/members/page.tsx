@@ -169,6 +169,7 @@ export default function MembersPage() {
             {/* 필터 및 검색 바 */}
             <div className="flex flex-col gap-4 mb-6">
                 <div className="flex flex-wrap gap-2 items-center">
+                    {/* 이름/학교 검색창 */}
                     <div className="relative flex-1 min-w-[200px]">
                         <input
                             type="text"
@@ -181,21 +182,34 @@ export default function MembersPage() {
                         <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
                     </div>
                     
+                    {/* 기수 선택 드롭다운 (버튼들 대신 적용) */}
                     <select
                         value={termFilter}
                         onChange={(e) => setTermFilter(e.target.value)}
                         className="px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white font-bold text-gray-700"
                     >
                         <option value="all">전체 기수</option>
-                        {termOptions.map(term => <option key={term} value={term}>{term} ({termCounts[term]}명)</option>)}
+                        {termOptions.map(term => (
+                            <option key={term} value={term}>{term}기 ({termCounts[term]}명)</option>
+                        ))}
                     </select>
 
+                    {/* 마포구 필터 체크박스 */}
                     <label className="flex items-center gap-2 px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white cursor-pointer hover:bg-gray-50">
-                        <input type="checkbox" checked={showMapoOnly} onChange={(e) => setShowMapoOnly(e.target.checked)} className="w-4 h-4 text-blue-600 rounded" />
+                        <input 
+                            type="checkbox" 
+                            checked={showMapoOnly} 
+                            onChange={(e) => setShowMapoOnly(e.target.checked)} 
+                            className="w-4 h-4 text-blue-600 rounded" 
+                        />
                         <span className="font-bold text-gray-700">마포구 거주자</span>
                     </label>
 
-                    <button onClick={() => setShowAddForm(!showAddForm)} className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-md active:scale-95 text-sm">
+                    {/* 부원 추가 버튼 */}
+                    <button 
+                        onClick={() => setShowAddForm(!showAddForm)} 
+                        className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-md active:scale-95 text-sm"
+                    >
                         + 부원 추가
                     </button>
                 </div>
