@@ -88,7 +88,6 @@ export default function ReviewPage() {
                         {reviews.length > 0 ? reviews.map((review) => (
                             <div key={review.reviewId} onClick={() => setSelectedReview(review)} className="bg-white p-6 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm cursor-pointer hover:border-[#4B7332] transition">
                                 <div className="flex items-center gap-4 min-w-0">
-                                    <span className="text-2xl hidden sm:block">🏸</span>
                                     <div className="min-w-0 truncate">
                                         <p className="text-xs font-bold text-slate-400">{REVERSE_CATEGORY_MAP[review.category]}</p>
                                         <h3 className="text-lg font-black text-slate-800 truncate">{review.brandName} - {review.productName}</h3>
