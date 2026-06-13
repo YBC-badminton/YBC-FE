@@ -210,17 +210,16 @@ function ActivityCard({ data, isPast }: { data: VoteItem; isPast: boolean }) {
                         </span>
                         <h3 className="text-base sm:text-lg font-black text-slate-800 truncate">{data.name}</h3>
 
-                        {!isPast && (
-                            <Link
-                                href={`/activities/${data.voteId}/tournament`}
-                                onClick={(e) => e.stopPropagation()}
-                                className="bg-[#4B7332] text-white text-[11px] font-bold px-3 py-1 rounded-full whitespace-nowrap drop-shadow-sm hover:bg-[#3d5d28] transition-colors z-20"
-                            >
-                                대진
-                            </Link>
-                        )}
+                        {/* 💡 수정: 과거 활동(isPast)이어도 대진 버튼이 보이게 변경 */}
+                        <Link
+                            href={`/activities/${data.voteId}/tournament`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-[#4B7332] text-white text-[11px] font-bold px-3 py-1 rounded-full whitespace-nowrap drop-shadow-sm hover:bg-[#3d5d28] transition-colors z-20"
+                        >
+                            대진 확인
+                        </Link>
                     </div>
-                    {/* 💡 아이콘 적용 및 모바일 레이아웃 최적화 */}
+                    
                     <div className="flex flex-col gap-1 text-xs font-bold text-slate-400">
                         <p className="flex items-center gap-1 truncate"><MapPin className="w-3 h-3" /> {data.location}</p>
                         <p className="flex items-center gap-1 truncate"><CalendarIcon className="w-3 h-3" /> {formatDate(data.voteEndAt)} {data.activityTime}</p>
