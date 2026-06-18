@@ -3,8 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Script from "next/script";
-import { Sansita } from "next/font/google";
-import api from "../../lib/axios"; // API 호출을 위한 axios 임포트 추가
+import api from "../../lib/axios";
 import { useAuth } from "../../context/AuthContext";
 
 // Kakao Maps SDK는 전역 window.kakao 객체로 노출됩니다.
@@ -17,14 +16,6 @@ declare global {
 
 const KAKAO_MAP_API_KEY = process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY;
 
-// 폰트 설정 (이탤릭이 기본 포함된 굵은 서체입니다)
-const sansita = Sansita({
-  weight: "800",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-// 서버에서 넘어올 정기모임 투표 데이터 인터페이스 추가
 interface VoteData {
   voteId: number;
   name?: string;
@@ -40,13 +31,52 @@ interface VoteData {
   };
 }
 
+/* ── 공용 아이콘 (Figma: tabler / solar 세트) ─────────────── */
+function PinIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 2C7.86 2 4.5 5.36 4.5 9.5c0 5.25 6.36 11.43 6.63 11.69a1.25 1.25 0 0 0 1.74 0c.27-.26 6.63-6.44 6.63-11.69C19.5 5.36 16.14 2 12 2Zm0 10.25a2.75 2.75 0 1 1 0-5.5 2.75 2.75 0 0 1 0 5.5Z" />
+    </svg>
+  );
+}
+function CalendarIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="4.5" width="18" height="17" rx="3" />
+      <path d="M3 9h18M8 2.5v4M16 2.5v4" />
+    </svg>
+  );
+}
+function PeopleIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M16 19v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 9a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM22 19v-2a4 4 0 0 0-3-3.87M16 2.13A4 4 0 0 1 16 9.87" />
+    </svg>
+  );
+}
+function ArrowUpRight({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M7 17 17 7M9 7h8v8" />
+    </svg>
+  );
+}
+function ShuttleIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 64 64" fill="none" aria-hidden="true">
+      <circle cx="48" cy="48" r="9" fill="#fff" stroke="#5b6b0f" strokeWidth="2.5" />
+      <path d="M44 44 18 18" stroke="#5b6b0f" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M18 18 8 8M22 16 14 6M16 22 6 14" stroke="#a1c852" strokeWidth="3" strokeLinecap="round" />
+      <path d="M6 6 4 4" stroke="#5b6b0f" strokeWidth="2.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export default function YBCMainPage() {
-  // 정기모임 데이터 상태 추가
   const [recentVotes, setRecentVotes] = useState<VoteData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { user, loginKakao, isLoading: isAuthLoading } = useAuth();
 
-  // 진행 중인 정기모임 데이터 로드 로직 추가
   useEffect(() => {
     const fetchActiveVotes = async () => {
       try {
@@ -61,29 +91,12 @@ export default function YBCMainPage() {
           data = response.data.data;
         }
 
-        // 최신 2개만 추출
-        setRecentVotes(data.slice(0, 2));
+        setRecentVotes(data.slice(0, 3));
       } catch (error) {
         console.warn("진행 중인 투표를 불러오지 못했습니다. 기본 활성 데이터를 노출합니다.", error);
         setRecentVotes([
-          {
-            voteId: 998,
-            name: "이번 주 화요 정기 운동",
-            activityDate: "2026-06-09",
-            activityTime: "19:00",
-            location: "마곡실내배드민턴장",
-            currentParticipantCount: 15,
-            capacity: 20,
-          },
-          {
-            voteId: 999,
-            name: "이번 주 토요 정기 운동",
-            activityDate: "2026-06-13",
-            activityTime: "13:30",
-            location: "망원나들목체육관",
-            currentParticipantCount: 18,
-            capacity: 20,
-          }
+          { voteId: 998, name: "이번 주 화요 정기 운동", activityDate: "2026-06-09", activityTime: "19:00", location: "마곡실내배드민턴장", currentParticipantCount: 15, capacity: 20 },
+          { voteId: 999, name: "이번 주 토요 정기 운동", activityDate: "2026-06-13", activityTime: "13:30", location: "망원나들목체육관", currentParticipantCount: 18, capacity: 20 },
         ]);
       } finally {
         setIsLoading(false);
@@ -93,337 +106,285 @@ export default function YBCMainPage() {
     fetchActiveVotes();
   }, []);
 
-  // 특정 ID로 부드럽게 이동하는 함수
   const scrollToApply = () => {
-    const element = document.getElementById("apply-section");
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
+    document.getElementById("apply-section")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
     <div className="min-h-screen flex flex-col font-sans select-none bg-white">
-      <section className="relative w-full min-h-[calc(100vh-80px)] bg-[#F2F8E1] overflow-hidden flex items-center justify-center py-16 sm:py-0">
-        {/* [배경] symbol.png 워터마크 패턴 */}
-        <div className="absolute inset-0 opacity-[0.2] z-0 pointer-events-none">
-          <img
-            src="/images/symbol.png"
-            alt="Background Pattern 1"
-            className="absolute top-[-5%] left-[-3%] w-[30%] sm:w-[20%] max-w-[300px] opacity-[0.9] rotate-[-15deg] object-contain"
-          />
-          <img
-            src="/images/symbol.png"
-            alt="Background Pattern 3"
-            className="absolute top-1/2 left-1/2 max-w-[700px] -translate-x-1/7 -translate-y-1/2 w-[70%] sm:w-[50%] opacity-[0.9] object-contain"
-          />
+      {/* ── 히어로 ───────────────────────────────────────── */}
+      <section className="relative w-full overflow-hidden -mt-[80px] pt-[120px] pb-16 sm:pb-24 bg-gradient-to-b from-brand-soft via-brand-wash to-white">
+        <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.18]">
+          <img src="/images/symbol.png" alt="" className="absolute top-[6%] left-[-2%] w-[16%] max-w-[220px] -rotate-12 object-contain" />
+          <img src="/images/symbol.png" alt="" className="absolute bottom-[8%] right-[-2%] w-[18%] max-w-[260px] rotate-12 object-contain" />
         </div>
 
-        {/* 메인 콘텐츠 컨테이너 */}
-        <div className="max-w-screen-xl mx-auto px-6 sm:px-12 relative z-10 flex flex-col lg:flex-row items-center w-full gap-8 lg:gap-0">
-          {/* [좌측] mascot.png 캐릭터 */}
-          <div className="w-full lg:w-1/3 flex justify-center animate-fade-in-left">
-            <img
-              src="/images/mascot.png"
-              alt="YBC Badminton Mascot"
-              className="w-[200px] sm:w-[300px] lg:w-[400px] h-auto object-contain"
-            />
-          </div>
-
-          {/* [우측] 텍스트 및 모집 상태 */}
-          <div className="w-full lg:w-2/3 text-center flex flex-col items-center gap-5 sm:gap-8 lg:pl-10">
-            <h1
-              className={`${sansita.className} text-4xl sm:text-6xl lg:text-[74px] text-[#00792D] tracking-[0.05em] leading-tight drop-shadow-sm`}
-            >
-              YBC badminton club
+        <div className="max-w-screen-xl mx-auto px-6 relative z-10 flex flex-col items-center text-center gap-6 sm:gap-8">
+          <div className="flex items-end justify-center gap-1 sm:gap-6">
+            <img src="/images/mascot.png" alt="YBC 마스코트" className="w-16 sm:w-[150px] h-auto object-contain -scale-x-100 animate-fade-in-left" />
+            <h1 className="font-black text-brand-dark text-5xl sm:text-8xl tracking-tight leading-none drop-shadow-sm">
+              양배추
             </h1>
+            <img src="/images/mascot.png" alt="YBC 마스코트" className="w-16 sm:w-[150px] h-auto object-contain" />
+          </div>
 
-            <p className="text-lg sm:text-2xl font-medium text-green-800 tracking-tight opacity-90">
-              양질의 배드민턴 추구
-            </p>
+          <p className="text-lg sm:text-2xl font-semibold text-brand-ink/90 tracking-tight">
+            양질의 배드민턴 추구
+          </p>
 
-            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mt-2 sm:mt-4">
-              <div
-                onClick={scrollToApply}
-                className="bg-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-full shadow-md flex items-center gap-3 border border-gray-100 transition-transform hover:scale-105 cursor-pointer active:scale-95"
+          <div className="flex flex-wrap items-center justify-center gap-3 mt-1">
+            <button
+              onClick={scrollToApply}
+              className="bg-white px-6 py-2.5 rounded-full shadow-[var(--shadow-card)] flex items-center gap-2.5 transition-transform hover:scale-105 active:scale-95"
+            >
+              <span className="relative flex h-3.5 w-3.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75" />
+                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-brand" />
+              </span>
+              <span className="text-base font-bold text-ink tracking-tight">모집중</span>
+            </button>
+
+            {!user && (
+              <button
+                onClick={() => loginKakao()}
+                disabled={isAuthLoading}
+                className="bg-[#FEE500] px-6 py-2.5 rounded-full shadow-[var(--shadow-card)] flex items-center gap-2 transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
               >
-                <span className="relative flex h-4 w-4">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-4 w-4 bg-green-500"></span>
+                <svg className="w-5 h-5 text-[#191919]" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 3C6.48 3 2 6.36 2 10.44c0 2.62 1.74 4.93 4.36 6.24-.14.52-.9 3.37-.93 3.58 0 0-.02.17.09.23.11.07.23.03.23.03.31-.04 3.56-2.33 4.12-2.73.7.1 1.42.15 2.13.15 5.52 0 10-3.36 10-7.5S17.52 3 12 3z" />
+                </svg>
+                <span className="text-base font-bold text-[#191919] tracking-tight">
+                  {isAuthLoading ? "로그인 중..." : "카카오 로그인"}
                 </span>
-                <span className="text-base sm:text-lg font-bold text-gray-900 tracking-tight">
-                  모집중
-                </span>
-              </div>
-
-              {!user && (
-                <button
-                  onClick={() => loginKakao()}
-                  disabled={isAuthLoading}
-                  className="bg-[#FEE500] px-6 sm:px-8 py-2.5 sm:py-3 rounded-full shadow-md flex items-center gap-2 transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
-                >
-                  <svg className="w-5 h-5 text-[#191919]" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 3C6.48 3 2 6.36 2 10.44c0 2.62 1.74 4.93 4.36 6.24-.14.52-.9 3.37-.93 3.58 0 0-.02.17.09.23.11.07.23.03.23.03.31-.04 3.56-2.33 4.12-2.73.7.1 1.42.15 2.13.15 5.52 0 10-3.36 10-7.5S17.52 3 12 3z" />
-                  </svg>
-                  <span className="text-base sm:text-lg font-bold text-[#191919] tracking-tight">
-                    {isAuthLoading ? '로그인 중...' : '카카오 로그인'}
-                  </span>
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 animate-bounce text-green-800 opacity-50 cursor-pointer"
-          onClick={scrollToApply}
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M19 14l-7 7m0 0l-7-7m7 7V3"
-            ></path>
-          </svg>
-        </div>
-      </section>
-
-      {/* --- 동아리 소개 --- */}
-      <section className="w-full bg-white py-16 sm:py-24 overflow-hidden">
-        <div className="max-w-screen-2xl mx-auto px-6 sm:px-12 flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
-          <div className="w-full lg:w-1/2 flex flex-col gap-8 lg:gap-12">
-            <h2 className="text-3xl sm:text-5xl font-black text-green-800 tracking-tight">
-              동아리 소개
-            </h2>
-            <div className="flex flex-col gap-4 sm:gap-6 text-base sm:text-xl font-medium text-slate-600 tracking-tight">
-              <p>어쩌고저쩌고</p>
-              <p>동아리소개글</p>
-              <p>양배추소개글</p>
-            </div>
-            <div className="flex gap-4 mt-4 sm:mt-8">
-              <InfoCard
-                icon={
-                  <img
-                    src="/images/Calendar.svg"
-                    alt="달력"
-                    className="w-full h-full"
-                  />
-                }
-                label="정기 활동"
-                value="주 2회"
-              />
-              <InfoCard
-                icon={
-                  <img
-                    src="/images/Users.svg"
-                    alt="유저"
-                    className="w-full h-full"
-                  />
-                }
-                label="부원 수"
-                value="50+명"
-              />
-            </div>
-          </div>
-          <div className="w-full lg:w-1/2 relative flex justify-center items-center">
-            <div className="absolute w-full max-w-[540px] aspect-[540/400] bg-black/5 rounded-[30px] sm:rounded-[40px] rotate-3 translate-x-4 translate-y-4 blur-sm" />
-            <div className="relative w-full max-w-[540px] aspect-[540/400] bg-[#E2EBC8] rounded-[30px] sm:rounded-[40px] shadow-sm transform -rotate-3 hover:rotate-0 transition-transform duration-500 flex items-center justify-center overflow-hidden">
-              <p className="text-green-800/20 font-black text-2xl sm:text-4xl select-none italic">
-                YBC GALLERY
-              </p>
-            </div>
+              </button>
+            )}
           </div>
         </div>
       </section>
 
-      {/* --- 정기모임 (동적 데이터 연동) --- */}
-      <section className="w-full bg-white py-14 sm:py-20 px-6 sm:px-12 max-w-screen-2xl mx-auto">
-        <div className="mb-8 sm:mb-12 flex flex-col gap-3">
-          <h2 className="text-3xl sm:text-5xl font-black text-green-800 tracking-tight">
-            정기모임
+      {/* ── 동아리 소개 ──────────────────────────────────── */}
+      <section className="w-full bg-white py-16 sm:py-24">
+        <div className="max-w-screen-lg mx-auto px-6 flex flex-col items-center text-center gap-5">
+          <h2 className="font-display text-[26px] sm:text-5xl text-brand-dark tracking-wide break-keep">
+            YBC badminton club
           </h2>
+          <div className="text-base sm:text-lg font-medium text-muted leading-relaxed max-w-2xl space-y-1">
+            <p>양질의 배드민턴을 추구하는 사람들이 모인 동아리, 양배추입니다.</p>
+            <p>매주 화요일·토요일, 실력보다 열정을 가진 분들과 함께합니다.</p>
+            <p>처음이어도 괜찮아요. 함께 즐기며 성장하는 배드민턴을 경험하세요.</p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-stretch justify-center gap-5 sm:gap-6 mt-8 w-full">
+            <div className="flex-1 max-w-[420px] mx-auto sm:mx-0 bg-brand rounded-[40px] min-h-[150px] flex items-center justify-center text-white/85 font-semibold text-sm sm:text-base shadow-[var(--shadow-card)] px-6 text-center">
+              동아리 실제 활동 사진 삽입
+            </div>
+            <InfoBlob label="정기 활동" prefix="주" value="2회" tone="soft" />
+            <InfoBlob label="부원 수" value="50+" suffix="명" tone="neutral" />
+          </div>
+        </div>
+      </section>
+
+      {/* ── 정기모임 ─────────────────────────────────────── */}
+      <section className="w-full bg-white py-12 sm:py-16 px-6 max-w-screen-xl mx-auto">
+        <div className="flex items-end justify-between mb-8 sm:mb-10">
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-ink tracking-tight">정기모임</h2>
+          <Link href="/activities" className="flex items-center gap-1 text-sm font-semibold text-subtle hover:text-brand-dark transition-colors">
+            <span className="text-base leading-none">＋</span> 전체보기
+          </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           {isLoading ? (
-            // 로딩 중 스켈레톤 UI
-            <>
-              <div className="bg-white border border-gray-100 rounded-[30px] sm:rounded-[40px] p-6 sm:p-8 shadow-sm flex flex-col gap-6 animate-pulse">
-                <div className="flex items-center gap-3">
-                  <div className="w-16 h-7 bg-[#E9ECEF] rounded-full" />
-                  <div className="w-24 h-7 bg-[#E9ECEF] rounded-full" />
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className={`rounded-[28px] p-6 border border-line/60 bg-brand-wash animate-pulse flex flex-col gap-5 ${i === 2 ? "hidden lg:flex" : ""}`}>
+                <div className="flex gap-2">
+                  <div className="w-12 h-6 bg-line rounded-full" />
+                  <div className="w-16 h-6 bg-line rounded-full" />
                 </div>
-                <div className="w-full h-48 sm:h-72 bg-[#E9ECEF] rounded-[20px] sm:rounded-[30px]" />
+                <div className="h-5 w-3/4 bg-line rounded" />
+                <div className="h-4 w-1/2 bg-line rounded" />
+                <div className="h-3 w-full bg-line rounded-full mt-4" />
               </div>
-              <div className="bg-white border border-gray-100 rounded-[30px] sm:rounded-[40px] p-6 sm:p-8 shadow-sm flex flex-col gap-6 animate-pulse hidden md:flex">
-                <div className="flex items-center gap-3">
-                  <div className="w-16 h-7 bg-[#E9ECEF] rounded-full" />
-                  <div className="w-24 h-7 bg-[#E9ECEF] rounded-full" />
-                </div>
-                <div className="w-full h-48 sm:h-72 bg-[#E9ECEF] rounded-[20px] sm:rounded-[30px]" />
-              </div>
-            </>
+            ))
           ) : recentVotes.length > 0 ? (
-            // 데이터 렌더링
-            recentVotes.map((vote, idx) => {
-              const title = vote.name || vote.title || "정기 운동";
-              const currentCount = vote.currentParticipantCount ?? vote.attendance?.currentAttendees ?? 0;
-              const maxCount = vote.capacity ?? vote.attendance?.totalParticipants ?? 20;
-              const progressRatio = Math.min((currentCount / maxCount) * 100, 100);
-
-              return (
-                <div
-                  key={vote.voteId || idx}
-                  className="bg-white border border-gray-100 rounded-[30px] sm:rounded-[40px] p-6 sm:p-8 shadow-sm flex flex-col gap-6 transition-transform hover:-translate-y-1 hover:shadow-md"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="bg-[#4B7332] text-white text-[13px] font-bold px-4 py-1.5 rounded-full flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 bg-green-200 rounded-full animate-pulse" />
-                      투표 진행중
-                    </span>
-                    <span className="bg-slate-100 text-slate-500 text-[13px] font-bold px-4 py-1.5 rounded-full">
-                      {vote.activityDate}
-                    </span>
-                  </div>
-
-                  <div className="w-full bg-[#F8F9FA] rounded-[20px] sm:rounded-[30px] p-6 sm:p-8 flex flex-col justify-center min-h-[192px] sm:min-h-[288px] gap-4 sm:gap-6">
-                    <h3 className="text-xl sm:text-3xl font-black text-slate-800 break-keep leading-tight">
-                      {title}
-                    </h3>
-
-                    <div className="space-y-1 sm:space-y-2 text-sm sm:text-base font-bold text-slate-500">
-                      <p className="flex items-center gap-2">
-                        <span className="text-lg">장소</span> {vote.location}
-                      </p>
-                      <p className="flex items-center gap-2">
-                        <span className="text-lg">운동 시간</span> {vote.activityTime || "19:00"}
-                      </p>
-                    </div>
-
-                    <div className="mt-2 sm:mt-4 w-full">
-                      <div className="flex justify-between items-end mb-2">
-                        <span className="text-xs sm:text-sm font-bold text-slate-400">참여 인원</span>
-                        <span className="text-sm sm:text-base font-black text-green-700">
-                          {currentCount} <span className="text-slate-300">/</span> {maxCount}명
-                        </span>
-                      </div>
-                      <div className="w-full h-3 sm:h-4 bg-gray-200 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-green-400 to-[#4B7332] transition-all duration-1000 ease-out"
-                          style={{ width: `${progressRatio}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })
+            recentVotes.map((vote, idx) => (
+              <MeetingCard key={vote.voteId ?? idx} vote={vote} active={idx === 0} />
+            ))
           ) : (
-            // 진행중인 모임이 없을 때
-            <div className="col-span-1 md:col-span-2 bg-white border border-dashed border-gray-200 rounded-[30px] sm:rounded-[40px] p-12 text-center text-gray-400 font-bold">
+            <div className="col-span-full bg-brand-wash border border-dashed border-line rounded-[28px] p-12 text-center text-subtle font-semibold">
               현재 진행 중인 정기모임 투표가 없습니다.
             </div>
           )}
         </div>
       </section>
 
-      {/* --- 체육관 위치 --- */}
+      {/* ── 체육관 위치 ──────────────────────────────────── */}
       <GymLocationSection />
 
-      {/* --- [지원하기 섹션] --- */}
+      {/* ── 지원하기 ─────────────────────────────────────── */}
       <section
         id="apply-section"
-        className="max-w-screen-2xl mx-auto px-6 sm:px-12 py-20 sm:py-32 flex flex-col items-center text-center gap-6 sm:gap-10"
+        className="relative w-full mt-10 overflow-hidden bg-gradient-to-b from-brand-wash to-brand-soft"
       >
-        <h2 className="text-3xl sm:text-5xl font-black text-green-800 tracking-tight">
-          지원하기
-        </h2>
-        <p className="text-base sm:text-xl font-medium text-slate-600 max-w-2xl leading-relaxed">
-          YBC 배드민턴 클럽은 실력보다 열정을 가진{" "}
-          <br className="hidden sm:block" />
-          새로운 가족을 언제나 기다리고 있습니다.
-        </p>
-        <Link href="/apply">
-          <button className="bg-[#4B7332] text-white text-sm sm:text-[16px] font-bold px-10 sm:px-14 py-3.5 sm:py-4 rounded-full shadow-lg hover:bg-[#3d5d28] hover:-translate-y-1 transition-all duration-300">
-            지원하기
-          </button>
-        </Link>
+        <img src="/images/symbol.png" alt="" className="absolute -bottom-6 right-4 w-24 sm:w-36 opacity-20 rotate-12 pointer-events-none" />
+        <div className="max-w-screen-lg mx-auto px-6 py-20 sm:py-28 flex flex-col items-center text-center gap-6 relative z-10">
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-brand-dark tracking-tight">지원하기</h2>
+          <p className="text-base sm:text-lg font-medium text-muted max-w-xl leading-relaxed">
+            YBC 배드민턴 클럽은 실력보다 열정을 가진{" "}
+            <br className="hidden sm:block" />
+            새로운 가족을 언제나 기다리고 있습니다.
+          </p>
+          <Link href="/apply">
+            <button className="bg-brand text-white text-base font-bold px-12 py-3.5 rounded-full shadow-[var(--shadow-card)] hover:bg-brand-hover hover:-translate-y-0.5 transition-all duration-300">
+              지원하기
+            </button>
+          </Link>
+        </div>
       </section>
     </div>
   );
 }
 
-function InfoCard({
-  icon,
+/* ── 소개 블롭 카드 ─────────────────────────────────────── */
+function InfoBlob({
   label,
+  prefix,
   value,
+  suffix,
+  tone,
 }: {
-  icon: React.ReactNode;
   label: string;
+  prefix?: string;
   value: string;
+  suffix?: string;
+  tone: "soft" | "neutral";
 }) {
   return (
-    <div className="bg-[#E2EBC8] px-5 sm:px-8 py-4 sm:py-6 rounded-2xl sm:rounded-[24px] flex flex-col gap-2 flex-1 sm:flex-none sm:w-56 shadow-sm border border-white/40">
-      <div className="w-7 h-7 sm:w-8 sm:h-8 mb-1 sm:mb-2">{icon}</div>
-      <p className="text-xs sm:text-sm font-bold text-green-800/60 uppercase tracking-tighter">
-        {label}
+    <div
+      className={`flex-1 max-w-[220px] mx-auto sm:mx-0 rounded-[40px] min-h-[150px] flex flex-col items-center justify-center gap-1.5 px-6 text-center shadow-[var(--shadow-card)] ${
+        tone === "soft" ? "bg-brand-tint" : "bg-[#ededed]"
+      }`}
+    >
+      <p className="text-sm font-semibold text-subtle tracking-tight">{label}</p>
+      <p className="flex items-baseline gap-1">
+        {prefix && <span className="text-lg font-bold text-brand-dark">{prefix}</span>}
+        <span className="text-4xl sm:text-5xl font-black text-brand-dark">{value}</span>
+        {suffix && <span className="text-lg font-bold text-brand-dark">{suffix}</span>}
       </p>
-      <p className="text-xl sm:text-2xl font-black text-slate-800">{value}</p>
     </div>
   );
 }
 
+/* ── 정기모임 카드 ──────────────────────────────────────── */
+function MeetingCard({ vote, active }: { vote: VoteData; active: boolean }) {
+  const title = vote.name || vote.title || "정기 운동";
+  const currentCount = vote.currentParticipantCount ?? vote.attendance?.currentAttendees ?? 0;
+  const maxCount = vote.capacity ?? vote.attendance?.totalParticipants ?? 20;
+  const ratio = Math.min(Math.round((currentCount / maxCount) * 100), 100);
+  const full = currentCount >= maxCount;
+
+  return (
+    <Link
+      href="/activities"
+      className={`group relative rounded-[28px] p-6 sm:p-7 flex flex-col gap-5 transition-all hover:-translate-y-1 ${
+        active
+          ? "bg-white border-2 border-brand shadow-[var(--shadow-card)]"
+          : "bg-brand-wash border border-line/70 hover:shadow-[var(--shadow-card)]"
+      }`}
+    >
+      {active && <ShuttleIcon className="absolute -top-4 -right-3 w-12 h-12 rotate-12" />}
+
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="bg-[#ededed] text-subtle text-xs font-bold px-3 py-1 rounded-full">오늘</span>
+          {full ? (
+            <span className="bg-brand-dark text-white text-xs font-bold px-3 py-1 rounded-full">모집완료</span>
+          ) : (
+            <span className="bg-brand text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 bg-white/90 rounded-full animate-pulse" />
+              모집중
+            </span>
+          )}
+        </div>
+        <ArrowUpRight className="w-5 h-5 text-subtle group-hover:text-brand-dark transition-colors" />
+      </div>
+
+      <h3 className="text-base sm:text-lg font-bold text-ink leading-snug break-keep">{title}</h3>
+
+      <div className="space-y-2 text-sm font-medium text-muted">
+        <p className="flex items-center gap-1.5">
+          <PinIcon className="w-4 h-4 text-brand-dark shrink-0" />
+          {vote.location}
+        </p>
+        <p className="flex items-center gap-1.5">
+          <CalendarIcon className="w-4 h-4 text-brand-dark shrink-0" />
+          {vote.activityDate} {vote.activityTime && `· ${vote.activityTime}`}
+        </p>
+      </div>
+
+      <div className="mt-1">
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="flex items-center gap-1.5 text-sm font-semibold text-muted">
+            <PeopleIcon className="w-4 h-4 text-brand-dark" />
+            {currentCount} / {maxCount}명
+          </span>
+          <span className="text-sm font-bold text-brand-dark">{ratio}%</span>
+        </div>
+        <div className="w-full h-2.5 bg-line/70 rounded-full overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all duration-1000 ease-out ${full ? "bg-brand-dark" : "bg-brand"}`}
+            style={{ width: `${ratio}%` }}
+          />
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+/* ── 체육관 위치 ────────────────────────────────────────── */
 type Gym = {
+  key: "magok" | "mangwon";
+  tab: string;
   name: string;
   address: string;
-  subTitle: string;
   scheduleLabel: string;
+  parking: string;
   scheduleTime: string[];
-  directions: string[];
-  // 카카오맵 장소 ID (place.map.kakao.com/{placeId}). 마커를 정확한 등록 장소에 고정합니다.
   placeId: string;
-  // 지도 초기 중심 좌표 (WGS84). 장소 검색 실패 시 폴백으로 사용됩니다.
   lat: number;
   lng: number;
 };
 
-const GYMS: { magok: Gym; mangwon: Gym } = {
-  magok: {
+const GYMS: Gym[] = [
+  {
+    key: "magok",
+    tab: "마곡",
     name: "마곡실내배드민턴장",
     address: "서울특별시 강서구 가양제1동 양천로 251",
-    subTitle: "화요일 운동 장소",
     scheduleLabel: "화요일",
+    parking: "주차장 이용 가능",
     scheduleTime: ["16:00 - 19:00"],
-    directions: [
-      "주차장 이용 가능",
-    ],
     placeId: "7856404",
     lat: 37.5675,
     lng: 126.8405,
   },
-  mangwon: {
+  {
+    key: "mangwon",
+    tab: "망원",
     name: "망원나들목체육관",
     address: "서울특별시 마포구 동교로1길 45",
-    subTitle: "토요일 운동 장소",
     scheduleLabel: "토요일",
+    parking: "주차장 이용 가능 (망원한강공원 주차장)",
     scheduleTime: ["13:30 - 15:30", "16:00 - 18:00"],
-    directions: [
-      "주차장 이용 가능 (망원한강공원 주차장)",
-    ],
     placeId: "1227651208",
     lat: 37.5556,
     lng: 126.9015,
   },
-};
+];
 
 type KakaoPlace = { id: string; x: string; y: string };
 
-function GymMapCard({ gym, sdkReady }: { gym: Gym; sdkReady: boolean }) {
+function GymMap({ gym, sdkReady }: { gym: Gym; sdkReady: boolean }) {
   const mapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -439,14 +400,11 @@ function GymMapCard({ gym, sdkReady }: { gym: Gym; sdkReady: boolean }) {
       const position = new kakao.maps.LatLng(lat, lng);
       map.setCenter(position);
       const marker = new kakao.maps.Marker({ map, position });
-      // 마커를 클릭하면 카카오맵 장소 상세 페이지로 이동합니다.
       kakao.maps.event.addListener(marker, "click", () => {
         window.open(`https://place.map.kakao.com/${gym.placeId}`, "_blank");
       });
     };
 
-    // 장소명으로 검색한 뒤, place_id 가 일치하는 결과의 정확한 좌표에 핀을 찍습니다.
-    // (keywordSearch 결과의 id 는 place.map.kakao.com/{id} 의 id 와 동일합니다.)
     const places = new kakao.maps.services.Places();
     places.keywordSearch(gym.name, (data: KakaoPlace[], status: string) => {
       if (status === kakao.maps.services.Status.OK && data.length > 0) {
@@ -454,7 +412,6 @@ function GymMapCard({ gym, sdkReady }: { gym: Gym; sdkReady: boolean }) {
         placeMarker(Number(exact.y), Number(exact.x));
         return;
       }
-      // 검색 실패 시 주소로 보정하고, 그래도 실패하면 기본 좌표에 표시합니다.
       const geocoder = new kakao.maps.services.Geocoder();
       geocoder.addressSearch(gym.address, (result: { x: string; y: string }[], st: string) => {
         if (st === kakao.maps.services.Status.OK && result[0]) {
@@ -466,77 +423,58 @@ function GymMapCard({ gym, sdkReady }: { gym: Gym; sdkReady: boolean }) {
     });
   }, [sdkReady, gym]);
 
+  if (!KAKAO_MAP_API_KEY) {
+    return (
+      <div className="w-full h-full min-h-[300px] rounded-[28px] bg-brand-soft flex items-center justify-center text-subtle text-sm font-medium px-6 text-center">
+        NEXT_PUBLIC_KAKAO_MAP_API_KEY 설정 후 지도가 표시됩니다.
+      </div>
+    );
+  }
+
+  return <div ref={mapRef} title={`${gym.name} 지도`} className="w-full h-full min-h-[300px] rounded-[28px] overflow-hidden" />;
+}
+
+function MapAppButton({ label, href, primary }: { label: string; href: string; primary?: boolean }) {
   return (
-    <div className="bg-white border-[1.5px] border-[#E9ECEF] rounded-[30px] sm:rounded-[40px] shadow-sm overflow-hidden flex flex-col">
-      <div className="px-6 sm:px-8 pt-5 sm:pt-6">
-        <span className="inline-flex items-center gap-2 bg-[#F2F8E1] text-green-800 text-xs sm:text-sm font-bold px-3 sm:px-4 py-1.5 rounded-full">
-          <span className="w-2 h-2 rounded-full bg-green-500" />
-          {gym.scheduleLabel} 운동 장소
-        </span>
-      </div>
-      <div className="w-full bg-[#E9ECEF] relative mt-4 sm:mt-5 min-h-[260px] sm:min-h-[340px]">
-        {KAKAO_MAP_API_KEY ? (
-          <div
-            ref={mapRef}
-            title={`${gym.name} 지도`}
-            className="w-full h-full min-h-[260px] sm:min-h-[340px]"
-          />
-        ) : (
-          <div className="w-full h-full min-h-[260px] sm:min-h-[340px] flex items-center justify-center text-slate-400 text-sm font-medium px-6 text-center">
-            NEXT_PUBLIC_KAKAO_MAP_API_KEY 설정 후 지도가 표시됩니다.
-          </div>
-        )}
-      </div>
-      <div className="p-6 sm:p-8 flex items-center gap-4 border-t border-[#E9ECEF]">
-        <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 flex items-center justify-center bg-green-50 rounded-full">
-          <img
-            src="/images/Location.svg"
-            alt="위치"
-            className="w-7 h-7 sm:w-9 sm:h-9"
-          />
-        </div>
-        <div className="space-y-1 min-w-0">
-          <p className="text-lg sm:text-2xl font-black text-slate-800 truncate">
-            {gym.name}
-          </p>
-          <p className="text-sm sm:text-base font-bold text-slate-400">
-            {gym.address}
-          </p>
-        </div>
-      </div>
-      <div className="px-6 sm:px-8 pb-6 sm:pb-8">
-        <ul className="space-y-2 text-sm sm:text-base font-bold text-slate-600">
-          {gym.directions.map((line) => (
-            <li key={line} className="flex items-start gap-2">
-              <span className="text-green-600 mt-0.5">•</span>
-              {line}
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`h-12 rounded-lg flex items-center justify-center gap-1.5 text-[15px] font-medium transition-colors ${
+        primary
+          ? "bg-white border border-brand-dark text-brand-dark hover:bg-brand-soft"
+          : "bg-white border border-line text-subtle hover:bg-brand-soft"
+      }`}
+    >
+      {label}
+      <ArrowUpRight className="w-4 h-4" />
+    </a>
   );
 }
 
 function GymLocationSection() {
   const [sdkReady, setSdkReady] = useState(false);
+  const [activeKey, setActiveKey] = useState<Gym["key"]>("magok");
+  const gym = GYMS.find((g) => g.key === activeKey)!;
 
-  // SDK 초기화. window.kakao 가 아직 없을 수 있으므로 항상 옵셔널 체이닝으로 보호합니다.
   const initKakaoSdk = () => {
     window.kakao?.maps?.load(() => setSdkReady(true));
   };
 
-  // 클라이언트 네비게이션으로 재진입한 경우 onLoad 가 다시 발생하지 않으므로,
-  // 마운트 시 이미 로드된 SDK 가 있으면 직접 초기화합니다.
   useEffect(() => {
-    if (window.kakao?.maps) {
-      initKakaoSdk();
-    }
+    if (window.kakao?.maps) initKakaoSdk();
   }, []);
 
+  const query = encodeURIComponent(gym.name);
+  const mapApps = [
+    { label: "네이버 지도", href: `https://map.naver.com/v5/search/${query}`, primary: true },
+    { label: "카카오 지도", href: `https://place.map.kakao.com/${gym.placeId}` },
+    { label: "구글 지도", href: `https://www.google.com/maps/search/${query}` },
+    { label: "TMAP", href: `https://tmap.life/route?goalname=${query}` },
+  ];
+
   return (
-    <section className="w-full bg-white py-16 sm:py-24 px-6 sm:px-12 max-w-screen-2xl mx-auto space-y-10 sm:space-y-16">
-      {/* Kakao Maps SDK (services 라이브러리로 장소/주소 검색) — autoload=false 후 kakao.maps.load로 초기화 */}
+    <section className="w-full bg-white py-12 sm:py-20 px-6 max-w-screen-xl mx-auto">
       {KAKAO_MAP_API_KEY && (
         <Script
           src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&libraries=services&autoload=false`}
@@ -545,42 +483,60 @@ function GymLocationSection() {
         />
       )}
 
-      <div className="text-center space-y-3 sm:space-y-4">
-        <h2 className="text-3xl sm:text-5xl font-black text-green-800 tracking-tight">
-          체육관 위치
-        </h2>
-        <p className="text-base sm:text-xl font-medium text-slate-500">
-          매주 화요일, 토요일에 만나요!
-        </p>
+      <div className="text-center space-y-2 mb-8 sm:mb-12">
+        <h2 className="text-2xl sm:text-4xl font-extrabold text-ink tracking-tight">체육관 위치</h2>
+        <p className="text-base sm:text-lg font-medium text-subtle">매주 화요일, 토요일에 만나요!</p>
       </div>
 
-      {/* 마곡 / 망원 두 체육관을 모두 표시 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-stretch">
-        <GymMapCard gym={GYMS.magok} sdkReady={sdkReady} />
-        <GymMapCard gym={GYMS.mangwon} sdkReady={sdkReady} />
-      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-stretch">
+        {/* 좌측: 탭 + 정보 (Pretendard) */}
+        <div className="flex flex-col font-body">
+          <div className="self-start bg-white rounded-full shadow-[var(--shadow-card)] p-2.5 flex gap-2.5 mb-10">
+            {GYMS.map((g) => (
+              <button
+                key={g.key}
+                onClick={() => setActiveKey(g.key)}
+                className={`w-[120px] sm:w-[140px] py-3 rounded-full text-base font-semibold transition-colors ${
+                  activeKey === g.key ? "bg-brand text-white" : "text-[#666] hover:text-brand-dark"
+                }`}
+              >
+                {g.tab}
+              </button>
+            ))}
+          </div>
 
-      <div className="bg-[#F2F8E1] p-6 sm:p-10 rounded-[30px] sm:rounded-[40px]">
-        <h4 className="text-lg sm:text-[22px] font-black text-slate-800 mb-5 sm:mb-8 tracking-tight">
-          정기 활동 시간
-        </h4>
-        <div className="space-y-3 sm:space-y-4 text-sm sm:text-[17px] font-bold">
-          <div className="flex justify-between items-start gap-4">
-            <span className="text-green-700">
-              화요일 · {GYMS.magok.name}
-            </span>
-            <span className="text-slate-700 text-right">
-              {GYMS.magok.scheduleTime.join(" / ")}
-            </span>
+          <div className="flex-1 flex flex-col justify-center gap-7">
+            <div className="flex flex-col gap-5">
+              <h3 className="text-xl sm:text-2xl font-bold text-black">{gym.name}</h3>
+              <div className="flex flex-col gap-3 text-base text-black/90">
+                <p className="flex items-center gap-1.5">
+                  <PinIcon className="w-5 h-5 text-brand-dark shrink-0" />
+                  {gym.address}
+                </p>
+                <p className="flex items-center gap-1.5">
+                  <PinIcon className="w-5 h-5 text-brand-dark shrink-0" />
+                  {gym.parking}
+                </p>
+                <p className="flex items-center gap-1.5">
+                  <CalendarIcon className="w-5 h-5 text-brand-dark shrink-0" />
+                  {gym.scheduleLabel} · {gym.scheduleTime.join(" / ")}
+                </p>
+              </div>
+            </div>
+
+            <div className="h-px w-full bg-line" />
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {mapApps.map((m) => (
+                <MapAppButton key={m.label} {...m} />
+              ))}
+            </div>
           </div>
-          <div className="flex justify-between items-start gap-4">
-            <span className="text-green-700">
-              토요일 · {GYMS.mangwon.name}
-            </span>
-            <span className="text-slate-700 text-right whitespace-pre-line">
-              {GYMS.mangwon.scheduleTime.join("\n")}
-            </span>
-          </div>
+        </div>
+
+        {/* 우측: 지도 */}
+        <div className="min-h-[300px] lg:min-h-[420px]">
+          <GymMap gym={gym} sdkReady={sdkReady} />
         </div>
       </div>
     </section>
