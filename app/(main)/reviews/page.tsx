@@ -96,7 +96,7 @@ export default function ReviewPage() {
                                 onClick={() => setActiveTab(tab)}
                                 className={`px-6 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${
                                     activeTab === tab
-                                        ? 'bg-[#4B7332] text-white shadow-md'
+                                        ? 'bg-[#5b6b0f] text-white shadow-md'
                                         : 'text-slate-400 hover:text-slate-600'
                                 }`}
                             >
@@ -105,7 +105,7 @@ export default function ReviewPage() {
                         ))}
                     </div>
                     <button
-                        className="bg-[#4B7332] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#3d5d28] transition-all text-sm w-full sm:w-auto"
+                        className="bg-[#5b6b0f] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#46530c] transition-all text-sm w-full sm:w-auto"
                         onClick={() => user ? setIsModalOpen(true) : setShowLoginModal(true)}
                     >
                         + 후기 작성하기
@@ -129,7 +129,7 @@ export default function ReviewPage() {
                                 <div 
                                     key={review.reviewId} 
                                     onClick={() => setSelectedReview(review)} 
-                                    className="bg-white p-5 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm cursor-pointer hover:border-[#4B7332] transition"
+                                    className="bg-white p-5 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm cursor-pointer hover:border-[#5b6b0f] transition"
                                 >
                                     <div className="flex items-center gap-4 min-w-0">
                                         <div className="min-w-0 truncate">
@@ -234,7 +234,7 @@ function ReviewDetailModal({ review, onClose, isAuthor, onChanged, showToast }: 
                             value={editContent} 
                             onChange={(e) => setEditContent(e.target.value)} 
                             rows={5} 
-                            className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#4B7332] outline-none" 
+                            className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#5b6b0f] outline-none" 
                         />
                     ) : (
                         <p className="text-lg text-slate-600 leading-relaxed whitespace-pre-wrap break-all">
@@ -247,7 +247,7 @@ function ReviewDetailModal({ review, onClose, isAuthor, onChanged, showToast }: 
                 {isAuthor && (
                     <div className="flex gap-4 justify-end pt-8">
                         {isEditing ? (
-                            <button onClick={saveEdit} disabled={busy} className="flex items-center gap-2 px-6 py-3 bg-[#4B7332] text-white rounded-full font-bold hover:bg-[#3d5d28]">
+                            <button onClick={saveEdit} disabled={busy} className="flex items-center gap-2 px-6 py-3 bg-[#5b6b0f] text-white rounded-full font-bold hover:bg-[#46530c]">
                                 <Check className="w-5 h-5" /> 저장
                             </button>
                         ) : (

@@ -17,7 +17,7 @@ interface ToastContextType {
 const ToastContext = createContext<ToastContextType | null>(null);
 
 const VARIANT_STYLES: Record<ToastVariant, string> = {
-    success: 'bg-[#4B7332] text-white',
+    success: 'bg-[#5b6b0f] text-white',
     error: 'bg-red-600 text-white',
     info: 'bg-slate-700 text-white',
 };

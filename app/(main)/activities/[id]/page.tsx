@@ -338,7 +338,7 @@ export default function ActivityVotePage() {
             {/* --- [1] 활동 요약 카드 --- */}
             <section className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6 sm:p-8 space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                <span className="bg-[#4B7332] text-white text-[11px] font-black px-2.5 py-1 rounded w-fit uppercase">
+                <span className="bg-[#5b6b0f] text-white text-[11px] font-black px-2.5 py-1 rounded w-fit uppercase">
                 {TYPE_LABEL[activity.type] || activity.type}
                 </span>
                 <h1 className="text-2xl sm:text-3xl font-black text-slate-800 break-keep">{activity.name}</h1>
@@ -346,10 +346,10 @@ export default function ActivityVotePage() {
 
             {/* 💡 모바일 화면 깨짐 현상 수정을 위한 그리드 반응형 및 flex 설정 변경 */}
             <div className="bg-[#F2F8E1] p-5 sm:p-6 rounded-2xl grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-y-6 sm:gap-x-8">
-                <InfoItem icon={<MapPin className="w-5 h-5 text-green-700" />} label="장소" value={activity.location} />
-                <InfoItem icon={<Clock className="w-5 h-5 text-green-700" />} label="시간" value={activity.activityTime} />
-                <InfoItem icon={<CalendarIcon className="w-5 h-5 text-green-700" />} label="활동 날짜" value={formatDate(activity.activityDate)} />
-                <InfoItem icon={<Users className="w-5 h-5 text-green-700" />} label="인원제한" value={`${activity.capacity}명`} />
+                <InfoItem icon={<MapPin className="w-5 h-5 text-[#5b6b0f]" />} label="장소" value={activity.location} />
+                <InfoItem icon={<Clock className="w-5 h-5 text-[#5b6b0f]" />} label="시간" value={activity.activityTime} />
+                <InfoItem icon={<CalendarIcon className="w-5 h-5 text-[#5b6b0f]" />} label="활동 날짜" value={formatDate(activity.activityDate)} />
+                <InfoItem icon={<Users className="w-5 h-5 text-[#5b6b0f]" />} label="인원제한" value={`${activity.capacity}명`} />
             </div>
 
             {activity.memo && (
@@ -365,7 +365,7 @@ export default function ActivityVotePage() {
                 <span className="break-keep leading-relaxed">투표 기간: {formatDateTime(activity.voteStartAt)} ~ {formatDateTime(activity.voteEndAt)}</span>
                 </div>
                 {isVoteActive ? (
-                    <div className="flex items-center gap-2 text-green-700 font-black text-xs sm:text-sm">
+                    <div className="flex items-center gap-2 text-[#5b6b0f] font-black text-xs sm:text-sm">
                     <div className="relative flex h-3 w-3 ml-0.5">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-green-600"></span>
@@ -393,7 +393,7 @@ export default function ActivityVotePage() {
                 >
                     <div className="flex flex-col gap-1">
                     <span className="font-black text-slate-800">참석</span>
-                    <span className="text-xs text-slate-400 font-bold group-hover:text-green-700 transition-colors">
+                    <span className="text-xs text-slate-400 font-bold group-hover:text-[#5b6b0f] transition-colors">
                         {showAttending ? '▲ 명단 접기' : '▼ 명단 보기'}
                     </span>
                     </div>
@@ -403,7 +403,7 @@ export default function ActivityVotePage() {
                 </div>
 
                 <div className="w-full h-8 bg-slate-100 rounded-lg overflow-hidden relative shadow-inner">
-                    <div className="h-full bg-[#4B7332] transition-all duration-700" style={{ width: `${attendanceRate}%` }} />
+                    <div className="h-full bg-[#5b6b0f] transition-all duration-700" style={{ width: `${attendanceRate}%` }} />
                     <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-black drop-shadow-sm">{attendanceRate}%</span>
                 </div>
 
@@ -419,7 +419,7 @@ export default function ActivityVotePage() {
                                         {idx + 1}. {m.nickname}
                                     </span>
                                     {/* 💡 isWaiting에 따른 뱃지 */}
-                                    <span className={`text-[10px] font-black px-2.5 py-1 rounded-full ${m.isWaiting ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
+                                    <span className={`text-[10px] font-black px-2.5 py-1 rounded-full ${m.isWaiting ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-[#5b6b0f]'}`}>
                                         {m.isWaiting ? '대기' : '참가'}
                                     </span>
                                 </div>
@@ -473,7 +473,7 @@ export default function ActivityVotePage() {
             {isVoteActive && (
                 <div className="space-y-3 relative z-10">
                 <div className="text-sm font-bold text-slate-500 px-1">
-                    {myAttendance === true && <span className="text-green-700">현재 상태: 참석</span>}
+                    {myAttendance === true && <span className="text-[#5b6b0f]">현재 상태: 참석</span>}
                     {myAttendance === false && <span className="text-slate-600">현재 상태: 불참</span>}
                     {myAttendance === null && <span className="text-slate-400">아직 투표하지 않았습니다.</span>}
                 </div>
@@ -496,8 +496,8 @@ export default function ActivityVotePage() {
                     aria-pressed={myAttendance === true}
                     className={`py-4 sm:py-5 font-black rounded-2xl transition-all shadow-md active:scale-[0.98] disabled:cursor-not-allowed ${
                         myAttendance === true
-                            ? 'bg-[#3d5d28] text-white ring-2 ring-[#3d5d28] opacity-100'
-                            : 'bg-[#4B7332] text-white hover:bg-[#3d5d28] disabled:opacity-50'
+                            ? 'bg-[#46530c] text-white ring-2 ring-[#46530c] opacity-100'
+                            : 'bg-[#5b6b0f] text-white hover:bg-[#46530c] disabled:opacity-50'
                     }`}
                 >
                     참석{myAttendance === true && ' (선택됨)'}
@@ -552,7 +552,7 @@ export default function ActivityVotePage() {
                                         <button onClick={cancelEditGuest} className="flex items-center gap-1 px-3 py-1.5 text-xs font-black text-slate-500 bg-white border border-gray-200 rounded-full hover:bg-gray-100">
                                             <X className="w-3.5 h-3.5" /> 취소
                                         </button>
-                                        <button onClick={() => saveEditGuest(g.guestId)} className="flex items-center gap-1 px-3 py-1.5 text-xs font-black text-white bg-[#4B7332] rounded-full hover:bg-[#3d5d28]">
+                                        <button onClick={() => saveEditGuest(g.guestId)} className="flex items-center gap-1 px-3 py-1.5 text-xs font-black text-white bg-[#5b6b0f] rounded-full hover:bg-[#46530c]">
                                             <Check className="w-3.5 h-3.5" /> 저장
                                         </button>
                                     </div>
@@ -566,7 +566,7 @@ export default function ActivityVotePage() {
                                     {/* 💡 수정된 부분: 이름 옆에 대기/참석 뱃지 추가 */}
                                     <div className="flex items-center gap-2">
                                         <span className="font-black text-slate-800 text-[14px] sm:text-[15px] truncate">{g.guestName}</span>
-                                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${g.isWaiting ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
+                                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${g.isWaiting ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-[#5b6b0f]'}`}>
                                             {g.isWaiting ? '대기' : '참석'}
                                         </span>
                                     </div>
@@ -581,7 +581,7 @@ export default function ActivityVotePage() {
                                     </span>
                                     {canManage && (
                                         <>
-                                            <button onClick={() => startEditGuest(g)} className="text-slate-400 hover:text-[#4B7332] p-1" aria-label="게스트 수정">
+                                            <button onClick={() => startEditGuest(g)} className="text-slate-400 hover:text-[#5b6b0f] p-1" aria-label="게스트 수정">
                                                 <Pencil className="w-4 h-4" />
                                             </button>
                                             <button onClick={() => deleteGuest(g.guestId, g.guestName)} className="text-slate-400 hover:text-red-500 p-1" aria-label="게스트 취소">
@@ -639,7 +639,7 @@ export default function ActivityVotePage() {
                     <button
                         onClick={submitGuest}
                         disabled={guestSubmitting}
-                        className="w-full py-4 sm:py-5 bg-[#4B7332] text-white font-black rounded-2xl shadow-md hover:bg-[#3d5d28] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                        className="w-full py-4 sm:py-5 bg-[#5b6b0f] text-white font-black rounded-2xl shadow-md hover:bg-[#46530c] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                     >
                     {guestSubmitting ? '등록 중...' : '등록'}
                     </button>

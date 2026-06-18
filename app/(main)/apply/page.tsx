@@ -154,7 +154,7 @@ export default function ApplyPage() {
         <div className="max-w-md w-full text-center space-y-6">
           <div className="w-20 h-20 bg-[#F2F8E1] rounded-full flex items-center justify-center mx-auto border border-[#E2EBC8]">
             <svg
-              className="w-10 h-10 text-[#4B7332]"
+              className="w-10 h-10 text-[#5b6b0f]"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -176,7 +176,7 @@ export default function ApplyPage() {
             면접 일정은 입력하신 전화번호로 안내드리겠습니다.
           </p>
           <Link href="/">
-            <button className="mt-4 bg-[#4B7332] text-white font-bold px-10 py-3.5 rounded-full shadow-md hover:bg-[#3d5d28] transition-all duration-300">
+            <button className="mt-4 bg-[#5b6b0f] text-white font-bold px-10 py-3.5 rounded-full shadow-md hover:bg-[#46530c] transition-all duration-300">
               홈으로 돌아가기
             </button>
           </Link>
@@ -199,7 +199,7 @@ export default function ApplyPage() {
 
         {/* 모집 안내 - 구글 폼처럼 지원서 상단에 줄글로 정보 제공 */}
         <div className="max-w-3xl mx-auto bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 sm:p-10 space-y-5 text-slate-600">
-          <div className="border-l-4 border-[#4B7332] pl-4">
+          <div className="border-l-4 border-[#5b6b0f] pl-4">
             <h2 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">
               양배추(YBC) 배드민턴 동아리 신규 부원 모집 안내
             </h2>
@@ -217,7 +217,7 @@ export default function ApplyPage() {
 
             <div>
               <div className="flex items-center gap-1.5 mb-3">
-                <Calendar className="w-4 h-4 text-[#4B7332]" />
+                <Calendar className="w-4 h-4 text-[#5b6b0f]" />
                 <p className="font-black text-slate-800">정기 활동 안내</p>
               </div>
               <ul className="list-disc pl-5 space-y-1">
@@ -229,7 +229,7 @@ export default function ApplyPage() {
 
             <div>
               <div className="flex items-center gap-1.5 mb-3">
-                <FileText className="w-4 h-4 text-[#4B7332]" />
+                <FileText className="w-4 h-4 text-[#5b6b0f]" />
                 <p className="font-black text-slate-800">모집 및 면접 절차</p>
               </div>
               <ul className="list-disc pl-5 space-y-1">
@@ -242,7 +242,7 @@ export default function ApplyPage() {
 
             <div>
               <div className="flex items-center gap-1.5 mb-3">
-                <CheckCircle className="w-4 h-4 text-[#4B7332]" />
+                <CheckCircle className="w-4 h-4 text-[#5b6b0f]" />
                 <p className="font-black text-slate-800">유의 사항</p>
               </div>
               <ul className="list-disc pl-5 space-y-1">
@@ -415,7 +415,7 @@ export default function ApplyPage() {
                   onChange={(e) =>
                     handleChange("operatorInterest", e.target.checked)
                   }
-                  className="mt-1 w-5 h-5 rounded border-slate-300 accent-[#4B7332]"
+                  className="mt-1 w-5 h-5 rounded border-slate-300 accent-[#5b6b0f]"
                 />
                 <div>
                   <span className="text-sm font-bold text-slate-600 group-hover:text-slate-800 transition">
@@ -442,7 +442,7 @@ export default function ApplyPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-[#4B7332] text-white font-bold text-base sm:text-lg py-4 sm:py-5 rounded-2xl shadow-md hover:bg-[#3d5d28] active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[#5b6b0f] text-white font-bold text-base sm:text-lg py-4 sm:py-5 rounded-2xl shadow-md hover:bg-[#46530c] active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? "제출 중..." : "지원서 제출하기"}
             </button>
@@ -513,7 +513,7 @@ function FormInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full px-4 py-3 sm:py-3.5 bg-slate-50 border border-gray-200 rounded-xl text-sm font-medium text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#4B7332]/20 focus:border-[#4B7332]/40 transition"
+        className="w-full px-4 py-3 sm:py-3.5 bg-slate-50 border border-gray-200 rounded-xl text-sm font-medium text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#5b6b0f]/20 focus:border-[#5b6b0f]/40 transition"
       />
     </div>
   );
@@ -545,7 +545,7 @@ function FormTextarea({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         rows={rows}
-        className="w-full px-4 py-3 sm:py-3.5 bg-slate-50 border border-gray-200 rounded-xl text-sm font-medium text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#4B7332]/20 focus:border-[#4B7332]/40 transition resize-none"
+        className="w-full px-4 py-3 sm:py-3.5 bg-slate-50 border border-gray-200 rounded-xl text-sm font-medium text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#5b6b0f]/20 focus:border-[#5b6b0f]/40 transition resize-none"
       />
     </div>
   );
@@ -580,7 +580,7 @@ function FormRadioGroup({
             key={option}
             className={`flex items-center gap-2.5 cursor-pointer px-4 py-2.5 sm:py-3 rounded-xl border text-sm font-bold transition-all ${
               value === option
-                ? "border-[#4B7332] bg-[#F2F8E1] text-[#4B7332] shadow-sm"
+                ? "border-[#5b6b0f] bg-[#F2F8E1] text-[#5b6b0f] shadow-sm"
                 : "border-gray-200 bg-slate-50 text-slate-500 hover:border-slate-300"
             }`}
           >
@@ -595,11 +595,11 @@ function FormRadioGroup({
             />
             <div
               className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                value === option ? "border-[#4B7332]" : "border-slate-300"
+                value === option ? "border-[#5b6b0f]" : "border-slate-300"
               }`}
             >
               {value === option && (
-                <div className="w-2 h-2 rounded-full bg-[#4B7332]" />
+                <div className="w-2 h-2 rounded-full bg-[#5b6b0f]" />
               )}
             </div>
             {option}
@@ -635,7 +635,7 @@ function FormCheckboxGroup({
             key={option}
             className={`flex items-center gap-3 cursor-pointer px-4 py-2.5 sm:py-3 rounded-xl border text-sm font-bold transition-all ${
               value.includes(option)
-                ? "border-[#4B7332] bg-[#F2F8E1] text-[#4B7332] shadow-sm"
+                ? "border-[#5b6b0f] bg-[#F2F8E1] text-[#5b6b0f] shadow-sm"
                 : "border-gray-200 bg-slate-50 text-slate-500 hover:border-slate-300"
             }`}
           >
@@ -650,7 +650,7 @@ function FormCheckboxGroup({
             <div
               className={`w-[18px] h-[18px] rounded border-2 flex items-center justify-center shrink-0 ${
                 value.includes(option)
-                  ? "border-[#4B7332] bg-[#4B7332]"
+                  ? "border-[#5b6b0f] bg-[#5b6b0f]"
                   : "border-slate-300"
               }`}
             >

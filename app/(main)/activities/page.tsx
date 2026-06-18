@@ -116,7 +116,7 @@ export default function ActivitiesPage() {
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
                                 className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
-                                    activeTab === tab ? 'bg-[#4B7332] text-white shadow-md' : 'text-slate-400 hover:text-slate-600'
+                                    activeTab === tab ? 'bg-[#5b6b0f] text-white shadow-md' : 'text-slate-400 hover:text-slate-600'
                                 }`}
                             >
                                 {tab}
@@ -142,7 +142,7 @@ export default function ActivitiesPage() {
                         <section className="space-y-6">
                             <div className="flex justify-between items-end">
                                 <h2 className="text-2xl font-black text-slate-800 tracking-tight">참여 가능 활동</h2>
-                                <span className="bg-[#F2F8E1] text-[#4B7332] px-4 py-1.5 rounded-full text-xs font-black border border-[#E2EBC8]">
+                                <span className="bg-[#F2F8E1] text-[#5b6b0f] px-4 py-1.5 rounded-full text-xs font-black border border-[#E2EBC8]">
                                     {history ? `${history.joinableVotes}개 참여 가능` : `+ ${filteredAvailable.length} ACTIVITIES`}
                                 </span>
                             </div>
@@ -219,7 +219,7 @@ function ActivityCard({ data, isPast }: { data: VoteItem; isPast: boolean }) {
                             <Link
                                 href={`/activities/${data.voteId}/tournament`}
                                 onClick={(e) => e.stopPropagation()}
-                                className="bg-[#4B7332] text-white text-[11px] font-bold px-3 py-1 rounded-full whitespace-nowrap drop-shadow-sm hover:bg-[#3d5d28] transition-colors z-20"
+                                className="bg-[#5b6b0f] text-white text-[11px] font-bold px-3 py-1 rounded-full whitespace-nowrap drop-shadow-sm hover:bg-[#46530c] transition-colors z-20"
                             >
                                 대진 확인
                             </Link>
@@ -239,7 +239,7 @@ function ActivityCard({ data, isPast }: { data: VoteItem; isPast: boolean }) {
                     </div>
                     <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
                         <div
-                            className={`h-full transition-all duration-500 ${isPast ? 'bg-slate-400' : 'bg-[#4B7332]'}`}
+                            className={`h-full transition-all duration-500 ${isPast ? 'bg-slate-400' : 'bg-[#5b6b0f]'}`}
                             style={{ width: `${percentage}%` }}
                         />
                     </div>
