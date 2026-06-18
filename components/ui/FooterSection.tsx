@@ -7,17 +7,23 @@ const KAKAO_CHANNEL_URL = 'https://open.kakao.com/o/sf2p7ipg';
 
 export default function FooterSection() {
     return (
-        <section className="border-t border-gray-100 py-10 px-12">
-            <div className="max-w-screen-2xl mx-auto flex flex-col gap-6 text-sm font-semibold tracking-tight text-slate-400">
+        <footer className="bg-brand-soft border-t border-brand-tint py-10 px-6 sm:px-12">
+            <div className="max-w-screen-xl mx-auto flex flex-col gap-6 text-sm font-medium tracking-tight text-subtle">
 
-                {/* Top row: 로고 + SNS 아이콘 */}
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div className="flex items-center opacity-60">
+                {/* Top row: 로고/연락처 + SNS 아이콘 */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5">
+                    <div className="flex flex-col gap-2">
                         <img
                             src="/images/logo.png"
                             alt="YBC Logo"
-                            className="h-7 w-auto object-contain grayscale"
+                            className="h-7 w-auto object-contain opacity-80"
                         />
+                        <div className="flex flex-col gap-0.5 text-[13px]">
+                            <a href={`mailto:${CONTACT_EMAIL}`} className="hover:text-brand-dark transition-colors">
+                                {CONTACT_EMAIL}
+                            </a>
+                            <span>000-0000-0000</span>
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -26,7 +32,7 @@ export default function FooterSection() {
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label="Instagram"
-                            className="w-9 h-9 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                            className="w-9 h-9 flex items-center justify-center rounded-full text-brand-dark/70 hover:text-brand-dark hover:bg-brand-tint transition-colors"
                         >
                             <InstagramIcon />
                         </a>
@@ -35,50 +41,38 @@ export default function FooterSection() {
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label="카카오톡 채널"
-                            className="w-9 h-9 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                            className="w-9 h-9 flex items-center justify-center rounded-full text-brand-dark/70 hover:text-brand-dark hover:bg-brand-tint transition-colors"
                         >
                             <KakaoIcon />
                         </a>
                         <a
                             href={`mailto:${CONTACT_EMAIL}`}
                             aria-label="이메일 문의"
-                            className="w-9 h-9 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                            className="w-9 h-9 flex items-center justify-center rounded-full text-brand-dark/70 hover:text-brand-dark hover:bg-brand-tint transition-colors"
                         >
                             <MailIcon />
                         </a>
                     </div>
                 </div>
 
-                {/* Bottom row: 문의 + 정책/저작권 */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-gray-100 pt-6">
-                    <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
-                        <a
-                            href={`mailto:${CONTACT_EMAIL}`}
-                            className="hover:text-slate-600 transition-colors"
-                        >
-                            문의: {CONTACT_EMAIL}
-                        </a>
-                        <span className="hidden sm:inline text-slate-300">|</span>
-                        <Link
-                            href="/faq"
-                            className="hover:text-slate-600 transition-colors"
-                        >
-                            자주 묻는 질문
-                        </Link>
-                    </div>
-                    <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+                {/* Bottom row: 정책/저작권 */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-t border-brand-tint pt-6 text-[13px]">
+                    <Link href="/faq" className="hover:text-brand-dark transition-colors">
+                        자주 묻는 질문
+                    </Link>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
                         <Link
                             href="/policy/privacy"
-                            className="hover:text-slate-600 transition-colors"
+                            className="hover:text-brand-dark transition-colors"
                         >
                             개인정보 처리방침
                         </Link>
-                        <span className="hidden sm:inline text-slate-300">|</span>
+                        <span className="hidden sm:inline text-line">|</span>
                         <p>Copyright © 2026 YBC Badminton Club. All Rights Reserved.</p>
                     </div>
                 </div>
             </div>
-        </section>
+        </footer>
     );
 }
 
