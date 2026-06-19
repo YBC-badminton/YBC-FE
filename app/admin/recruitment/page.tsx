@@ -45,7 +45,7 @@ interface RecruitmentForm {
 const emptyForm: RecruitmentForm = {
     term: '', startAt: '', endAt: '', firstResultDate: '', finalResultDate: '',
     interviewDate: '', interviewLocation: '', interviewFirstTime: '', interviewSecondTime: '',
-    otDate: '', membershipFee: '', activityPeriod: '', recruitmentMessage: '',
+    otDate: '', recruitmentMessage: '', membershipFee: '', activityPeriod: '',
 };
 
 export default function RecruitmentPage() {
@@ -59,44 +59,28 @@ export default function RecruitmentPage() {
     const [detailLoading, setDetailLoading] = useState(false);
     const [saving, setSaving] = useState(false);
 
-    // GET /admin/recruitments
     const fetchList = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
             const res = await api.get('/admin/recruitments');
-            const data: unknown = res.data;
-            const list: RecruitmentListItem[] = Array.isArray(data)
-                ? (data as RecruitmentListItem[])
-                : Array.isArray((data as { recruitments?: unknown })?.recruitments)
-                    ? ((data as { recruitments: RecruitmentListItem[] }).recruitments)
-                    : Array.isArray((data as { data?: unknown })?.data)
-                        ? ((data as { data: RecruitmentListItem[] }).data)
-                        : [];
+            const data: any = res.data;
+            const list: RecruitmentListItem[] = Array.isArray(data) ? data : (data.recruitments || data.data || []);
             setSchedules(list);
-        } catch (err: unknown) {
-            const message = (err as { response?: { data?: { message?: string } } })
-                ?.response?.data?.message || '모집 일정 목록을 불러오는 중 오류가 발생했습니다.';
-            setError(message);
-            setSchedules([]);
+        } catch (err: any) {
+            setError(err?.response?.data?.message || '목록을 불러오는 중 오류가 발생했습니다.');
         } finally {
             setLoading(false);
         }
     }, []);
 
-    useEffect(() => {
-        fetchList();
-    }, [fetchList]);
+    useEffect(() => { fetchList(); }, [fetchList]);
 
-    // Click item → load detail and fill form
     const handleSelectDetail = async (item: RecruitmentListItem) => {
         setSelectedId(item.recruitmentId);
         setDetailLoading(true);
         setViewMode('detail');
         try {
-            // The spec doesn't have a single detail endpoint, so we use the list + local data
-            // For now, fill what we have. If there's a detail endpoint later, use it here.
-            // Use PATCH response format to populate
             const res = await api.get<RecruitmentDetail>(`/admin/recruitments/${item.recruitmentId}`);
             const d = res.data;
             setForm({
@@ -114,24 +98,18 @@ export default function RecruitmentPage() {
                 membershipFee: d.membershipFee,
                 activityPeriod: d.activityPeriod,
             });
-        } catch {
-            // If detail endpoint doesn't exist, just show the term
-            setForm({ ...emptyForm, term: item.term });
-        } finally {
-            setDetailLoading(false);
-        }
+        } catch { setForm({ ...emptyForm, term: item.term }); }
+        finally { setDetailLoading(false); }
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value, type } = e.target;
-        setForm({
-            ...form,
-            // type이 'number'인 input은 숫자로 변환, textarea나 일반 input은 그대로 value 사용
+        setForm(prev => ({
+            ...prev,
             [name]: type === 'number' ? (value === '' ? '' : Number(value)) : value,
-        });
+        }));
     };
 
-    // POST /admin/recruitments or PATCH /admin/recruitments/{id}
     const handleSubmit = async () => {
         if (!form.term) { showToast('기수 정보를 입력해주세요.', 'error'); return; }
         setSaving(true);
