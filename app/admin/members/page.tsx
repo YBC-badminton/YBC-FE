@@ -199,7 +199,7 @@ export default function MembersPage() {
                             >
                                 <div className="font-black text-lg">{m.name}</div>
                                 <div className="text-sm font-bold text-gray-500 text-right">
-                                    {GENDER_LABEL[m.gender]} · {m.university} · {m.term}기
+                                    {GENDER_LABEL[m.gender]} · {m.university} · {m.term}
                                 </div>
                                 {expandedId === m.memberId ? <ChevronUp className="text-gray-400" /> : <ChevronDown className="text-gray-400" />}
                             </div>
