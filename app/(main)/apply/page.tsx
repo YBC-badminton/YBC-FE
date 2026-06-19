@@ -83,6 +83,7 @@ export default function ApplyPage() {
           term: res.data.term,
           message: res.data.recruitmentMessage
         });
+        console.log("안내 문구 로드 성공", res.data);
       } catch (err) {
         console.error("안내 문구 로드 실패", err);
       }
