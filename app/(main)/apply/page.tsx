@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import api from "../../../lib/axios";
 import { useToast } from "../../../components/ui/Toast";
@@ -69,6 +69,26 @@ export default function ApplyPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const [recruitmentInfo, setRecruitmentInfo] = useState({
+    term: "",
+    message: ""
+  });
+
+  useEffect(() => {
+    const fetchMessage = async () => {
+      try {
+        const res = await api.get('/recruitments/message');
+        setRecruitmentInfo({
+          term: res.data.term,
+          message: res.data.recruitmentMessage
+        });
+      } catch (err) {
+        console.error("안내 문구 로드 실패", err);
+      }
+    };
+    fetchMessage();
+  }, []);
 
   const handleChange = (
     field: keyof FormData,
@@ -209,11 +229,13 @@ export default function ApplyPage() {
           </div>
 
           <div className="space-y-5 text-sm sm:text-[15px] font-medium leading-relaxed break-keep">
-            <p>
-              안녕하세요, &lsquo;양질의 배드민턴 추구&rsquo;를 목표로 하는 YBC
-              배드민턴 클럽입니다. 실력보다 열정을 가진 새로운 가족을 언제나
-              기다리고 있습니다.
-            </p>
+            <div className="text-slate-600 leading-relaxed break-keep">
+              {recruitmentInfo ? (
+                <p className="whitespace-pre-line">{recruitmentInfo.message}</p>
+              ) : (
+                <p>정보를 불러오는 중입니다...</p>
+              )}
+            </div>
 
             <div>
               <div className="flex items-center gap-1.5 mb-3">
