@@ -43,7 +43,7 @@ export default function TournamentPage() {
             setError(null);
             try {
                 // First get participants to find matchId, then get match data
-                const res = await api.get<MatchResponse>(`/admin/votes/${voteId}/matches`);
+                const res = await api.get<MatchResponse>(`/votes/${voteId}/matches`);
                 // If response has matches structure, use it directly
                 if (res.data.matches) {
                     setMatchData(res.data);
