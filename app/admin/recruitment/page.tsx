@@ -110,9 +110,9 @@ export default function RecruitmentPage() {
                 interviewFirstTime: d.interviewFirstTime || '',
                 interviewSecondTime: d.interviewSecondTime || '',
                 otDate: d.otDate || '',
+                recruitmentMessage: d.recruitmentMessage || '',
                 membershipFee: d.membershipFee,
                 activityPeriod: d.activityPeriod,
-                recruitmentMessage: d.recruitmentMessage || '',
             });
         } catch {
             // If detail endpoint doesn't exist, just show the term
