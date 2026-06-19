@@ -96,7 +96,7 @@ function Article({ number, title, children }: { number: string; title: string; c
     return (
         <section className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-8 space-y-4">
             <h2 className="text-xl font-black text-slate-800">
-                <span className="text-[#4B7332]">{number}.</span> {title}
+                <span className="text-[#5b6b0f]">{number}.</span> {title}
             </h2>
             <div className="text-[15px] leading-7 text-slate-700 space-y-3">
                 {children}

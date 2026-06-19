@@ -1,5 +1,55 @@
 @import "tailwindcss";
 
+/* ── Self-hosted Korean UI fonts ───────────────────────────── */
+@font-face {
+    font-family: "SUITE Variable";
+    font-weight: 100 900;
+    font-display: swap;
+    src: url("/fonts/SUITE-Variable.woff2") format("woff2");
+}
+@font-face {
+    font-family: "Pretendard Variable";
+    font-weight: 100 900;
+    font-display: swap;
+    src: url("/fonts/PretendardVariable.woff2") format("woff2");
+}
+
+/* ── Design tokens (Figma: TalkFile_YBC) ───────────────────── */
+@theme {
+    --font-sans: "SUITE Variable", "Pretendard Variable", ui-sans-serif,
+        system-ui, sans-serif;
+    --font-body: "Pretendard Variable", "SUITE Variable", ui-sans-serif,
+        system-ui, sans-serif;
+    /* Agbalumo (--font-agbalumo) is injected by next/font on <html> */
+    --font-display: var(--font-agbalumo), "SUITE Variable", ui-sans-serif,
+        system-ui, sans-serif;
+
+    /* Brand greens */
+    --color-brand: #a1c852; /* primary lime */
+    --color-brand-hover: #93bd41;
+    --color-brand-dark: #5b6b0f; /* olive headings / accents */
+    --color-brand-ink: #3f4a0a;
+    --color-brand-tint: #eef7ec; /* soft pill border / chip bg */
+    --color-brand-soft: #f2f8e1; /* light section bg */
+    --color-brand-wash: #f7fbee; /* lightest page wash */
+
+    /* Neutrals from the design */
+    --color-ink: #1a1a1a;
+    --color-muted: #484848;
+    --color-subtle: #878787;
+    --color-line: #e3e3e3;
+
+    /* Signature soft shadows */
+    --shadow-pill: 0 4px 40px 0 rgba(0, 0, 0, 0.1);
+    --shadow-card: 0 4px 17px 0 rgba(172, 172, 172, 0.25);
+}
+
+body {
+    background-color: #ffffff;
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+}
+
 /* 가로 스크롤 영역의 스크롤바를 숨기는 유틸리티 (탭/필터 바 등) */
 @utility scrollbar-hide {
     -ms-overflow-style: none; /* IE, Edge */

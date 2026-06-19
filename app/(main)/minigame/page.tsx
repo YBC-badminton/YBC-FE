@@ -186,7 +186,7 @@ export default function BadmintonGameManager() {
         >
           <div className="flex justify-between items-center mb-2 z-20">
              <div className="flex flex-col">
-                <span className="bg-green-100 text-green-700 px-3 py-0.5 rounded-full text-[9px] font-black uppercase w-fit mb-1">{activeGame.title}</span>
+                <span className="bg-green-100 text-[#5b6b0f] px-3 py-0.5 rounded-full text-[9px] font-black uppercase w-fit mb-1">{activeGame.title}</span>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
                     {activeGame.isFinished ? "Finished" : `${activeGame.targetScore} PTS Match`}
                 </span>

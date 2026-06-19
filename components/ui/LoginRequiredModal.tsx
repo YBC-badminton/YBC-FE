@@ -60,7 +60,7 @@ export default function LoginRequiredModal({
           </button>
           <button
             onClick={handleLogin}
-            className="flex-1 py-3 bg-[#4B7332] text-white font-bold rounded-2xl hover:bg-[#3d5d28] transition-all shadow-md text-sm"
+            className="flex-1 py-3 bg-[#5b6b0f] text-white font-bold rounded-2xl hover:bg-[#46530c] transition-all shadow-md text-sm"
           >
             로그인하기
           </button>

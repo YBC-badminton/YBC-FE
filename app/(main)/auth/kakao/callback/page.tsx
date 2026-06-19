@@ -48,7 +48,7 @@ function KakaoCallbackContent() {
                 <p className="text-sm text-red-500 font-bold">{error}</p>
                 <button
                     onClick={() => router.replace('/login')}
-                    className="bg-[#4B7332] text-white font-bold px-8 py-3 rounded-full shadow-md hover:bg-[#3d5d28] transition-all"
+                    className="bg-[#5b6b0f] text-white font-bold px-8 py-3 rounded-full shadow-md hover:bg-[#46530c] transition-all"
                 >
                     로그인 페이지로
                 </button>
@@ -58,7 +58,7 @@ function KakaoCallbackContent() {
 
     return (
         <div className="text-center space-y-4">
-            <div className="w-12 h-12 border-4 border-[#4B7332] border-t-transparent rounded-full animate-spin mx-auto" />
+            <div className="w-12 h-12 border-4 border-[#5b6b0f] border-t-transparent rounded-full animate-spin mx-auto" />
             <p className="text-slate-400 font-bold text-sm">카카오 로그인 처리 중...</p>
         </div>
     );
@@ -69,7 +69,7 @@ export default function KakaoCallbackPage() {
         <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center px-6 font-sans">
             <Suspense fallback={
                 <div className="text-center space-y-4">
-                    <div className="w-12 h-12 border-4 border-[#4B7332] border-t-transparent rounded-full animate-spin mx-auto" />
+                    <div className="w-12 h-12 border-4 border-[#5b6b0f] border-t-transparent rounded-full animate-spin mx-auto" />
                     <p className="text-slate-400 font-bold text-sm">로딩 중...</p>
                 </div>
             }>
