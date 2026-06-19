@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Pencil, Trash2 } from 'lucide-react';
+import { Search, Trash2, ChevronDown, ChevronUp, Mail, Phone } from 'lucide-react';
 import api from '@/lib/axios';
 import { useToast } from '@/components/ui/Toast';
 
@@ -12,6 +12,7 @@ const GENDER_LABEL: Record<string, string> = {
 
 interface MemberSummary {
     totalMembers: number;
+    mapoResidentCount: number;
 }
 
 interface Member {
@@ -23,22 +24,12 @@ interface Member {
     gender: 'MALE' | 'FEMALE';
     age: string;
     term: string;
-    isMapoResident: boolean; // 💡 마포구 거주 여부 필드 추가
+    isMapoResident: boolean;
 }
 
 interface MembersResponse {
     summary: MemberSummary;
     members: Member[];
-}
-
-interface MemberForm {
-    name: string;
-    university: string;
-    phone: string;
-    email: string;
-    gender: 'MALE' | 'FEMALE';
-    age: string;
-    term: string;
 }
 
 export default function MembersPage() {
@@ -49,13 +40,10 @@ export default function MembersPage() {
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [termFilter, setTermFilter] = useState('all');
-    const [showMapoOnly, setShowMapoOnly] = useState(false); // 💡 마포구 필터 상태
-    const [editingId, setEditingId] = useState<number | null>(null);
-    const [editForm, setEditForm] = useState<Partial<MemberForm>>({});
-    const [showAddForm, setShowAddForm] = useState(false);
-    const [addForm, setAddForm] = useState<MemberForm>({
-        name: '', university: '', phone: '', email: '', gender: 'MALE', age: '', term: '',
-    });
+    const [showMapoOnly, setShowMapoOnly] = useState(false);
+    
+    // 상세 보기(토글) 상태 관리
+    const [expandedId, setExpandedId] = useState<number | null>(null);
 
     const fetchMembers = useCallback(async () => {
         setLoading(true);
@@ -77,71 +65,18 @@ export default function MembersPage() {
         fetchMembers();
     }, [fetchMembers]);
 
-    const handleSearch = async () => {
-        if (!searchQuery.trim()) {
-            fetchMembers();
-            return;
-        }
-        setLoading(true);
-        try {
-            const res = await api.get(`/admin/members/search`, { params: { name: searchQuery } });
-            const data = Array.isArray(res.data) ? res.data : [res.data];
-            setMembers(data);
-        } catch {
-            setMembers([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleSaveEdit = async (memberId: number) => {
-        try {
-            await api.patch(`/admin/members/${memberId}`, editForm);
-            setEditingId(null);
-            setEditForm({});
-            fetchMembers();
-            showToast('부원 정보가 수정되었습니다.', 'success');
-        } catch {
-            showToast('수정에 실패했습니다.', 'error');
-        }
-    };
-
-    const handleAdd = async () => {
-        if (!addForm.name || !addForm.phone) {
-            showToast('이름과 전화번호는 필수입니다.', 'error');
-            return;
-        }
-        try {
-            await api.post('/admin/members', addForm);
-            setShowAddForm(false);
-            setAddForm({ name: '', university: '', phone: '', email: '', gender: 'MALE', age: '', term: '' });
-            fetchMembers();
-            showToast('부원이 성공적으로 추가되었습니다.', 'success');
-        } catch {
-            showToast('부원 추가에 실패했습니다.', 'error');
-        }
-    };
-
     const handleDelete = async (memberId: number, name: string) => {
         if (!confirm(`${name} 부원을 삭제하시겠습니까?`)) return;
         try {
             await api.delete(`/admin/members/${memberId}`);
             fetchMembers();
+            setExpandedId(null);
             showToast(`${name} 부원이 삭제되었습니다.`, 'success');
         } catch {
             showToast('삭제에 실패했습니다.', 'error');
         }
     };
 
-    const startEdit = (member: Member) => {
-        setEditingId(member.memberId);
-        setEditForm({
-            name: member.name, university: member.university, phone: member.phone,
-            email: member.email, gender: member.gender, age: member.age, term: member.term,
-        });
-    };
-
-    // 필터링 및 통계 계산
     const termCounts = members.reduce<Record<string, number>>((acc, m) => {
         if (m.term) acc[m.term] = (acc[m.term] || 0) + 1;
         return acc;
@@ -167,26 +102,27 @@ export default function MembersPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="mb-8">
                 <h1 className="text-2xl font-black text-gray-800">부원 명단</h1>
-                <p className="text-sm text-gray-500 mt-1">동아리 부원 정보를 관리하세요.</p>
+                <div className="text-sm text-gray-500 mt-2 font-bold">
+                    전체 부원: {summary?.totalMembers || 0}명 
+                    <span className="mx-2 text-gray-300">|</span> 
+                    마포구 거주자: {summary?.mapoResidentCount || 0}명
+                </div>
             </div>
 
             {/* 필터 및 검색 바 */}
             <div className="flex flex-col gap-4 mb-6">
                 <div className="flex flex-wrap gap-2 items-center">
-                    {/* 이름/학교 검색창 */}
                     <div className="relative flex-1 min-w-[200px]">
                         <input
                             type="text"
                             placeholder="이름 또는 학교 검색"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm"
                         />
                         <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
                     </div>
                     
-                    {/* 기수 선택 드롭다운 (버튼들 대신 적용) */}
                     <select
                         value={termFilter}
                         onChange={(e) => setTermFilter(e.target.value)}
@@ -198,7 +134,6 @@ export default function MembersPage() {
                         ))}
                     </select>
 
-                    {/* 마포구 필터 체크박스 */}
                     <label className="flex items-center gap-2 px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white cursor-pointer hover:bg-gray-50">
                         <input 
                             type="checkbox" 
@@ -208,41 +143,10 @@ export default function MembersPage() {
                         />
                         <span className="font-bold text-gray-700">마포구 거주자</span>
                     </label>
-
-                    {/* 부원 추가 버튼 */}
-                    <button 
-                        onClick={() => setShowAddForm(!showAddForm)} 
-                        className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-md active:scale-95 text-sm"
-                    >
-                        + 부원 추가
-                    </button>
                 </div>
             </div>
 
-            {/* 부원 추가 폼 */}
-            {showAddForm && (
-                <div className="bg-white border border-blue-100 rounded-xl p-6 mb-6 shadow-sm animate-in fade-in zoom-in duration-200">
-                    <h3 className="font-black text-gray-800 mb-4">새 부원 추가</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <input placeholder="이름" value={addForm.name} onChange={(e) => setAddForm({ ...addForm, name: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
-                        <input placeholder="학교" value={addForm.university} onChange={(e) => setAddForm({ ...addForm, university: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
-                        <input placeholder="전화번호" value={addForm.phone} onChange={(e) => setAddForm({ ...addForm, phone: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
-                        <input placeholder="이메일" value={addForm.email} onChange={(e) => setAddForm({ ...addForm, email: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
-                        <select value={addForm.gender} onChange={(e) => setAddForm({ ...addForm, gender: e.target.value as 'MALE' | 'FEMALE' })} className="p-2.5 border rounded-lg text-sm bg-white">
-                            <option value="MALE">남성</option>
-                            <option value="FEMALE">여성</option>
-                        </select>
-                        <input placeholder="나이(예: 01)" value={addForm.age} onChange={(e) => setAddForm({ ...addForm, age: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
-                        <input placeholder="기수(예: 10)" value={addForm.term} onChange={(e) => setAddForm({ ...addForm, term: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
-                    </div>
-                    <div className="flex gap-2 mt-4 justify-end">
-                        <button onClick={() => setShowAddForm(false)} className="px-4 py-2 text-sm text-gray-500 border rounded-lg hover:bg-gray-50">취소</button>
-                        <button onClick={handleAdd} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">추가 완료</button>
-                    </div>
-                </div>
-            )}
-
-            {/* 리스트 (데스크탑/모바일 생략 없이 작성) */}
+            {/* 리스트 테이블 */}
             <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
                 <table className="w-full text-left hidden lg:table">
                     <thead className="bg-gray-50 text-gray-400 text-xs uppercase font-bold">
@@ -251,35 +155,67 @@ export default function MembersPage() {
                             <th className="p-4">성별</th>
                             <th className="p-4">나이</th>
                             <th className="p-4">학교</th>
-                            <th className="p-4">전화번호</th>
                             <th className="p-4">기수</th>
-                            <th className="p-4 text-center">관리</th>
+                            <th className="p-4">연락처</th>
+                            <th className="p-4">이메일</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 text-sm">
-                        {filteredMembers.map((member) => (
-                            <tr key={member.memberId} className="hover:bg-gray-50">
-                                <td className="p-4 font-bold">{member.name}</td>
-                                <td className="p-4">{GENDER_LABEL[member.gender]}</td>
-                                <td className="p-4">{member.age}년생</td>
-                                <td className="p-4">{member.university}</td>
-                                <td className="p-4">{member.phone}</td>
-                                <td className="p-4">{member.term}</td>
-                                <td className="p-4 text-center space-x-2">
-                                    <button onClick={() => handleDelete(member.memberId, member.name)} className="text-red-400 hover:text-red-600"><Trash2 className="w-4 h-4"/></button>
-                                </td>
-                            </tr>
+                        {filteredMembers.map((m) => (
+                            <React.Fragment key={m.memberId}>
+                                <tr className="hover:bg-gray-50 cursor-pointer" onClick={() => setExpandedId(expandedId === m.memberId ? null : m.memberId)}>
+                                    <td className="p-4 font-bold">{m.name}</td>
+                                    <td className="p-4">{GENDER_LABEL[m.gender]}</td>
+                                    <td className="p-4">{m.age}년생</td>
+                                    <td className="p-4">{m.university}</td>
+                                    <td className="p-4">{m.term}</td>
+                                    <td className="p-4">{m.phone}</td>
+                                    <td className="p-4">{m.email}</td>
+                                </tr>
+                                {expandedId === m.memberId && (
+                                    <tr className="bg-gray-50">
+                                        <td colSpan={7} className="p-4 text-center">
+                                            <button 
+                                                onClick={() => handleDelete(m.memberId, m.name)} 
+                                                className="flex items-center gap-2 text-red-500 font-bold mx-auto hover:text-red-700"
+                                            >
+                                                <Trash2 className="w-4 h-4"/> 부원 삭제
+                                            </button>
+                                        </td>
+                                    </tr>
+                                )}
+                            </React.Fragment>
                         ))}
                     </tbody>
                 </table>
                 
                 {/* 모바일 뷰 */}
-                <div className="lg:hidden p-4 space-y-4">
-                    {filteredMembers.map((member) => (
-                        <div key={member.memberId} className="border p-4 rounded-xl space-y-2">
-                            <h3 className="font-black text-lg">{member.name}</h3>
-                            <p className="text-sm">{member.university} · {member.term}</p>
-                            <button onClick={() => handleDelete(member.memberId, member.name)} className="w-full py-2 bg-red-50 text-red-600 rounded-lg font-bold text-sm">삭제</button>
+                <div className="lg:hidden">
+                    {filteredMembers.map((m) => (
+                        <div key={m.memberId} className="border-b border-gray-100 p-4">
+                            <div 
+                                className="flex justify-between items-center cursor-pointer" 
+                                onClick={() => setExpandedId(expandedId === m.memberId ? null : m.memberId)}
+                            >
+                                <div className="font-black text-lg">{m.name}</div>
+                                <div className="text-sm font-bold text-gray-500 text-right">
+                                    {GENDER_LABEL[m.gender]} · {m.university} · {m.term}기
+                                </div>
+                                {expandedId === m.memberId ? <ChevronUp className="text-gray-400" /> : <ChevronDown className="text-gray-400" />}
+                            </div>
+                            
+                            {expandedId === m.memberId && (
+                                <div className="mt-4 pt-4 border-t border-gray-100 space-y-3 text-sm font-bold text-gray-600">
+                                    <div className="flex items-center gap-2"><Phone className="w-4 h-4 text-gray-400"/> {m.phone}</div>
+                                    <div className="flex items-center gap-2"><Mail className="w-4 h-4 text-gray-400"/> {m.email}</div>
+                                    <button 
+                                        onClick={() => handleDelete(m.memberId, m.name)} 
+                                        className="w-full mt-2 py-2.5 bg-red-50 text-red-600 rounded-lg font-bold text-sm"
+                                    >
+                                        삭제
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>
