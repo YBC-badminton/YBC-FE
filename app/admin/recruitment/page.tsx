@@ -21,6 +21,7 @@ interface RecruitmentDetail {
     interviewFirstTime: string;
     interviewSecondTime: string;
     otDate: string;
+    recruitmentMessage: string;
     membershipFee: number;
     activityPeriod: number;
 }
@@ -36,6 +37,7 @@ interface RecruitmentForm {
     interviewFirstTime: string;
     interviewSecondTime: string;
     otDate: string;
+    recruitmentMessage: string;
     membershipFee: number | '';
     activityPeriod: number | '';
 }
@@ -43,7 +45,7 @@ interface RecruitmentForm {
 const emptyForm: RecruitmentForm = {
     term: '', startAt: '', endAt: '', firstResultDate: '', finalResultDate: '',
     interviewDate: '', interviewLocation: '', interviewFirstTime: '', interviewSecondTime: '',
-    otDate: '', membershipFee: '', activityPeriod: '',
+    otDate: '', membershipFee: '', activityPeriod: '', recruitmentMessage: '',
 };
 
 export default function RecruitmentPage() {
@@ -110,6 +112,7 @@ export default function RecruitmentPage() {
                 otDate: d.otDate || '',
                 membershipFee: d.membershipFee,
                 activityPeriod: d.activityPeriod,
+                recruitmentMessage: d.recruitmentMessage || '',
             });
         } catch {
             // If detail endpoint doesn't exist, just show the term
@@ -119,10 +122,11 @@ export default function RecruitmentPage() {
         }
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value, type } = e.target;
         setForm({
             ...form,
+            // type이 'number'인 input은 숫자로 변환, textarea나 일반 input은 그대로 value 사용
             [name]: type === 'number' ? (value === '' ? '' : Number(value)) : value,
         });
     };
@@ -213,6 +217,17 @@ export default function RecruitmentPage() {
                         <>
                             <FormSection title="기본 정보">
                                 <InputField label="기수" name="term" value={form.term} onChange={handleChange} placeholder="예) 10.5기" />
+                                <div className="flex flex-col gap-1.5 mt-4">
+                                    <label className="text-[10px] sm:text-[11px] font-black text-slate-400 ml-1">지원 안내 문구</label>
+                                    <textarea
+                                        name="recruitmentMessage"
+                                        value={form.recruitmentMessage}
+                                        onChange={handleChange}
+                                        rows={3}
+                                        className="w-full p-3.5 border border-slate-200 rounded-2xl text-[14px] font-bold text-slate-700 outline-none focus:ring-4 focus:ring-blue-500/5"
+                                        placeholder="지원자들에게 보여줄 안내 문구를 입력하세요."
+                                    />
+                                </div>
                             </FormSection>
 
                             <FormSection title="모집 기간">
