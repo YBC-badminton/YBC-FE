@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Trash2, ChevronDown, ChevronUp, Mail, Phone } from 'lucide-react';
+import { Search, Trash2, ChevronDown, ChevronUp, Mail, Phone, Edit2, Check, X } from 'lucide-react';
 import api from '@/lib/axios';
 import { useToast } from '@/components/ui/Toast';
 
@@ -42,8 +42,10 @@ export default function MembersPage() {
     const [termFilter, setTermFilter] = useState('all');
     const [showMapoOnly, setShowMapoOnly] = useState(false);
     
-    // 상세 보기(토글) 상태 관리
+    // 상세 보기(토글) 및 수정 모드 관리
     const [expandedId, setExpandedId] = useState<number | null>(null);
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [editForm, setEditForm] = useState<Partial<Member>>({});
 
     const fetchMembers = useCallback(async () => {
         setLoading(true);
@@ -64,6 +66,18 @@ export default function MembersPage() {
     useEffect(() => {
         fetchMembers();
     }, [fetchMembers]);
+
+    const handleSaveEdit = async (memberId: number) => {
+        try {
+            await api.patch(`/admin/members/${memberId}`, editForm);
+            setEditingId(null);
+            setExpandedId(null);
+            fetchMembers();
+            showToast('부원 정보가 수정되었습니다.', 'success');
+        } catch {
+            showToast('수정에 실패했습니다.', 'error');
+        }
+    };
 
     const handleDelete = async (memberId: number, name: string) => {
         if (!confirm(`${name} 부원을 삭제하시겠습니까?`)) return;
@@ -109,7 +123,6 @@ export default function MembersPage() {
                 </div>
             </div>
 
-            {/* 필터 및 검색 바 */}
             <div className="flex flex-col gap-4 mb-6">
                 <div className="flex flex-wrap gap-2 items-center">
                     <div className="relative flex-1 min-w-[200px]">
@@ -146,7 +159,6 @@ export default function MembersPage() {
                 </div>
             </div>
 
-            {/* 리스트 테이블 */}
             <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
                 <table className="w-full text-left hidden lg:table">
                     <thead className="bg-gray-50 text-gray-400 text-xs uppercase font-bold">
@@ -174,13 +186,20 @@ export default function MembersPage() {
                                 </tr>
                                 {expandedId === m.memberId && (
                                     <tr className="bg-gray-50">
-                                        <td colSpan={7} className="p-4 text-center">
-                                            <button 
-                                                onClick={() => handleDelete(m.memberId, m.name)} 
-                                                className="flex items-center gap-2 text-red-500 font-bold mx-auto hover:text-red-700"
-                                            >
-                                                <Trash2 className="w-4 h-4"/> 부원 삭제
-                                            </button>
+                                        <td colSpan={7} className="p-4">
+                                            {editingId === m.memberId ? (
+                                                <div className="flex gap-4 justify-center items-center">
+                                                    <input className="border p-1 rounded text-xs" value={editForm.name || ''} onChange={e => setEditForm({...editForm, name: e.target.value})} placeholder="이름" />
+                                                    <input className="border p-1 rounded text-xs" value={editForm.university || ''} onChange={e => setEditForm({...editForm, university: e.target.value})} placeholder="학교" />
+                                                    <button onClick={() => handleSaveEdit(m.memberId)} className="text-blue-600 font-bold"><Check className="w-5 h-5"/></button>
+                                                    <button onClick={() => setEditingId(null)} className="text-gray-500 font-bold"><X className="w-5 h-5"/></button>
+                                                </div>
+                                            ) : (
+                                                <div className="flex gap-8 justify-center">
+                                                    <button onClick={() => { setEditingId(m.memberId); setEditForm(m); }} className="flex items-center gap-1 text-blue-600 font-bold hover:text-blue-800"><Edit2 className="w-4 h-4"/> 수정하기</button>
+                                                    <button onClick={() => handleDelete(m.memberId, m.name)} className="flex items-center gap-1 text-red-500 font-bold hover:text-red-700"><Trash2 className="w-4 h-4"/> 삭제하기</button>
+                                                </div>
+                                            )}
                                         </td>
                                     </tr>
                                 )}
@@ -189,31 +208,21 @@ export default function MembersPage() {
                     </tbody>
                 </table>
                 
-                {/* 모바일 뷰 */}
                 <div className="lg:hidden">
                     {filteredMembers.map((m) => (
                         <div key={m.memberId} className="border-b border-gray-100 p-4">
-                            <div 
-                                className="flex justify-between items-center cursor-pointer" 
-                                onClick={() => setExpandedId(expandedId === m.memberId ? null : m.memberId)}
-                            >
-                                <div className="font-black text-lg">{m.name}</div>
-                                <div className="text-sm font-bold text-gray-500 text-right">
-                                    {GENDER_LABEL[m.gender]} · {m.university} · {m.term}
-                                </div>
+                            <div className="flex justify-between items-center cursor-pointer" onClick={() => setExpandedId(expandedId === m.memberId ? null : m.memberId)}>
+                                <span className="font-black text-lg">{m.name} | {m.term}기</span>
                                 {expandedId === m.memberId ? <ChevronUp className="text-gray-400" /> : <ChevronDown className="text-gray-400" />}
                             </div>
-                            
                             {expandedId === m.memberId && (
                                 <div className="mt-4 pt-4 border-t border-gray-100 space-y-3 text-sm font-bold text-gray-600">
                                     <div className="flex items-center gap-2"><Phone className="w-4 h-4 text-gray-400"/> {m.phone}</div>
                                     <div className="flex items-center gap-2"><Mail className="w-4 h-4 text-gray-400"/> {m.email}</div>
-                                    <button 
-                                        onClick={() => handleDelete(m.memberId, m.name)} 
-                                        className="w-full mt-2 py-2.5 bg-red-50 text-red-600 rounded-lg font-bold text-sm"
-                                    >
-                                        삭제
-                                    </button>
+                                    <div className="flex gap-4 pt-2">
+                                        <button onClick={() => { setEditingId(m.memberId); setEditForm(m); }} className="flex-1 py-2 bg-blue-50 text-blue-600 rounded-lg font-bold">수정</button>
+                                        <button onClick={() => handleDelete(m.memberId, m.name)} className="flex-1 py-2 bg-red-50 text-red-600 rounded-lg font-bold">삭제</button>
+                                    </div>
                                 </div>
                             )}
                         </div>
