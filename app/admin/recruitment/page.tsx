@@ -133,10 +133,7 @@ export default function RecruitmentPage() {
 
     // POST /admin/recruitments or PATCH /admin/recruitments/{id}
     const handleSubmit = async () => {
-        if (!form.term) {
-            showToast('기수 정보를 입력해주세요.', 'error');
-            return;
-        }
+        if (!form.term) { showToast('기수 정보를 입력해주세요.', 'error'); return; }
         setSaving(true);
         try {
             const payload = {
@@ -144,21 +141,16 @@ export default function RecruitmentPage() {
                 startAt: form.startAt ? form.startAt + (form.startAt.length === 16 ? ':00' : '') : '',
                 endAt: form.endAt ? form.endAt + (form.endAt.length === 16 ? ':00' : '') : '',
             };
-            if (viewMode === 'add') {
-                await api.post('/admin/recruitments', payload);
-            } else if (selectedId) {
-                await api.patch(`/admin/recruitments/${selectedId}`, payload);
-            }
+            if (viewMode === 'add') await api.post('/admin/recruitments', payload);
+            else if (selectedId) await api.patch(`/admin/recruitments/${selectedId}`, payload);
+            
             showToast('모집 일정이 저장되었습니다.', 'success');
             setViewMode('list');
             setForm(emptyForm);
             setSelectedId(null);
             fetchList();
-        } catch {
-            showToast('저장 중 오류가 발생했습니다.', 'error');
-        } finally {
-            setSaving(false);
-        }
+        } catch { showToast('저장 중 오류가 발생했습니다.', 'error'); }
+        finally { setSaving(false); }
     };
 
     return (
