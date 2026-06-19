@@ -185,9 +185,10 @@ export default function TournamentPage() {
                 // 2. 서버 데이터 매핑
                 data.matches.forEach((m) => {
                     const courtKey = `${m.courtNumber}코트`;
-                    if (newBrackets[courtKey]) {
-                        // matchNumber(1부터 시작)를 인덱스로 사용하여 대진표 채우기
-                        const matchIdx = m.matchNumber - 1;
+                    
+                    // 💡 여기서 m.courtMatches를 순회해야 합니다!
+                    m.courtMatches.forEach((match) => {
+                        const matchIdx = match.matchNumber - 1; // 여기서 matchNumber를 사용
                         
                         // 행이 부족하면 추가
                         while (newBrackets[courtKey].length <= matchIdx) {
@@ -195,20 +196,20 @@ export default function TournamentPage() {
                         }
 
                         const row: BracketRow = [null, null, null, null];
-                        const allTeamMembers = [...m.team1, ...m.team2];
+                        const allTeamMembers = [...match.team1, ...match.team2];
                         
                         allTeamMembers.forEach((member, idx) => {
                             const pData = participants.find(p => p.participantId === member.participantId);
                             if (pData) {
                                 row[idx] = pData;
-                                // 상단 배정 명단 중복 방지 추가
+                                // 명단 중복 방지 추가
                                 if (!newAssignments[courtKey].some(a => a.participantId === pData.participantId)) {
                                     newAssignments[courtKey].push(pData);
                                 }
                             }
                         });
                         newBrackets[courtKey][matchIdx] = row;
-                    }
+                    });
                 });
 
                 // 3. 상태 한 번에 업데이트
