@@ -172,44 +172,57 @@ export default function TournamentPage() {
 
             // 4. 대진 데이터가 있는 경우 상태 복구 (수정 모드)
             if (activity.matchRegistered && data.matches) {
-                setIsEditMode(true);
-                setMatchId(data.matchId || null);
-
                 const newBrackets: Record<string, BracketRow[]> = {
-                    '1코트': initialBracket(), '2코트': initialBracket(), 
-                    '3코트': initialBracket(), '4코트': initialBracket()
+                    '1코트': [], '2코트': [], '3코트': [], '4코트': []
                 };
                 const newAssignments: Record<string, LocalParticipant[]> = { '1코트': [], '2코트': [], '3코트': [], '4코트': [] };
 
-                // 서버 데이터 순회하며 상태 재구축
+                // 1. 모든 코트 초기화
+                ['1코트', '2코트', '3코트', '4코트'].forEach(courtKey => {
+                    newBrackets[courtKey] = initialBracket();
+                });
+
+                // 2. 서버 데이터 매핑
                 data.matches.forEach((m) => {
                     const courtKey = `${m.courtNumber}코트`;
                     if (newBrackets[courtKey]) {
-                        newBrackets[courtKey] = m.courtMatches.map((match) => {
-                            const row: BracketRow = [null, null, null, null];
-                            
-                            // 팀1(인덱스 0,1) & 팀2(인덱스 2,3) 매핑
-                            const allTeamMembers = [...match.team1, ...match.team2];
-                            allTeamMembers.forEach((member, idx) => {
-                                const pData = participants.find(p => p.participantId === member.participantId);
-                                if (pData) {
-                                    row[idx] = pData;
-                                    // 상단 배정 박스에 추가 (중복 방지)
-                                    if (!newAssignments[courtKey].some(a => a.participantId === pData.participantId)) {
-                                        newAssignments[courtKey].push(pData);
-                                    }
+                        // matchNumber(1부터 시작)를 인덱스로 사용하여 대진표 채우기
+                        const matchIdx = m.matchNumber - 1;
+                        
+                        // 행이 부족하면 추가
+                        while (newBrackets[courtKey].length <= matchIdx) {
+                            newBrackets[courtKey].push(createEmptyRow());
+                        }
+
+                        const row: BracketRow = [null, null, null, null];
+                        const allTeamMembers = [...m.team1, ...m.team2];
+                        
+                        allTeamMembers.forEach((member, idx) => {
+                            const pData = participants.find(p => p.participantId === member.participantId);
+                            if (pData) {
+                                row[idx] = pData;
+                                // 상단 배정 명단 중복 방지 추가
+                                if (!newAssignments[courtKey].some(a => a.participantId === pData.participantId)) {
+                                    newAssignments[courtKey].push(pData);
                                 }
-                            });
-                            return row;
+                            }
                         });
-                        // 행이 4개 미만이면 빈 행 추가
-                        while (newBrackets[courtKey].length < 4) newBrackets[courtKey].push(createEmptyRow());
+                        newBrackets[courtKey][matchIdx] = row;
                     }
                 });
 
-                setCourtBrackets(newBrackets);
+                // 3. 상태 한 번에 업데이트
                 setAssignments(newAssignments);
+                setCourtBrackets(newBrackets);
+                setMatchId(data.matchId || null);
+                setIsEditMode(true);
             } else {
+                // 수정 모드가 아닐 때 초기화
+                setAssignments({ '1코트': [], '2코트': [], '3코트': [], '4코트': [] });
+                setCourtBrackets({
+                    '1코트': initialBracket(), '2코트': initialBracket(), 
+                    '3코트': initialBracket(), '4코트': initialBracket()
+                });
                 setIsEditMode(false);
                 setMatchId(null);
             }
