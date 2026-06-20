@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Trash2, ChevronDown, ChevronUp, Mail, Phone, Edit2, Check, X } from 'lucide-react';
+import { Search, Trash2, Mail, Phone, Edit2, Check, X, Plus } from 'lucide-react';
 import api from '@/lib/axios';
 import { useToast } from '@/components/ui/Toast';
 
@@ -32,6 +32,12 @@ interface MembersResponse {
     members: Member[];
 }
 
+type MemberForm = Omit<Member, 'memberId'>;
+
+const EMPTY_FORM: MemberForm = {
+    name: '', university: '', phone: '', email: '', gender: 'MALE', age: '', term: '', isMapoResident: false,
+};
+
 export default function MembersPage() {
     const { showToast } = useToast();
     const [summary, setSummary] = useState<MemberSummary | null>(null);
@@ -44,6 +50,9 @@ export default function MembersPage() {
     
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editForm, setEditForm] = useState<Partial<Member>>({});
+
+    const [showAddForm, setShowAddForm] = useState(false);
+    const [addForm, setAddForm] = useState<MemberForm>(EMPTY_FORM);
 
     const fetchMembers = useCallback(async () => {
         setLoading(true);
@@ -74,6 +83,22 @@ export default function MembersPage() {
             showToast('부원 정보가 수정되었습니다.', 'success');
         } catch {
             showToast('수정에 실패했습니다.', 'error');
+        }
+    };
+
+    const handleAdd = async () => {
+        if (!addForm.name || !addForm.phone) {
+            showToast('이름과 연락처는 필수입니다.', 'error');
+            return;
+        }
+        try {
+            await api.post('/admin/members', addForm);
+            setAddForm(EMPTY_FORM);
+            setShowAddForm(false);
+            fetchMembers();
+            showToast('부원이 추가되었습니다.', 'success');
+        } catch {
+            showToast('부원 추가에 실패했습니다.', 'error');
         }
     };
 
@@ -153,7 +178,40 @@ export default function MembersPage() {
                         />
                         <span className="font-bold text-gray-700">마포구 거주자</span>
                     </label>
+
+                    <button
+                        onClick={() => setShowAddForm(v => !v)}
+                        className="ml-auto flex items-center gap-1.5 px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition active:scale-95"
+                    >
+                        <Plus className="w-4 h-4" /> 부원 추가
+                    </button>
                 </div>
+
+                {showAddForm && (
+                    <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                        <h3 className="font-black text-gray-800 mb-4">새 부원 추가</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                            <input placeholder="이름" value={addForm.name} onChange={(e) => setAddForm({ ...addForm, name: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
+                            <input placeholder="학교" value={addForm.university} onChange={(e) => setAddForm({ ...addForm, university: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
+                            <input placeholder="전화번호" value={addForm.phone} onChange={(e) => setAddForm({ ...addForm, phone: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
+                            <input placeholder="이메일" value={addForm.email} onChange={(e) => setAddForm({ ...addForm, email: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
+                            <select value={addForm.gender} onChange={(e) => setAddForm({ ...addForm, gender: e.target.value as 'MALE' | 'FEMALE' })} className="p-2.5 border rounded-lg text-sm bg-white">
+                                <option value="MALE">남</option>
+                                <option value="FEMALE">여</option>
+                            </select>
+                            <input placeholder="나이 (예: 01)" value={addForm.age} onChange={(e) => setAddForm({ ...addForm, age: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
+                            <input placeholder="기수 (예: 10)" value={addForm.term} onChange={(e) => setAddForm({ ...addForm, term: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
+                            <label className="flex items-center gap-2 px-3 py-2.5 border rounded-lg text-sm bg-white cursor-pointer">
+                                <input type="checkbox" checked={addForm.isMapoResident} onChange={(e) => setAddForm({ ...addForm, isMapoResident: e.target.checked })} className="w-4 h-4 text-blue-600 rounded" />
+                                <span className="font-bold text-gray-700">마포구 거주</span>
+                            </label>
+                        </div>
+                        <div className="flex justify-end gap-2 mt-4">
+                            <button onClick={() => { setShowAddForm(false); setAddForm(EMPTY_FORM); }} className="px-4 py-2 text-sm font-bold text-gray-500 border rounded-lg hover:bg-gray-50">취소</button>
+                            <button onClick={handleAdd} className="px-4 py-2 text-sm font-bold bg-blue-600 text-white rounded-lg hover:bg-blue-700">추가 완료</button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
@@ -209,6 +267,62 @@ export default function MembersPage() {
                         ))}
                     </tbody>
                 </table>
+
+                {/* 모바일 카드 리스트 */}
+                <div className="lg:hidden divide-y divide-gray-100">
+                    {filteredMembers.map((m) => (
+                        <div key={m.memberId} className="p-4">
+                            {editingId === m.memberId ? (
+                                <div className="space-y-2">
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <input className="border p-2 rounded text-sm" value={editForm.name || ''} onChange={e => setEditForm({ ...editForm, name: e.target.value })} placeholder="이름" />
+                                        <select className="border p-2 rounded text-sm bg-white" value={editForm.gender} onChange={e => setEditForm({ ...editForm, gender: e.target.value as 'MALE' | 'FEMALE' })}>
+                                            <option value="MALE">남</option>
+                                            <option value="FEMALE">여</option>
+                                        </select>
+                                        <input className="border p-2 rounded text-sm" value={editForm.age || ''} onChange={e => setEditForm({ ...editForm, age: e.target.value })} placeholder="나이" />
+                                        <input className="border p-2 rounded text-sm" value={editForm.term || ''} onChange={e => setEditForm({ ...editForm, term: e.target.value })} placeholder="기수" />
+                                        <input className="border p-2 rounded text-sm col-span-2" value={editForm.university || ''} onChange={e => setEditForm({ ...editForm, university: e.target.value })} placeholder="학교" />
+                                        <input className="border p-2 rounded text-sm col-span-2" value={editForm.phone || ''} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} placeholder="연락처" />
+                                        <input className="border p-2 rounded text-sm col-span-2" value={editForm.email || ''} onChange={e => setEditForm({ ...editForm, email: e.target.value })} placeholder="이메일" />
+                                    </div>
+                                    <label className="flex items-center gap-2 text-sm">
+                                        <input type="checkbox" checked={!!editForm.isMapoResident} onChange={e => setEditForm({ ...editForm, isMapoResident: e.target.checked })} className="w-4 h-4 text-blue-600 rounded" />
+                                        <span className="font-bold text-gray-700">마포구 거주</span>
+                                    </label>
+                                    <div className="flex gap-2 pt-1">
+                                        <button onClick={() => handleSaveEdit(m.memberId)} className="flex-1 flex items-center justify-center gap-1 py-2 bg-blue-50 text-blue-600 rounded-lg font-bold text-sm"><Check className="w-4 h-4" /> 저장</button>
+                                        <button onClick={() => setEditingId(null)} className="flex-1 flex items-center justify-center gap-1 py-2 bg-gray-50 text-gray-500 rounded-lg font-bold text-sm"><X className="w-4 h-4" /> 취소</button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <div className="font-black text-lg text-gray-800">
+                                                {m.name}
+                                                <span className="ml-2 text-sm font-bold text-gray-400">{m.term}기 · {GENDER_LABEL[m.gender]} · {m.age}년생</span>
+                                            </div>
+                                            <div className="text-sm font-bold text-gray-500 mt-0.5">{m.university}</div>
+                                        </div>
+                                        <div className="flex gap-3 shrink-0">
+                                            <button onClick={() => { setEditingId(m.memberId); setEditForm(m); }} className="text-blue-600 hover:text-blue-800"><Edit2 className="w-4 h-4" /></button>
+                                            <button onClick={() => handleDelete(m.memberId, m.name)} className="text-red-500 hover:text-red-700"><Trash2 className="w-4 h-4" /></button>
+                                        </div>
+                                    </div>
+                                    <div className="mt-3 space-y-1.5 text-sm font-bold text-gray-600">
+                                        <div className="flex items-center gap-2"><Phone className="w-4 h-4 text-gray-400" /> {m.phone}</div>
+                                        <div className="flex items-center gap-2 break-all"><Mail className="w-4 h-4 text-gray-400 shrink-0" /> {m.email}</div>
+                                        <div className="text-xs text-gray-500">마포구 거주: {m.isMapoResident ? 'O' : 'X'}</div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    ))}
+                    {filteredMembers.length === 0 && (
+                        <div className="p-8 text-center text-gray-400 font-bold text-sm">부원이 없습니다.</div>
+                    )}
+                </div>
             </div>
         </div>
     );
