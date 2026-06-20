@@ -249,14 +249,14 @@ export default function MembersPage() {
                                     </>
                                 ) : (
                                     <>
-                                        <td className="p-4 font-bold w-24"><p className="border border-[1px]">{m.name}</p></td>
-                                        <td className="p-4 w-16"><p className="border border-[1px]">{GENDER_LABEL[m.gender]}</p></td>
-                                        <td className="p-4 w-20"><p className="border border-[1px]">{m.age}년생</p></td>
-                                        <td className="p-4 w-32"><p className="border border-[1px]">{m.university}</p></td>
-                                        <td className="p-4 w-20"><p className="border border-[1px]">{m.term}</p></td>
-                                        <td className="p-4 w-40"><p className="border border-[1px]">{m.phone}</p></td>
-                                        <td className="p-4 w-40 truncate"><p className="border border-[1px]">{m.email}</p></td>
-                                        <td className="p-4 w-16 text-center"><p className="border border-[1px]">{m.isMapoResident ? 'O' : 'X'}</p></td>
+                                        <td className="p-4 font-bold w-24"><p className="p-[1px]">{m.name}</p></td>
+                                        <td className="p-4 w-16"><p className="p-[1px]">{GENDER_LABEL[m.gender]}</p></td>
+                                        <td className="p-4 w-20"><p className="p-[1px]">{m.age}년생</p></td>
+                                        <td className="p-4 w-32"><p className="p-[1px]">{m.university}</p></td>
+                                        <td className="p-4 w-20"><p className="p-[1px]">{m.term}</p></td>
+                                        <td className="p-4 w-40"><p className="p-[1px]">{m.phone}</p></td>
+                                        <td className="p-4 w-40 truncate"><p className="p-[1px]">{m.email}</p></td>
+                                        <td className="p-4 w-16 text-center"><p className="p-[1px]">{m.isMapoResident ? 'O' : 'X'}</p></td>
                                         <td className="p-4 w-24 flex justify-center items-center gap-3">
                                             <button onClick={() => { setEditingId(m.memberId); setEditForm(m); }} className="text-blue-600 hover:text-blue-800"><Edit2 className="w-4 h-4"/></button>
                                             <button onClick={() => handleDelete(m.memberId, m.name)} className="text-red-500 hover:text-red-700"><Trash2 className="w-4 h-4"/></button>
