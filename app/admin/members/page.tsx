@@ -242,22 +242,22 @@ export default function MembersPage() {
                                         <td className="p-3 w-40"><input className="w-full border p-1 rounded text-sm" value={editForm.phone || ''} onChange={e => setEditForm({...editForm, phone: e.target.value})} /></td>
                                         <td className="p-3 w-40"><input className="w-full border p-1 rounded text-sm" value={editForm.email || ''} onChange={e => setEditForm({...editForm, email: e.target.value})} /></td>
                                         <td className="p-3 w-16 text-center"><input type="checkbox" checked={!!editForm.isMapoResident} onChange={e => setEditForm({...editForm, isMapoResident: e.target.checked})} /></td>
-                                        <td className="p-3 w-24 flex gap-1 justify-center items-center">
+                                        <td className="p-3 w-24 flex justify-center items-center h-full gap-2">
                                             <button onClick={() => handleSaveEdit(m.memberId)} className="text-blue-600 font-bold"><Check className="w-5 h-5"/></button>
                                             <button onClick={() => setEditingId(null)} className="text-gray-500 font-bold"><X className="w-5 h-5"/></button>
                                         </td>
                                     </>
                                 ) : (
                                     <>
-                                        <td className="p-4 font-bold w-24"><p className="border border-gray-50">{m.name}</p></td>
-                                        <td className="p-4 w-16"><p className="border border-gray-50">{GENDER_LABEL[m.gender]}</p></td>
-                                        <td className="p-4 w-20"><p className="border border-gray-50">{m.age}년생</p></td>
-                                        <td className="p-4 w-32"><p className="border border-gray-50">{m.university}</p></td>
-                                        <td className="p-4 w-20"><p className="border border-gray-50">{m.term}</p></td>
-                                        <td className="p-4 w-40"><p className="border border-gray-50">{m.phone}</p></td>
-                                        <td className="p-4 w-40 truncate"><p className="border border-gray-50">{m.email}</p></td>
-                                        <td className="p-4 w-16 text-center"><p className="border border-gray-50">{m.isMapoResident ? 'O' : 'X'}</p></td>
-                                        <td className="p-4 w-24 flex gap-3 justify-center">
+                                        <td className="p-4 font-bold w-24"><p className="border border-white">{m.name}</p></td>
+                                        <td className="p-4 w-16"><p className="border border-white">{GENDER_LABEL[m.gender]}</p></td>
+                                        <td className="p-4 w-20"><p className="border border-white">{m.age}년생</p></td>
+                                        <td className="p-4 w-32"><p className="border border-white">{m.university}</p></td>
+                                        <td className="p-4 w-20"><p className="border border-white">{m.term}</p></td>
+                                        <td className="p-4 w-40"><p className="border border-white">{m.phone}</p></td>
+                                        <td className="p-4 w-40 truncate"><p className="border border-white">{m.email}</p></td>
+                                        <td className="p-4 w-16 text-center"><p className="border border-white">{m.isMapoResident ? 'O' : 'X'}</p></td>
+                                        <td className="p-4 w-24 flex justify-center items-center gap-3">
                                             <button onClick={() => { setEditingId(m.memberId); setEditForm(m); }} className="text-blue-600 hover:text-blue-800"><Edit2 className="w-4 h-4"/></button>
                                             <button onClick={() => handleDelete(m.memberId, m.name)} className="text-red-500 hover:text-red-700"><Trash2 className="w-4 h-4"/></button>
                                         </td>
