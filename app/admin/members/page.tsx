@@ -231,7 +231,7 @@ export default function MembersPage() {
                     </thead>
                     <tbody className="divide-y divide-gray-100 text-sm">
                         {filteredMembers.map((m) => (
-                            <tr key={m.memberId} className="hover:bg-gray-50">
+                            <tr key={m.memberId} className="hover:bg-gray-50 hover:border-gray-50">
                                 {editingId === m.memberId ? (
                                     <>
                                         <td className="p-3 w-24"><input className="w-full border p-1 rounded text-sm" value={editForm.name || ''} onChange={e => setEditForm({...editForm, name: e.target.value})} /></td>
@@ -249,14 +249,14 @@ export default function MembersPage() {
                                     </>
                                 ) : (
                                     <>
-                                        <td className="p-4 font-bold w-24"><p className="border border-white hover:border-gray-50">{m.name}</p></td>
-                                        <td className="p-4 w-16"><p className="border border-white hover:border-gray-50">{GENDER_LABEL[m.gender]}</p></td>
-                                        <td className="p-4 w-20"><p className="border border-white hover:border-gray-50">{m.age}년생</p></td>
-                                        <td className="p-4 w-32"><p className="border border-white hover:border-gray-50">{m.university}</p></td>
-                                        <td className="p-4 w-20"><p className="border border-white hover:border-gray-50">{m.term}</p></td>
-                                        <td className="p-4 w-40"><p className="border border-white hover:border-gray-50">{m.phone}</p></td>
-                                        <td className="p-4 w-40 truncate"><p className="border border-white hover:border-gray-50">{m.email}</p></td>
-                                        <td className="p-4 w-16 text-center"><p className="border border-white hover:border-gray-50">{m.isMapoResident ? 'O' : 'X'}</p></td>
+                                        <td className="p-4 font-bold w-24"><p className="border border-white ">{m.name}</p></td>
+                                        <td className="p-4 w-16"><p className="border border-white ">{GENDER_LABEL[m.gender]}</p></td>
+                                        <td className="p-4 w-20"><p className="border border-white ">{m.age}년생</p></td>
+                                        <td className="p-4 w-32"><p className="border border-white ">{m.university}</p></td>
+                                        <td className="p-4 w-20"><p className="border border-white ">{m.term}</p></td>
+                                        <td className="p-4 w-40"><p className="border border-white ">{m.phone}</p></td>
+                                        <td className="p-4 w-40 truncate"><p className="border border-white ">{m.email}</p></td>
+                                        <td className="p-4 w-16 text-center"><p className="border border-white ">{m.isMapoResident ? 'O' : 'X'}</p></td>
                                         <td className="p-4 w-24 flex justify-center items-center gap-3">
                                             <button onClick={() => { setEditingId(m.memberId); setEditForm(m); }} className="text-blue-600 hover:text-blue-800"><Edit2 className="w-4 h-4"/></button>
                                             <button onClick={() => handleDelete(m.memberId, m.name)} className="text-red-500 hover:text-red-700"><Trash2 className="w-4 h-4"/></button>
