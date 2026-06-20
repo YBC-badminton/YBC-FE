@@ -234,30 +234,30 @@ export default function MembersPage() {
                             <tr key={m.memberId} className="hover:bg-gray-50">
                                 {editingId === m.memberId ? (
                                     <>
-                                        <td className="p-2"><input className="w-20 border p-1 rounded" value={editForm.name || ''} onChange={e => setEditForm({...editForm, name: e.target.value})} /></td>
-                                        <td className="p-2"><select className="w-13 border p-1 rounded" value={editForm.gender} onChange={e => setEditForm({...editForm, gender: e.target.value as 'MALE' | 'FEMALE'})}><option value="MALE">남</option><option value="FEMALE">여</option></select></td>
-                                        <td className="p-2"><input className="w-20 border p-1 rounded" value={editForm.age || ''} onChange={e => setEditForm({...editForm, age: e.target.value})} /></td>
-                                        <td className="p-2"><input className="w-full border p-1 rounded" value={editForm.university || ''} onChange={e => setEditForm({...editForm, university: e.target.value})} /></td>
-                                        <td className="p-2"><input className="w-20 border p-1 rounded" value={editForm.term || ''} onChange={e => setEditForm({...editForm, term: e.target.value})} /></td>
-                                        <td className="p-2"><input className="w-full border p-1 rounded" value={editForm.phone || ''} onChange={e => setEditForm({...editForm, phone: e.target.value})} /></td>
-                                        <td className="p-2"><input className="w-full border p-1 rounded" value={editForm.email || ''} onChange={e => setEditForm({...editForm, email: e.target.value})} /></td>
-                                        <td className="p-2 text-center"><input type="checkbox" checked={!!editForm.isMapoResident} onChange={e => setEditForm({...editForm, isMapoResident: e.target.checked})} /></td>
-                                        <td className="p-2 flex gap-2 justify-center">
+                                        <td className="p-2 w-24"><input className="w-full border p-1 rounded text-sm" value={editForm.name || ''} onChange={e => setEditForm({...editForm, name: e.target.value})} /></td>
+                                        <td className="p-2 w-16"><select className="w-full border p-1 rounded text-sm" value={editForm.gender} onChange={e => setEditForm({...editForm, gender: e.target.value as 'MALE' | 'FEMALE'})}><option value="MALE">남</option><option value="FEMALE">여</option></select></td>
+                                        <td className="p-2 w-20"><input className="w-full border p-1 rounded text-sm" value={editForm.age || ''} onChange={e => setEditForm({...editForm, age: e.target.value})} /></td>
+                                        <td className="p-2 w-32"><input className="w-full border p-1 rounded text-sm" value={editForm.university || ''} onChange={e => setEditForm({...editForm, university: e.target.value})} /></td>
+                                        <td className="p-2 w-20"><input className="w-full border p-1 rounded text-sm" value={editForm.term || ''} onChange={e => setEditForm({...editForm, term: e.target.value})} /></td>
+                                        <td className="p-2 w-32"><input className="w-full border p-1 rounded text-sm" value={editForm.phone || ''} onChange={e => setEditForm({...editForm, phone: e.target.value})} /></td>
+                                        <td className="p-2 w-40"><input className="w-full border p-1 rounded text-sm" value={editForm.email || ''} onChange={e => setEditForm({...editForm, email: e.target.value})} /></td>
+                                        <td className="p-2 w-16 text-center"><input type="checkbox" checked={!!editForm.isMapoResident} onChange={e => setEditForm({...editForm, isMapoResident: e.target.checked})} /></td>
+                                        <td className="p-2 w-24 flex gap-1 justify-center items-center">
                                             <button onClick={() => handleSaveEdit(m.memberId)} className="text-blue-600 font-bold"><Check className="w-5 h-5"/></button>
                                             <button onClick={() => setEditingId(null)} className="text-gray-500 font-bold"><X className="w-5 h-5"/></button>
                                         </td>
                                     </>
                                 ) : (
                                     <>
-                                        <td className="p-4 font-bold">{m.name}</td>
-                                        <td className="p-4">{GENDER_LABEL[m.gender]}</td>
-                                        <td className="p-4">{m.age}년생</td>
-                                        <td className="p-4">{m.university}</td>
-                                        <td className="p-4">{m.term}</td>
-                                        <td className="p-4">{m.phone}</td>
-                                        <td className="p-4">{m.email}</td>
-                                        <td className="p-4 text-center">{m.isMapoResident ? 'O' : 'X'}</td>
-                                        <td className="p-4 flex gap-3 justify-center">
+                                        <td className="p-4 font-bold w-24">{m.name}</td>
+                                        <td className="p-4 w-16">{GENDER_LABEL[m.gender]}</td>
+                                        <td className="p-4 w-20">{m.age}년생</td>
+                                        <td className="p-4 w-32">{m.university}</td>
+                                        <td className="p-4 w-20">{m.term}</td>
+                                        <td className="p-4 w-32">{m.phone}</td>
+                                        <td className="p-4 w-40 truncate">{m.email}</td>
+                                        <td className="p-4 w-16 text-center">{m.isMapoResident ? 'O' : 'X'}</td>
+                                        <td className="p-4 w-24 flex gap-3 justify-center">
                                             <button onClick={() => { setEditingId(m.memberId); setEditForm(m); }} className="text-blue-600 hover:text-blue-800"><Edit2 className="w-4 h-4"/></button>
                                             <button onClick={() => handleDelete(m.memberId, m.name)} className="text-red-500 hover:text-red-700"><Trash2 className="w-4 h-4"/></button>
                                         </td>
