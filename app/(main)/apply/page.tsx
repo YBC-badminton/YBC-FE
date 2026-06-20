@@ -70,25 +70,44 @@ export default function ApplyPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  const [interviewOptions, setInterviewOptions] = useState<string[]>([]);
+  const [interviewTimeMap, setInterviewTimeMap] = useState<Record<string, string>>({});
+
+  const [isRecruiting, setIsRecruiting] = useState<boolean | null>(null);
+
   const [recruitmentInfo, setRecruitmentInfo] = useState({
     term: "",
     message: ""
   });
 
   useEffect(() => {
-    const fetchMessage = async () => {
+    const fetchData = async () => {
       try {
-        const res = await api.get('/recruitments/message');
-        setRecruitmentInfo({
-          term: res.data.term,
-          message: res.data.recruitmentMessage
-        });
-        console.log("안내 문구 로드 성공", res.data);
+        // 1. 안내 문구 API 호출
+        const msgRes = await api.get('/recruitments/message');
+        setRecruitmentInfo({ term: msgRes.data.term, message: msgRes.data.recruitmentMessage });
+        setIsRecruiting(msgRes.data.recruiting);
+
+        // 2. 면접 시간 API 호출
+        const timeRes = await api.get('/recruitments/interview-times');
+        if (timeRes.data.recruiting) { // 모집 중일 때만 시간 데이터 구성
+          const { interviewDate, interviewFirstTime, interviewSecondTime } = timeRes.data;
+          const options = [
+            `${interviewDate} ${interviewFirstTime}`,
+            `${interviewDate} ${interviewSecondTime}`
+          ];
+          const map = {
+            [`${interviewDate} ${interviewFirstTime}`]: "FIRST_SESSION",
+            [`${interviewDate} ${interviewSecondTime}`]: "SECOND_SESSION"
+          };
+          setInterviewOptions(options);
+          setInterviewTimeMap(map);
+        }
       } catch (err) {
-        console.error("안내 문구 로드 실패", err);
+        console.error("데이터 로드 실패", err);
       }
     };
-    fetchMessage();
+    fetchData();
   }, []);
 
   const handleChange = (
@@ -148,7 +167,7 @@ export default function ApplyPage() {
         introduction: form.introduction,
         motivation: form.motivation,
         equipment: form.equipment,
-        interviewTimes: form.interviewTimes.map((t) => INTERVIEW_TIME_MAP[t]),
+        interviewTimes: form.interviewTimes.map((t) => interviewTimeMap[t]),
         discoverySource: DISCOVERY_SOURCE_MAP[form.referral],
         discoveryEtc: form.referral === "기타" ? form.referralDetail : "",
         wantsStaff: form.operatorInterest,
@@ -167,6 +186,34 @@ export default function ApplyPage() {
       setIsSubmitting(false);
     }
   };
+
+  // 1. 데이터 로딩 중 처리
+  if (isRecruiting === null) {
+    return <div className="min-h-screen flex items-center justify-center font-bold">불러오는 중...</div>;
+  }
+
+  // 2. 모집 기간이 아닐 때 (isRecruiting === false)
+  if (!isRecruiting) {
+    return (
+      <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center p-6">
+        <div className="max-w-md w-full text-center space-y-6 bg-white p-10 rounded-[32px] border border-gray-100 shadow-sm">
+          <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
+            <span className="text-3xl">🏸</span>
+          </div>
+          <h2 className="text-2xl font-black text-slate-800">모집 기간이 아닙니다</h2>
+          <p className="text-slate-500 font-bold leading-relaxed">
+            현재는 신규 부원 모집 기간이 아닙니다.<br />
+            다음 기수 모집 때 꼭 다시 지원해 주세요!
+          </p>
+          <Link href="/faq">
+            <button className="mt-4 w-full bg-slate-800 text-white font-bold py-3.5 rounded-xl hover:bg-slate-900 transition-all">
+              문의하기 페이지로 이동
+            </button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   // 제출 완료 화면
   if (isSubmitted) {
@@ -401,13 +448,17 @@ export default function ApplyPage() {
             title="면접 시간"
             description="가능하신 시간에 전부 체크해 주시면 됩니다."
           >
-            <FormCheckboxGroup
-              label="면접 가능 시간"
-              required
-              options={INTERVIEW_OPTIONS}
-              value={form.interviewTimes}
-              onChange={handleCheckbox}
-            />
+            {interviewOptions.length > 0 ? (
+                <FormCheckboxGroup
+                label="면접 가능 시간"
+                required
+                options={interviewOptions}
+                value={form.interviewTimes}
+                onChange={handleCheckbox}
+                />
+            ) : (
+                <p className="text-sm text-slate-400 font-bold">면접 일정을 불러오는 중입니다...</p>
+            )}
           </FormSection>
 
           {/* 추가 정보 */}
