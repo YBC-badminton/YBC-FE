@@ -258,7 +258,7 @@ export default function ApplyPage() {
         <div className="max-w-3xl mx-auto bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 sm:p-10 space-y-5 text-slate-600">
           <div className="border-l-4 border-[#5b6b0f] pl-4">
             <h2 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">
-              양배추(YBC) 배드민턴 동아리 {recruitmentInfo?.term || "신규"} 부원 모집 안내
+              양배추(YBC) 배드민턴 동아리 {recruitmentInfo?.term} 신규 부원 모집 안내
             </h2>
             <p className="text-sm text-slate-400 font-bold mt-1">
               지원서를 작성하기 전, 아래 안내를 꼭 읽어주세요.
