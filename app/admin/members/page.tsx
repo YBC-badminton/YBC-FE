@@ -249,15 +249,15 @@ export default function MembersPage() {
                                     </>
                                 ) : (
                                     <>
-                                        <td className="p-4 font-bold w-24">{m.name}</td>
-                                        <td className="p-4 w-16">{GENDER_LABEL[m.gender]}</td>
-                                        <td className="p-4 w-20">{m.age}년생</td>
-                                        <td className="p-4 w-32">{m.university}</td>
-                                        <td className="p-4 w-20">{m.term}</td>
-                                        <td className="p-4 w-40">{m.phone}</td>
-                                        <td className="p-4 w-40 truncate">{m.email}</td>
-                                        <td className="p-4 w-16 text-center">{m.isMapoResident ? 'O' : 'X'}</td>
-                                        <td className="p-4 w-24 flex gap-3 justify-center">
+                                        <td className="p-4 border border-white font-bold w-24">{m.name}</td>
+                                        <td className="p-4 border border-white w-16">{GENDER_LABEL[m.gender]}</td>
+                                        <td className="p-4 border border-white w-20">{m.age}년생</td>
+                                        <td className="p-4 border border-white w-32">{m.university}</td>
+                                        <td className="p-4 border border-white w-20">{m.term}</td>
+                                        <td className="p-4 border border-white w-40">{m.phone}</td>
+                                        <td className="p-4 border border-white w-40 truncate">{m.email}</td>
+                                        <td className="p-4 border border-white w-16 text-center">{m.isMapoResident ? 'O' : 'X'}</td>
+                                        <td className="p-4 border border-white w-24 flex gap-3 justify-center">
                                             <button onClick={() => { setEditingId(m.memberId); setEditForm(m); }} className="text-blue-600 hover:text-blue-800"><Edit2 className="w-4 h-4"/></button>
                                             <button onClick={() => handleDelete(m.memberId, m.name)} className="text-red-500 hover:text-red-700"><Trash2 className="w-4 h-4"/></button>
                                         </td>
