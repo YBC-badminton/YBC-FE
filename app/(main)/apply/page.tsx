@@ -25,17 +25,6 @@ interface FormData {
   finalRemarks: string;
 }
 
-const INTERVIEW_OPTIONS = [
-  "2월 21일(토) 13:30~14:30",
-  "2월 21일(토) 14:30~15:30",
-];
-
-// 면접 시간 라벨 → API enum 매핑
-const INTERVIEW_TIME_MAP: Record<string, string> = {
-  "2월 21일(토) 13:30~14:30": "FIRST_SESSION",
-  "2월 21일(토) 14:30~15:30": "SECOND_SESSION",
-};
-
 // 유입 경로 라벨 → API enum 매핑
 const DISCOVERY_SOURCE_MAP: Record<string, string> = {
   에브리타임: "EVERYTIME",
@@ -258,7 +247,7 @@ export default function ApplyPage() {
       <div className="max-w-screen-xl mx-auto space-y-12">
         {/* 헤더 - activities, reviews 스타일 통일 */}
         <div className="space-y-2">
-          <h1 className="text-4xl font-black text-slate-800">지원하기</h1>
+          <h1 className="text-4xl font-black text-slate-800">{recruitmentInfo?.term || "신규"} 지원하기</h1>
           <p className="text-slate-400 font-bold">
             양배추 배드민턴 동아리에 오신 것을 환영합니다! 아래 양식을 작성하여
             지원해 주세요.
@@ -269,7 +258,7 @@ export default function ApplyPage() {
         <div className="max-w-3xl mx-auto bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 sm:p-10 space-y-5 text-slate-600">
           <div className="border-l-4 border-[#5b6b0f] pl-4">
             <h2 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">
-              양배추(YBC) 배드민턴 동아리 신규 부원 모집 안내
+              양배추(YBC) 배드민턴 동아리 {recruitmentInfo?.term || "신규"} 부원 모집 안내
             </h2>
             <p className="text-sm text-slate-400 font-bold mt-1">
               지원서를 작성하기 전, 아래 안내를 꼭 읽어주세요.
