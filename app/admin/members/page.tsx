@@ -234,15 +234,15 @@ export default function MembersPage() {
                             <tr key={m.memberId} className="hover:bg-gray-50">
                                 {editingId === m.memberId ? (
                                     <>
-                                        <td className="p-2 w-24"><input className="w-full border p-1 rounded text-sm" value={editForm.name || ''} onChange={e => setEditForm({...editForm, name: e.target.value})} /></td>
-                                        <td className="p-2 w-16"><select className="w-full border p-1 rounded text-sm" value={editForm.gender} onChange={e => setEditForm({...editForm, gender: e.target.value as 'MALE' | 'FEMALE'})}><option value="MALE">남</option><option value="FEMALE">여</option></select></td>
-                                        <td className="p-2 w-20"><input className="w-full border p-1 rounded text-sm" value={editForm.age || ''} onChange={e => setEditForm({...editForm, age: e.target.value})} /></td>
-                                        <td className="p-2 w-32"><input className="w-full border p-1 rounded text-sm" value={editForm.university || ''} onChange={e => setEditForm({...editForm, university: e.target.value})} /></td>
-                                        <td className="p-2 w-20"><input className="w-full border p-1 rounded text-sm" value={editForm.term || ''} onChange={e => setEditForm({...editForm, term: e.target.value})} /></td>
-                                        <td className="p-2 w-40"><input className="w-full border p-1 rounded text-sm" value={editForm.phone || ''} onChange={e => setEditForm({...editForm, phone: e.target.value})} /></td>
-                                        <td className="p-2 w-40"><input className="w-full border p-1 rounded text-sm" value={editForm.email || ''} onChange={e => setEditForm({...editForm, email: e.target.value})} /></td>
-                                        <td className="p-2 w-16 text-center"><input type="checkbox" checked={!!editForm.isMapoResident} onChange={e => setEditForm({...editForm, isMapoResident: e.target.checked})} /></td>
-                                        <td className="p-2 w-24 flex gap-1 justify-center items-center">
+                                        <td className="p-3 w-24"><input className="w-full border p-1 rounded text-sm" value={editForm.name || ''} onChange={e => setEditForm({...editForm, name: e.target.value})} /></td>
+                                        <td className="p-3 w-16"><select className="w-full border p-1 rounded text-sm" value={editForm.gender} onChange={e => setEditForm({...editForm, gender: e.target.value as 'MALE' | 'FEMALE'})}><option value="MALE">남</option><option value="FEMALE">여</option></select></td>
+                                        <td className="p-3 w-20"><input className="w-full border p-1 rounded text-sm" value={editForm.age || ''} onChange={e => setEditForm({...editForm, age: e.target.value})} /></td>
+                                        <td className="p-3 w-32"><input className="w-full border p-1 rounded text-sm" value={editForm.university || ''} onChange={e => setEditForm({...editForm, university: e.target.value})} /></td>
+                                        <td className="p-3 w-20"><input className="w-full border p-1 rounded text-sm" value={editForm.term || ''} onChange={e => setEditForm({...editForm, term: e.target.value})} /></td>
+                                        <td className="p-3 w-40"><input className="w-full border p-1 rounded text-sm" value={editForm.phone || ''} onChange={e => setEditForm({...editForm, phone: e.target.value})} /></td>
+                                        <td className="p-3 w-40"><input className="w-full border p-1 rounded text-sm" value={editForm.email || ''} onChange={e => setEditForm({...editForm, email: e.target.value})} /></td>
+                                        <td className="p-3 w-16 text-center"><input type="checkbox" checked={!!editForm.isMapoResident} onChange={e => setEditForm({...editForm, isMapoResident: e.target.checked})} /></td>
+                                        <td className="p-3 w-24 flex gap-1 justify-center items-center">
                                             <button onClick={() => handleSaveEdit(m.memberId)} className="text-blue-600 font-bold"><Check className="w-5 h-5"/></button>
                                             <button onClick={() => setEditingId(null)} className="text-gray-500 font-bold"><X className="w-5 h-5"/></button>
                                         </td>
