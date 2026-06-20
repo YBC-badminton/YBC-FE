@@ -234,11 +234,11 @@ export default function MembersPage() {
                             <tr key={m.memberId} className="hover:bg-gray-50">
                                 {editingId === m.memberId ? (
                                     <>
-                                        <td className="p-2"><input className="w-full border p-1 rounded" value={editForm.name || ''} onChange={e => setEditForm({...editForm, name: e.target.value})} /></td>
-                                        <td className="p-2"><select className="w-full border p-1 rounded" value={editForm.gender} onChange={e => setEditForm({...editForm, gender: e.target.value as 'MALE' | 'FEMALE'})}><option value="MALE">남</option><option value="FEMALE">여</option></select></td>
-                                        <td className="p-2"><input className="w-full border p-1 rounded" value={editForm.age || ''} onChange={e => setEditForm({...editForm, age: e.target.value})} /></td>
+                                        <td className="p-2"><input className="w-20 border p-1 rounded" value={editForm.name || ''} onChange={e => setEditForm({...editForm, name: e.target.value})} /></td>
+                                        <td className="p-2"><select className="w-13 border p-1 rounded" value={editForm.gender} onChange={e => setEditForm({...editForm, gender: e.target.value as 'MALE' | 'FEMALE'})}><option value="MALE">남</option><option value="FEMALE">여</option></select></td>
+                                        <td className="p-2"><input className="w-20 border p-1 rounded" value={editForm.age || ''} onChange={e => setEditForm({...editForm, age: e.target.value})} /></td>
                                         <td className="p-2"><input className="w-full border p-1 rounded" value={editForm.university || ''} onChange={e => setEditForm({...editForm, university: e.target.value})} /></td>
-                                        <td className="p-2"><input className="w-full border p-1 rounded" value={editForm.term || ''} onChange={e => setEditForm({...editForm, term: e.target.value})} /></td>
+                                        <td className="p-2"><input className="w-20 border p-1 rounded" value={editForm.term || ''} onChange={e => setEditForm({...editForm, term: e.target.value})} /></td>
                                         <td className="p-2"><input className="w-full border p-1 rounded" value={editForm.phone || ''} onChange={e => setEditForm({...editForm, phone: e.target.value})} /></td>
                                         <td className="p-2"><input className="w-full border p-1 rounded" value={editForm.email || ''} onChange={e => setEditForm({...editForm, email: e.target.value})} /></td>
                                         <td className="p-2 text-center"><input type="checkbox" checked={!!editForm.isMapoResident} onChange={e => setEditForm({...editForm, isMapoResident: e.target.checked})} /></td>
