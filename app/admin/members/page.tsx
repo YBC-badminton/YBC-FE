@@ -209,6 +209,19 @@ export default function MembersPage() {
                         ))}
                     </tbody>
                 </table>
+                {/* 모바일 뷰 */}
+                <div className="lg:hidden divide-y">
+                    {filteredMembers.map((m) => (
+                        <div key={m.memberId} className="p-4 space-y-2">
+                            <div className="font-black text-lg">{m.name} ({m.term}기)</div>
+                            <div className="text-sm text-gray-600">{m.university} · {m.phone}</div>
+                            <div className="flex gap-2 pt-2">
+                                <button onClick={() => { setEditingId(m.memberId); setEditForm(m); }} className="flex-1 py-2 bg-blue-50 text-blue-600 rounded-lg font-bold text-sm">수정</button>
+                                <button onClick={() => handleDelete(m.memberId, m.name)} className="flex-1 py-2 bg-red-50 text-red-600 rounded-lg font-bold text-sm">삭제</button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );
