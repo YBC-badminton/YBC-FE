@@ -188,11 +188,21 @@ export default function MembersPage() {
                                     <tr className="bg-gray-50">
                                         <td colSpan={7} className="p-4">
                                             {editingId === m.memberId ? (
-                                                <div className="flex gap-4 justify-center items-center">
-                                                    <input className="border p-1 rounded text-xs" value={editForm.name || ''} onChange={e => setEditForm({...editForm, name: e.target.value})} placeholder="이름" />
-                                                    <input className="border p-1 rounded text-xs" value={editForm.university || ''} onChange={e => setEditForm({...editForm, university: e.target.value})} placeholder="학교" />
-                                                    <button onClick={() => handleSaveEdit(m.memberId)} className="text-blue-600 font-bold"><Check className="w-5 h-5"/></button>
-                                                    <button onClick={() => setEditingId(null)} className="text-gray-500 font-bold"><X className="w-5 h-5"/></button>
+                                                <div className="grid grid-cols-4 gap-2 items-center">
+                                                    <input className="border p-1.5 rounded text-xs" value={editForm.name || ''} onChange={e => setEditForm({...editForm, name: e.target.value})} placeholder="이름" />
+                                                    <select className="border p-1.5 rounded text-xs" value={editForm.gender} onChange={e => setEditForm({...editForm, gender: e.target.value as 'MALE' | 'FEMALE'})}>
+                                                        <option value="MALE">남</option>
+                                                        <option value="FEMALE">여</option>
+                                                    </select>
+                                                    <input className="border p-1.5 rounded text-xs" value={editForm.age || ''} onChange={e => setEditForm({...editForm, age: e.target.value})} placeholder="나이" />
+                                                    <input className="border p-1.5 rounded text-xs" value={editForm.university || ''} onChange={e => setEditForm({...editForm, university: e.target.value})} placeholder="학교" />
+                                                    <input className="border p-1.5 rounded text-xs" value={editForm.term || ''} onChange={e => setEditForm({...editForm, term: e.target.value})} placeholder="기수" />
+                                                    <input className="border p-1.5 rounded text-xs" value={editForm.phone || ''} onChange={e => setEditForm({...editForm, phone: e.target.value})} placeholder="연락처" />
+                                                    <input className="border p-1.5 rounded text-xs" value={editForm.email || ''} onChange={e => setEditForm({...editForm, email: e.target.value})} placeholder="이메일" />
+                                                    <div className="flex gap-2">
+                                                        <button onClick={() => handleSaveEdit(m.memberId)} className="text-blue-600 font-bold"><Check className="w-5 h-5"/></button>
+                                                        <button onClick={() => setEditingId(null)} className="text-gray-500 font-bold"><X className="w-5 h-5"/></button>
+                                                    </div>
                                                 </div>
                                             ) : (
                                                 <div className="flex gap-8 justify-center">
@@ -211,7 +221,10 @@ export default function MembersPage() {
                 <div className="lg:hidden">
                     {filteredMembers.map((m) => (
                         <div key={m.memberId} className="border-b border-gray-100 p-4">
-                            <div className="flex justify-between items-center cursor-pointer" onClick={() => setExpandedId(expandedId === m.memberId ? null : m.memberId)}>
+                            <div 
+                                className="flex justify-between items-center cursor-pointer" 
+                                onClick={() => setExpandedId(expandedId === m.memberId ? null : m.memberId)}
+                            >
                                 <span className="font-black text-lg">{m.name} | {m.term}기</span>
                                 {expandedId === m.memberId ? <ChevronUp className="text-gray-400" /> : <ChevronDown className="text-gray-400" />}
                             </div>
