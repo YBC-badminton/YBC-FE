@@ -239,7 +239,7 @@ export default function MembersPage() {
                                         <td className="p-2 w-20"><input className="w-full border p-1 rounded text-sm" value={editForm.age || ''} onChange={e => setEditForm({...editForm, age: e.target.value})} /></td>
                                         <td className="p-2 w-32"><input className="w-full border p-1 rounded text-sm" value={editForm.university || ''} onChange={e => setEditForm({...editForm, university: e.target.value})} /></td>
                                         <td className="p-2 w-20"><input className="w-full border p-1 rounded text-sm" value={editForm.term || ''} onChange={e => setEditForm({...editForm, term: e.target.value})} /></td>
-                                        <td className="p-2 w-32"><input className="w-full border p-1 rounded text-sm" value={editForm.phone || ''} onChange={e => setEditForm({...editForm, phone: e.target.value})} /></td>
+                                        <td className="p-2 w-40"><input className="w-full border p-1 rounded text-sm" value={editForm.phone || ''} onChange={e => setEditForm({...editForm, phone: e.target.value})} /></td>
                                         <td className="p-2 w-40"><input className="w-full border p-1 rounded text-sm" value={editForm.email || ''} onChange={e => setEditForm({...editForm, email: e.target.value})} /></td>
                                         <td className="p-2 w-16 text-center"><input type="checkbox" checked={!!editForm.isMapoResident} onChange={e => setEditForm({...editForm, isMapoResident: e.target.checked})} /></td>
                                         <td className="p-2 w-24 flex gap-1 justify-center items-center">
@@ -254,7 +254,7 @@ export default function MembersPage() {
                                         <td className="p-4 w-20">{m.age}년생</td>
                                         <td className="p-4 w-32">{m.university}</td>
                                         <td className="p-4 w-20">{m.term}</td>
-                                        <td className="p-4 w-32">{m.phone}</td>
+                                        <td className="p-4 w-40">{m.phone}</td>
                                         <td className="p-4 w-40 truncate">{m.email}</td>
                                         <td className="p-4 w-16 text-center">{m.isMapoResident ? 'O' : 'X'}</td>
                                         <td className="p-4 w-24 flex gap-3 justify-center">
