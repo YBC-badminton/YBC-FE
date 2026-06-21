@@ -217,6 +217,8 @@ export default function TournamentPage() {
                 setCourtBrackets(newBrackets);
                 setMatchId(data.matchId || null);
                 setIsEditMode(true);
+                // 수정 모드 진입 시 기존 대진 전체를 먼저 보여준다
+                setCurrentCourt('전체');
             } else {
                 // 수정 모드가 아닐 때 초기화
                 setAssignments({ '1코트': [], '2코트': [], '3코트': [], '4코트': [] });

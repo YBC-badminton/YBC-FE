@@ -206,16 +206,16 @@ function ReviewDetailModal({ review, onClose, isAuthor, onChanged, showToast }: 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-            <div className="bg-white w-full max-w-2xl p-10 sm:p-12 rounded-[40px] relative shadow-2xl max-h-[90vh] overflow-y-auto animate-in zoom-in duration-200">
-                <button onClick={onClose} className="absolute top-8 right-8 text-slate-400 text-2xl hover:text-slate-600">
+            <div className="bg-white w-full max-w-2xl p-6 sm:p-12 rounded-[28px] sm:rounded-[40px] relative shadow-2xl max-h-[90vh] overflow-y-auto animate-in zoom-in duration-200">
+                <button onClick={onClose} className="absolute top-6 right-6 sm:top-8 sm:right-8 text-slate-400 text-2xl hover:text-slate-600">
                     <X />
                 </button>
-                
-                <div className="mb-10 space-y-2">
+
+                <div className="mb-8 sm:mb-10 space-y-2">
                     <p className="text-sm font-black text-slate-400 bg-slate-100 w-fit px-3 py-1 rounded-lg uppercase tracking-wider">
                         {REVERSE_CATEGORY_MAP[review.category]}
                     </p>
-                    <h2 className="text-4xl font-black text-slate-800">
+                    <h2 className="text-xl sm:text-4xl font-black text-slate-800 break-keep pr-8">
                         {review.brandName} - {review.productName}
                     </h2>
                     <div className="flex justify-between items-center text-sm font-bold text-slate-400 pt-2">
