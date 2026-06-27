@@ -361,7 +361,7 @@ export default function ApplyPage() {
                 required
                 value={form.phone}
                 onChange={(v) => handleChange("phone", v)}
-                placeholder="010-1234-5678"
+                placeholder="01012345678"
                 type="tel"
                 description="합격 통지 및 카톡방 초대에 사용됩니다."
               />

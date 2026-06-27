@@ -75,12 +75,12 @@ export default function ActivitiesPage() {
         setLoading(true);
         setError(null);
         try {
-            const [joinableRes, pastRes, historyRes] = await Promise.all([
-                api.get<VotesResponse>('/votes', { params: { joinable: true, page: 0, size: 50 } }),
-                api.get<VotesResponse>('/votes', { params: { joinable: false, page: 0, size: 50 } }),
+            const [openRes, pastRes, historyRes] = await Promise.all([
+                api.get<VotesResponse>('/votes', { params: { open: true, page: 0, size: 50 } }),
+                api.get<VotesResponse>('/votes', { params: { open: false, page: 0, size: 50 } }),
                 api.get<VotesHistory>('/votes/history'),
             ]);
-            setAvailableActivities(joinableRes.data.votes);
+            setAvailableActivities(openRes.data.votes);
             setPastActivities(pastRes.data.votes);
             setHistory(historyRes.data);
         } catch (err: unknown) {
