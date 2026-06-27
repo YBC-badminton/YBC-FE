@@ -195,7 +195,7 @@ export default function Header() {
             </button>
           </div>
 
-          <nav className="flex flex-col items-center gap-7 pt-16">
+          <nav className="flex flex-col items-start gap-8 px-9 pt-14">
             {NAV_LINKS.map((item) => (
               <Link
                 key={item.href}
