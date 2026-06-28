@@ -41,6 +41,13 @@ const TYPE_LABEL: Record<string, string> = {
     'EVENT': '이벤트',
 };
 
+// 타입별 배지 색상
+const TYPE_BADGE: Record<string, string> = {
+    'REGULAR': 'bg-[#F2F8E1] text-[#5b6b0f]',
+    'FLASH': 'bg-amber-50 text-amber-600',
+    'EVENT': 'bg-purple-50 text-purple-600',
+};
+
 // 날짜 포맷: "2026-04-03T18:00:00" → "26.04.03 (목)"
 function formatDate(dateStr: string): string {
     const d = new Date(dateStr);
@@ -111,7 +118,7 @@ export default function ActivitiesPage() {
                 {/* 상단 탭 및 버튼 바 */}
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                     <div className="flex bg-white p-1 rounded-xl shadow-sm border border-gray-100 overflow-x-auto scrollbar-hide">
-                        {['전체', '정기모임', '번개모임'].map((tab) => (
+                        {['전체', '정기모임', '번개모임', '이벤트'].map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
@@ -209,7 +216,7 @@ function ActivityCard({ data, isPast }: { data: VoteItem; isPast: boolean }) {
 
                 <div className="flex-grow space-y-2 min-w-0">
                     <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                        <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-black uppercase">
+                        <span className={`text-[10px] px-2 py-0.5 rounded font-black uppercase ${TYPE_BADGE[data.type] || 'bg-slate-100 text-slate-500'}`}>
                             {typeLabel}
                         </span>
                         <h3 className="text-base sm:text-lg font-black text-slate-800 truncate">{data.name}</h3>
