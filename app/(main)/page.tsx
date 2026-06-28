@@ -199,7 +199,7 @@ export default function YBCMainPage() {
             {recruiting === true && (
               <Link
                 href="/apply"
-                className="flex-1 flex items-center justify-center gap-1.5 bg-[#93C54B] text-white py-3 sm:py-3.5 rounded-full font-black text-sm sm:text-base shadow-sm hover:bg-[#81b23c] active:scale-95 transition-all duration-200"
+                className="flex-1 flex items-center justify-center gap-1.5 bg-[#93C54B] text-white py-3 sm:py-3.5 rounded-full font-body font-semibold text-[17px] shadow-sm hover:bg-[#81b23c] active:scale-95 transition-all duration-200"
               >
                 지원하기 <span className="ml-5 font-bold">↗</span>
               </Link>
@@ -208,7 +208,7 @@ export default function YBCMainPage() {
             {/* 정기모임 보기 버튼 (흰 바탕 + 초록 테두리) */}
             <Link
               href="/activities"
-              className="flex-1 flex items-center justify-center gap-1.5 bg-white border-2 border-[#93C54B] text-[#769e37] py-3 sm:py-3.5 rounded-full font-black text-sm sm:text-base shadow-sm hover:bg-[#f6fbf0] active:scale-95 transition-all duration-200"
+              className="flex-1 flex items-center justify-center gap-1.5 bg-white border-2 border-[#93C54B] text-[#5b6b0f] py-3 sm:py-3.5 rounded-full font-body font-semibold text-[17px] shadow-sm hover:bg-[#f6fbf0] active:scale-95 transition-all duration-200"
             >
               정기모임 보기 <span className="font-bold">↗</span>
             </Link>
