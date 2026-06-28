@@ -171,32 +171,35 @@ export default function YBCMainPage() {
 
         {/* 2. 캐릭터 개별 배치 영역 (z-5) */}
         {/* max-w-screen-xl 기준 컨테이너 안에서 absolute 기준점을 잡아 화면 해상도가 커져도 캐릭터 위치가 유지됩니다. */}
-        <div className="absolute inset-x-0 bottom-0 top-0 z-5 max-w-screen-xl mx-auto w-full pointer-events-none">
+        <div className="absolute inset-x-0 bottom-0 top-0 z-5 max-w-screen-2xl mx-auto w-full pointer-events-none">
           
           {/* [왼쪽 캐릭터] 서서 라켓 들고 손 흔드는 양배추 */}
-          <div className="absolute -left-[23%] bottom-[4%] sm:bottom-[1%] w-[200px] sm:w-[200px] md:w-[200px] lg:w-[270px]">
+          {/* 💡 마이너스 값을 지우고 화면 안쪽(left-2% ~ 8%)으로 들어오게 배치했습니다. */}
+          <div className="absolute left-[-2%] sm:left-[2%] md:left-[5%] lg:left-[8%] bottom-[4%] sm:bottom-[2%] w-[130px] sm:w-[160px] md:w-[200px] lg:w-[250px] transition-all duration-300">
             <img 
               src="/images/character-left.svg" 
               alt="손 흔드는 양배추 캐릭터" 
-              className="w-full h-auto object-contain"
+              className="w-full h-auto object-contain drop-shadow-sm"
             />
           </div>
 
           {/* [가운데 캐릭터] 코트에 슬라이딩하며 리시브하는 양배추 */}
-          <div className="absolute left-[10%] md:left-[20%] bottom-[2%] sm:bottom-[9%] w-[130px] sm:w-[200px] md:w-[240px] lg:w-[400px]">
+          {/* 💡 화면 크기가 줄어들 때 좌우 캐릭터와 겹치지 않도록 적당한 간격과 비율로 맞췄습니다. */}
+          <div className="absolute left-[35%] sm:left-[35%] md:left-[35%] bottom-[2%] sm:bottom-[6%] w-[140px] sm:w-[180px] md:w-[220px] lg:w-[280px] transition-all duration-300">
             <img 
               src="/images/character-center.svg" 
               alt="슬라이딩하는 양배추 캐릭터" 
-              className="w-full h-auto object-contain"
+              className="w-full h-auto object-contain drop-shadow-sm"
             />
           </div>
 
           {/* [오른쪽 캐릭터 + 셔틀콕] 점프하며 스매싱 시도하는 양배추 */}
-          <div className="absolute -right-[23%] bottom-[2%] sm:bottom-[2%] w-[150px] sm:w-[230px] md:w-[280px] lg:w-[500px]">
+          {/* 💡 500px처럼 지나치게 큰 사이즈를 줄여 창이 작아져도 오른쪽 화면 밖으로 튀어나가지 않게 잡았습니다. */}
+          <div className="absolute right-[-2%] sm:right-[2%] md:right-[5%] lg:right-[8%] bottom-[2%] sm:bottom-[2%] w-[160px] sm:w-[200px] md:w-[250px] lg:w-[320px] transition-all duration-300">
             <img 
               src="/images/character-right.svg" 
               alt="스매싱하는 양배추 캐릭터" 
-              className="w-full h-auto object-contain"
+              className="w-full h-auto object-contain drop-shadow-sm"
             />
           </div>
 
@@ -303,6 +306,7 @@ export default function YBCMainPage() {
         className="relative w-full mt-10 pt-20 sm:pt-28 pb-6 overflow-hidden bg-[#EDF3E3]"
       >
 
+        {/* 0. 상단 파도치는 디자인 (SVG Shape Divider) */}
         <div className="absolute top-0 left-0 w-full overflow-hidden leading-[0] z-10 pointer-events-none">
           <svg 
             viewBox="0 0 1200 120" 
@@ -317,68 +321,86 @@ export default function YBCMainPage() {
         </div>
 
         {/* 1. 뒷배경 코트 이미지 */}
+        {/* 모바일에서는 복잡성을 줄이기 위해 투명도를 더 낮추거나 숨기고, 데스크톱에서 선명하게 보이도록 조정 */}
         <div className="absolute inset-0 z-0 pointer-events-none flex justify-end">
           <img 
             src="/images/court-bg.svg" 
             alt="배드민턴 코트 배경" 
-            className="w-[60%] object-cover object-right-top opacity-90" 
+            className="w-full md:w-[60%] object-cover object-right-top opacity-30 md:opacity-90" 
           />
         </div>
 
         {/* 2. 지원하기 좌측 텍스트 콘텐츠 */}
-        <div className="relative z-10 max-w-screen-xl mx-auto px-8 sm:px-16 flex flex-col justify-start min-h-[300px]">
-          <h2 className="text-2xl sm:text-[34px] font-black text-gray-900 tracking-tight mb-5">
+        <div className="relative z-10 max-w-screen-xl mx-auto px-6 sm:px-16 flex flex-col justify-start min-h-[200px] md:min-h-[300px] mt-4">
+          <h2 className="text-[28px] sm:text-[34px] font-black text-gray-900 tracking-tight mb-4 sm:mb-5">
             지원하기
           </h2>
-          <p className="text-[14px] sm:text-[15px] font-bold text-gray-600 leading-relaxed mb-8">
+          <p className="text-[14px] sm:text-[15px] font-bold text-gray-600 leading-relaxed mb-6 sm:mb-8">
             YBC 배드민턴 클럽은 실력보다 열정을 가진 <br />
             새로운 가족을 언제나 기다리고 있습니다.
           </p>
           <Link href="/apply" className="w-fit">
-            <button className="flex items-center justify-center gap-2 bg-[#A3C668] text-white text-[15px] font-bold px-8 py-3 rounded-full shadow-sm hover:bg-[#93C54B] active:scale-95 transition-all duration-200">
+            <button className="flex items-center justify-center gap-2 bg-[#A3C668] text-white text-[15px] font-bold px-8 py-3.5 sm:py-3 rounded-full shadow-sm hover:bg-[#93C54B] active:scale-95 transition-all duration-200">
               지원하기 <ArrowUpRight className="w-4 h-4" />
             </button>
           </Link>
         </div>
 
-        {/* 3. 하단 반투명 푸터 박스 */}
-        <div className="relative z-20 w-full max-w-screen-4xl mx-auto px-4 sm:px-6 mt-16">
-          <div className="bg-[#F8FAF3]/85 backdrop-blur-md rounded-[28px] sm:rounded-[36px] p-8 sm:p-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-10 shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-white/50">
+        {/* 3. 하단 반투명 푸터 박스 (모바일 반응형 완벽 적용) */}
+        <div className="relative z-20 w-full max-w-screen-4xl mx-auto px-4 sm:px-6 mt-12 md:mt-16">
+          <div className="bg-[#F8FAF3]/85 backdrop-blur-md rounded-[28px] sm:rounded-[36px] p-7 sm:p-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-8 md:gap-10 shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-white/50">
             
-            {/* 좌측 정보 영역 */}
-            <div className="flex flex-col gap-6">
-              {/* 💡 YBC 로고 이미지 경로 */}
-              <img src="/images/logo.png" alt="YBC Logo" className="h-6 sm:h-7 object-contain self-start" />
+            {/* 좌측(모바일 상단) 정보 영역 */}
+            <div className="flex flex-col gap-6 w-full md:w-auto">
               
-              <div className="flex flex-col gap-2.5 text-[13px] sm:text-sm font-bold text-gray-500">
+              {/* 로고 & 모바일 전용 인스타그램 아이콘 */}
+              <div className="flex justify-between items-center w-full">
+                <img src="/images/logo.png" alt="YBC Logo" className="h-6 sm:h-7 object-contain" />
+                
+                {/* 모바일 화면에서만 우측에 나타나는 인스타그램 버튼 */}
+                <a href="#" className="md:hidden w-8 h-8 rounded-lg bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] flex items-center justify-center text-white shadow-sm">
+                  <InstagramIcon className="w-4.5 h-4.5" />
+                </a>
+              </div>
+              
+              {/* 연락처 정보 */}
+              <div className="flex flex-col gap-2.5 text-[14px] font-bold text-gray-500">
                 <p className="flex items-center gap-2.5">
-                  <MailIcon className="w-4.5 h-4.5 text-gray-400" />
+                  <MailIcon className="w-4.5 h-4.5 text-gray-600" />
                   contact@ybc-badminton.com
                 </p>
                 <p className="flex items-center gap-2.5">
-                  <PhoneIcon className="w-4.5 h-4.5 text-gray-400" />
+                  <PhoneIcon className="w-4.5 h-4.5 text-gray-600" />
                   000-0000-0000
                 </p>
               </div>
             </div>
 
-            {/* 우측 약관 및 저작권 영역 */}
-            <div className="flex flex-col items-start md:items-end gap-6 text-[13px] font-bold text-gray-400">
-              {/* 인스타그램 버튼 */}
-              <a href="#" className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] flex items-center justify-center text-white hover:opacity-85 transition-opacity shadow-sm">
+            {/* 우측(모바일 하단) 약관 및 저작권 영역 */}
+            <div className="flex flex-col items-start md:items-end gap-6 w-full md:w-auto">
+              
+              {/* 데스크톱 화면에서만 우측 상단에 나타나는 인스타그램 버튼 */}
+              <a href="#" className="hidden md:flex w-8 h-8 rounded-lg bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] items-center justify-center text-white hover:opacity-85 transition-opacity shadow-sm">
                 <InstagramIcon className="w-4.5 h-4.5" />
               </a>
               
-              <div className="flex flex-col items-start md:items-end gap-1.5">
-                <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors font-extrabold">개인정보 처리방침</a>
-                <p>Copyright c 2026 YBC Badminton Club. All Rights Reserved</p>
+              {/* 하단 텍스트 (모바일: 좌측 정렬 / 데스크톱: 우측 정렬) */}
+              <div className="flex flex-col items-start md:items-end gap-2 text-[13px] font-bold text-gray-400 w-full">
+                <a href="#" className="text-gray-900 font-black text-[14px] hover:text-gray-700 transition-colors">
+                  개인정보 처리방침
+                </a>
+                <p className="text-left md:text-right leading-relaxed">
+                  Copyright c 2026 YBC Badminton Club. <br className="block md:hidden" />
+                  All Rights Reserved
+                </p>
               </div>
             </div>
+
           </div>
         </div>
 
-        {/* 4. 코트를 바라보는 뒷모습 캐릭터 (푸터 위로 겹침) */}
-        <div className="absolute left-[50%] sm:left-[45%] bottom-[160px] sm:bottom-[180px] w-[160px] sm:w-[350px] z-30 pointer-events-none transform -translate-x-1/2 drop-shadow-lg">
+        {/* 4. 코트를 바라보는 뒷모습 캐릭터 (모바일에서는 숨김 처리) */}
+        <div className="absolute left-[50%] sm:left-[45%] bottom-[160px] sm:bottom-[180px] w-[160px] sm:w-[350px] z-30 pointer-events-none transform -translate-x-1/2 drop-shadow-lg hidden md:block">
           <img 
             src="/images/character-back.svg" 
             alt="코트를 바라보는 캐릭터" 
@@ -386,19 +408,24 @@ export default function YBCMainPage() {
           />
         </div>
 
-        {/* 5. 우측 하단 플로팅 지원하기 버튼 (FAB) */}
-        <div className="absolute bottom-8 right-8 z-40 hidden md:block">
+        {/* 5. 우측 하단 플로팅 지원하기 버튼 (FAB, 스크롤 시 화면 고정) */}
+        <div className="fixed bottom-8 right-8 z-50 hidden md:block">
           <Link href="/apply" className="relative group flex flex-col items-center">
             {/* 셔틀콕 데코레이션 */}
             <div className="absolute -top-6 right-2 w-10 h-10 pointer-events-none drop-shadow-sm group-hover:-translate-y-1.5 transition-transform duration-300">
-              
+              <img 
+                src="/images/shuttlecock2.svg" 
+                alt="셔틀콕 데코레이션" 
+                className="w-full h-full object-contain"
+              />
             </div>
             {/* 동그란 버튼 본체 */}
-            <button className="bg-[#93C54B] text-white text-[13px] font-black w-[68px] h-[68px] rounded-full shadow-lg border-[3px] border-white flex items-center justify-center hover:bg-[#81b23c] active:scale-95 transition-all">
+            <button style={{ borderRadius: "70% 31% 60% 50% / 35% 30% 60% 70%" }} className="bg-[#93C54B] text-white text-[13px] font-black w-[68px] h-[68px] rounded-full shadow-lg border-[3px] border-white flex items-center justify-center hover:bg-[#81b23c] active:scale-95 transition-all">
               지원하기
             </button>
           </Link>
         </div>
+
       </section>
     </div>
   );
@@ -713,25 +740,23 @@ function GymLocationSection() {
         </div>
 
         {/* 우측: 유기적인 조약돌 형태의 카카오 맵 & 데코레이션 캐릭터 */}
-        <div className="w-full lg:w-[50%] relative mt-8 lg:mt-0">
-          
-          {/* 지도 컨테이너 (Blob 테두리 곡선 적용) */}
+        <div className="w-full lg:w-[50%] relative mt-10 lg:mt-0 flex justify-center">
+          {/* 지도 컨테이너 (시안과 일치하는 유기적 Blob 테두리 곡선 적용) */}
           <div 
-            className="w-full h-[320px] sm:h-[400px] relative overflow-hidden shadow-sm"
-            style={{ borderRadius: "50% 45% 55% 45% / 55% 45% 55% 45%" }}
+            className="w-[95%] sm:w-full h-[320px] sm:h-[400px] relative overflow-hidden shadow-sm"
+            style={{ borderRadius: "70% 31% 60% 50% / 35% 30% 60% 70%" }}
           >
             <GymMap gym={gym} sdkReady={sdkReady} />
           </div>
 
           {/* 💡 피그마 시안 우측 하단 라켓 든 양배추 캐릭터 주입 */}
-          <div className="absolute -bottom-6 -right-4 sm:-right-8 w-32 sm:w-48 z-10 pointer-events-none drop-shadow-md">
+          <div className="absolute -bottom-8 -right-2 sm:-bottom-12 sm:-right-8 lg:-right-14 w-[160px] sm:w-[240px] lg:w-[280px] z-10 pointer-events-none drop-shadow-md transition-all">
             <img 
               src="/images/character-map.svg" 
               alt="양배추 캐릭터" 
               className="w-full h-auto object-contain" 
             />
           </div>
-
         </div>
 
       </div>
