@@ -244,7 +244,7 @@ export default function ApplyPage() {
           <p className="text-base sm:text-lg text-slate-400 font-medium leading-relaxed">
             양배추 배드민턴 동아리에 지원해 주셔서 감사합니다.
             <br />
-            면접 일정은 입력하신 전화번호로 안내드리겠습니다.
+            면접 일정은 카카오톡으로 안내드리겠습니다.
           </p>
           <Link href="/">
             <button className="mt-4 bg-[#5b6b0f] text-white font-bold px-10 py-3.5 rounded-full shadow-md hover:bg-[#46530c] transition-all duration-300">
