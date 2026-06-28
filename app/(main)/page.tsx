@@ -401,15 +401,15 @@ export default function YBCMainPage() {
 
         {/* 2. 지원하기 좌측 텍스트 콘텐츠 */}
         <div className="relative z-10 max-w-screen-xl mx-auto px-6 sm:px-16 flex flex-col justify-start min-h-[200px] md:min-h-[300px] mt-4">
-          <h2 className="text-[28px] sm:text-[34px] font-black text-gray-900 tracking-tight mb-4 sm:mb-5">
+          <h2 className="text-[28px] sm:text-[40px] font-bold text-ink mb-4 sm:mb-5">
             지원하기
           </h2>
-          <p className="text-[14px] sm:text-[15px] font-bold text-gray-600 leading-relaxed mb-6 sm:mb-8">
+          <p className="text-[14px] sm:text-[18px] font-normal text-[#494949] leading-[1.5] mb-6 sm:mb-8">
             YBC 배드민턴 클럽은 실력보다 열정을 가진 <br />
             새로운 가족을 언제나 기다리고 있습니다.
           </p>
           <Link href="/apply" className="w-fit">
-            <button className="flex items-center justify-center gap-2 bg-[#A3C668] text-white text-[15px] font-bold px-8 py-3.5 sm:py-3 rounded-full shadow-sm hover:bg-[#93C54B] active:scale-95 transition-all duration-200">
+            <button className="flex items-center justify-center gap-2 bg-[#A3C668] text-white text-[16px] font-semibold px-8 py-3.5 sm:py-3 rounded-full shadow-sm hover:bg-[#93C54B] active:scale-95 transition-all duration-200">
               지원하기 <ArrowUpRight className="w-4 h-4" />
             </button>
           </Link>
@@ -441,7 +441,7 @@ export default function YBCMainPage() {
               </div>
 
               {/* 연락처 정보 */}
-              <div className="flex flex-col gap-2.5 text-[14px] font-bold text-gray-500">
+              <div className="flex flex-col gap-2.5 text-[16px] font-medium text-[#626262]">
                 <a
                   href="mailto:ybc.since240120@gmail.com"
                   className="flex items-center gap-2.5 hover:text-gray-700 transition-colors"
@@ -473,7 +473,7 @@ export default function YBCMainPage() {
                 >
                   개인정보 처리방침
                 </a>
-                <p className="text-left md:text-right leading-relaxed">
+                <p className="text-left md:text-right leading-relaxed text-[15px] font-normal text-[#191919]/60">
                   Copyright c 2026 YBC Badminton Club.{" "}
                   <br className="block md:hidden" />
                   All Rights Reserved
