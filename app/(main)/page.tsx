@@ -323,7 +323,7 @@ export default function YBCMainPage() {
       {/* ── 정기모임 ─────────────────────────────────────── */}
       <section className="w-full bg-white py-12 sm:py-16 px-6 max-w-screen-xl mx-auto">
         <div className="flex items-end justify-between mb-8 sm:mb-10">
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-ink tracking-tight">
+          <h2 className="text-2xl sm:text-[40px] font-bold text-ink">
             정기모임
           </h2>
           <Link
@@ -552,15 +552,15 @@ function MeetingCard({ vote, active, isLoggedIn }: { vote: VoteData; active: boo
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="bg-[#ededed] text-subtle text-xs font-bold px-3 py-1 rounded-full">
+          <span className="bg-[#ededed] text-subtle text-sm font-normal px-3 py-1 rounded-full">
             오늘
           </span>
           {full ? (
-            <span className="bg-brand-dark text-white text-xs font-bold px-3 py-1 rounded-full">
+            <span className="bg-brand-dark text-white text-sm font-normal px-3 py-1 rounded-full">
               모집완료
             </span>
           ) : (
-            <span className="bg-brand text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5">
+            <span className="bg-brand text-white text-sm font-normal px-3 py-1 rounded-full flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 bg-white/90 rounded-full animate-pulse" />
               모집중
             </span>
@@ -569,11 +569,11 @@ function MeetingCard({ vote, active, isLoggedIn }: { vote: VoteData; active: boo
         <ArrowUpRight className="w-5 h-5 text-subtle group-hover:text-brand-dark transition-colors" />
       </div>
 
-      <h3 className="text-base sm:text-lg font-bold text-ink leading-snug break-keep">
+      <h3 className="text-base sm:text-[20px] font-semibold text-ink leading-snug break-keep">
         {title}
       </h3>
 
-      <div className="space-y-2 text-sm font-medium text-muted">
+      <div className="space-y-2 text-base font-normal text-[#52525c]">
         <p className="flex items-center gap-1.5">
           <PinIcon className="w-4 h-4 text-brand-dark shrink-0" />
           {vote.location}
@@ -588,7 +588,7 @@ function MeetingCard({ vote, active, isLoggedIn }: { vote: VoteData; active: boo
         {hasCapacity ? (
           <>
             <div className="flex items-center justify-between mb-1.5">
-              <span className="flex items-center gap-1.5 text-sm font-semibold text-muted">
+              <span className="flex items-center gap-1.5 text-base font-normal text-[#71717b]">
                 <PeopleIcon className="w-4 h-4 text-brand-dark" />
                 {isLoggedIn ? `${currentCount} / ${maxCount}명` : "?? / ??명"}
               </span>
@@ -604,7 +604,7 @@ function MeetingCard({ vote, active, isLoggedIn }: { vote: VoteData; active: boo
             </div>
           </>
         ) : (
-          <span className="flex items-center gap-1.5 text-sm font-semibold text-muted">
+          <span className="flex items-center gap-1.5 text-base font-normal text-[#71717b]">
             <PeopleIcon className="w-4 h-4 text-brand-dark" />
             {isLoggedIn ? `${currentCount}명 참가` : "??명 참가"}
           </span>
