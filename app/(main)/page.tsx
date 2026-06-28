@@ -437,9 +437,10 @@ export default function YBCMainPage() {
 function MeetingCard({ vote, active }: { vote: VoteData; active: boolean }) {
   const title = vote.name || vote.title || "정기 운동";
   const currentCount = vote.currentParticipantCount ?? vote.attendance?.currentAttendees ?? 0;
-  const maxCount = vote.capacity ?? vote.attendance?.totalParticipants ?? 20;
-  const ratio = Math.min(Math.round((currentCount / maxCount) * 100), 100);
-  const full = currentCount >= maxCount;
+  const maxCount = vote.capacity ?? vote.attendance?.totalParticipants ?? 0;
+  const hasCapacity = maxCount > 0; // FLASH(번개)는 정원이 없어 0으로 옴
+  const ratio = hasCapacity ? Math.min(Math.round((currentCount / maxCount) * 100), 100) : 0;
+  const full = hasCapacity && currentCount >= maxCount;
 
   return (
     <Link
@@ -488,19 +489,28 @@ function MeetingCard({ vote, active }: { vote: VoteData; active: boolean }) {
       </div>
 
       <div className="mt-1">
-        <div className="flex items-center justify-between mb-1.5">
+        {hasCapacity ? (
+          <>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="flex items-center gap-1.5 text-sm font-semibold text-muted">
+                <PeopleIcon className="w-4 h-4 text-brand-dark" />
+                {currentCount} / {maxCount}명
+              </span>
+              <span className="text-sm font-bold text-brand-dark">{ratio}%</span>
+            </div>
+            <div className="w-full h-2.5 bg-line/70 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-1000 ease-out ${full ? "bg-brand-dark" : "bg-brand"}`}
+                style={{ width: `${ratio}%` }}
+              />
+            </div>
+          </>
+        ) : (
           <span className="flex items-center gap-1.5 text-sm font-semibold text-muted">
             <PeopleIcon className="w-4 h-4 text-brand-dark" />
-            {currentCount} / {maxCount}명
+            {currentCount}명 참가
           </span>
-          <span className="text-sm font-bold text-brand-dark">{ratio}%</span>
-        </div>
-        <div className="w-full h-2.5 bg-line/70 rounded-full overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all duration-1000 ease-out ${full ? "bg-brand-dark" : "bg-brand"}`}
-            style={{ width: `${ratio}%` }}
-          />
-        </div>
+        )}
       </div>
     </Link>
   );
