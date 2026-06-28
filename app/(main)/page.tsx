@@ -286,7 +286,8 @@ function MeetingCard({ vote, active }: { vote: VoteData; active: boolean }) {
         <img
           src="/images/shuttlecock.svg"
           alt=""
-          className="absolute -top-4 -right-3 w-12 h-auto rotate-12 pointer-events-none drop-shadow-sm"
+          style={{ transform: "rotate(103.35deg)" }}
+          className="absolute -top-12 -right-6 w-[75.713px] h-[73.41px] pointer-events-none drop-shadow-sm"
         />
       )}
 
