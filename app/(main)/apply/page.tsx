@@ -441,7 +441,7 @@ export default function ApplyPage() {
               value={form.motivation}
               onChange={(v) => handleChange("motivation", v)}
               placeholder="본 동아리에 지원하게 된 동기를 적어주세요."
-              rows={4}
+              rows={5}
             />
           </FormSection>
 
