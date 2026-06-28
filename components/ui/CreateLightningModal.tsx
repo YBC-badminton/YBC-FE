@@ -15,8 +15,7 @@ export default function CreateLightningModal({ isOpen, onClose, onCreated }: Mod
     const { showToast } = useToast();
     const [title, setTitle] = useState('');
     const [date, setDate] = useState('');
-    const [startTime, setStartTime] = useState('');
-    const [endTime, setEndTime] = useState('');
+    const [activityTime, setActivityTime] = useState('');
     const [voteEndAt, setVoteEndAt] = useState('');
     const [location, setLocation] = useState('');
     const [fee, setFee] = useState('');
@@ -26,12 +25,12 @@ export default function CreateLightningModal({ isOpen, onClose, onCreated }: Mod
     if (!isOpen) return null;
 
     const resetForm = () => {
-        setTitle(''); setDate(''); setStartTime(''); setEndTime('');
+        setTitle(''); setDate(''); setActivityTime('');
         setVoteEndAt(''); setLocation(''); setFee(''); setMemo('');
     };
 
     const handleSubmit = async () => {
-        if (!title.trim() || !date || !startTime || !endTime || !location.trim() || !voteEndAt) {
+        if (!title.trim() || !date || !activityTime.trim() || !location.trim() || !voteEndAt) {
             showToast('필수 항목을 모두 입력해주세요.', 'error');
             return;
         }
@@ -46,7 +45,7 @@ export default function CreateLightningModal({ isOpen, onClose, onCreated }: Mod
             const payload = {
                 title: title.trim(),
                 activityDate: date,
-                activityTime: `${startTime} ~ ${endTime}`,
+                activityTime: activityTime.trim(),
                 location: location.trim(),
                 memo: memoParts.join(' / '),
                 voteEndAt: `${voteEndAt}:00`,
@@ -103,10 +102,7 @@ export default function CreateLightningModal({ isOpen, onClose, onCreated }: Mod
             <InputGroup icon={<Zap className="w-5 h-5" />} label="번개 모임 이름" placeholder="예) 목요일 저녁 번개" value={title} onChange={setTitle} />
             <InputGroup icon={<Calendar className="w-5 h-5" />} label="날짜" type="date" value={date} onChange={setDate} />
 
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                <InputGroup icon={<Clock className="w-5 h-5" />} label="시작 시간" type="time" value={startTime} onChange={setStartTime} />
-                <InputGroup icon={<Clock className="w-5 h-5" />} label="종료 시간" type="time" value={endTime} onChange={setEndTime} />
-            </div>
+            <InputGroup icon={<Clock className="w-5 h-5" />} label="활동 시간" placeholder="예) 19:00 ~ 20:00" value={activityTime} onChange={setActivityTime} />
 
             <InputGroup icon={<MapPin className="w-5 h-5" />} label="장소" placeholder="예) 강남구민체육센터" value={location} onChange={setLocation} />
             <InputGroup icon={<Calendar className="w-5 h-5" />} label="투표 마감 시각" type="datetime-local" value={voteEndAt} onChange={setVoteEndAt} />
