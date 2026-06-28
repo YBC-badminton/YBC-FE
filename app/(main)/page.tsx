@@ -183,7 +183,13 @@ export default function YBCMainPage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+        <div className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          {/* 3번째 카드 뒤에서 빼꼼 나오는 마스코트 (모바일 숨김) */}
+          <img
+            src="/images/mascot-peek.svg"
+            alt=""
+            className="hidden lg:block pointer-events-none select-none absolute -top-[150px] right-[72px] w-[246px] h-[282px]"
+          />
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className={`rounded-[28px] p-6 border border-line/60 bg-brand-wash animate-pulse flex flex-col gap-5 ${i === 2 ? "hidden lg:flex" : ""}`}>
