@@ -19,6 +19,7 @@ interface Review {
     content: string;
     memberNickname: string;
     createdAt: string;
+    updatedAt?: string;
 }
 
 interface ReviewResponse {
@@ -234,7 +235,11 @@ function ReviewDetailModal({ review, onClose, isAuthor, onChanged, showToast }: 
                     </h2>
                     <div className="flex justify-between items-center text-sm font-bold text-slate-400 pt-2">
                         <span>작성자: {maskName(review.memberNickname)}</span>
-                        <span>작성일: {formatDate(review.createdAt)}</span>
+                        <span>
+                            {review.updatedAt && review.updatedAt !== review.createdAt
+                                ? `수정일: ${formatDate(review.updatedAt)}`
+                                : `작성일: ${formatDate(review.createdAt)}`}
+                        </span>
                     </div>
                 </div>
 
