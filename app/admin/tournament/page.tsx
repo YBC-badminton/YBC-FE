@@ -142,93 +142,87 @@ export default function TournamentPage() {
         return Math.floor((filledSlots / totalSlots) * 100);
     }, [courtBrackets]);
 
+    // 응답 데이터(participants + matches)를 화면 상태로 반영하는 공용 함수
+    // 선택 시 조회 / 서버 생성 응답 모두에서 재사용한다.
+    const hydrateTournament = (data: TournamentDetailResponse) => {
+        // 1. 참가자 풀 파싱
+        const participants: LocalParticipant[] = (data.participants || []).map(p => ({
+            participantId: p.participantId,
+            name: p.name,
+            gender: p.gender === 'MALE' ? '남' : '여',
+            participantType: p.participantType
+        }));
+        setParticipantsPool(participants);
+
+        // 2. 대진(matches)이 내려온 경우에만 복구 (과거 플래그가 아닌 실제 데이터 유무로 판단)
+        if (data.matches && data.matches.length > 0) {
+            const newBrackets: Record<string, BracketRow[]> = {
+                '1코트': [], '2코트': [], '3코트': [], '4코트': []
+            };
+            const newAssignments: Record<string, LocalParticipant[]> = { '1코트': [], '2코트': [], '3코트': [], '4코트': [] };
+
+            ['1코트', '2코트', '3코트', '4코트'].forEach(courtKey => {
+                newBrackets[courtKey] = initialBracket();
+            });
+
+            data.matches.forEach((m) => {
+                const courtKey = `${m.courtNumber}코트`;
+                m.courtMatches.forEach((match) => {
+                    const matchIdx = match.matchNumber - 1;
+                    while (newBrackets[courtKey].length <= matchIdx) {
+                        newBrackets[courtKey].push(createEmptyRow());
+                    }
+                    const row: BracketRow = [null, null, null, null];
+                    const allTeamMembers = [...match.team1, ...match.team2];
+                    allTeamMembers.forEach((member, idx) => {
+                        const pData = participants.find(p => p.participantId === member.participantId);
+                        if (pData) {
+                            row[idx] = pData;
+                            if (!newAssignments[courtKey].some(a => a.participantId === pData.participantId)) {
+                                newAssignments[courtKey].push(pData);
+                            }
+                        }
+                    });
+                    newBrackets[courtKey][matchIdx] = row;
+                });
+            });
+
+            setAssignments(newAssignments);
+            setCourtBrackets(newBrackets);
+            setMatchId(data.matchId || null);
+            setIsEditMode(true);
+            // 대진이 있으면 전체 코트 현황을 먼저 보여준다
+            setCurrentCourt('전체');
+        } else {
+            // 대진이 없으면 빈 작성 상태
+            setAssignments({ '1코트': [], '2코트': [], '3코트': [], '4코트': [] });
+            setCourtBrackets({
+                '1코트': initialBracket(), '2코트': initialBracket(),
+                '3코트': initialBracket(), '4코트': initialBracket()
+            });
+            setIsEditMode(false);
+            setMatchId(null);
+            setCurrentCourt('1코트');
+        }
+    };
+
     // [API 2] 특정 모임 선택 시 명단 로드 및 대진표 복구 (Hydration)
     const handleSelectActivity = async (activity: AdminActivity) => {
         setLoading(true);
         try {
-            // 1. 상태 초기화
+            // 상태 초기화
             setAssignments({ '1코트': [], '2코트': [], '3코트': [], '4코트': [] });
             const emptyBracket = initialBracket();
-            setCourtBrackets({ 
-                '1코트': emptyBracket, '2코트': emptyBracket, 
-                '3코트': emptyBracket, '4코트': emptyBracket 
+            setCourtBrackets({
+                '1코트': emptyBracket, '2코트': emptyBracket,
+                '3코트': emptyBracket, '4코트': emptyBracket
             });
             setCurrentCourt('1코트');
             setMobileStep(1);
 
-            // 2. 대진 상세 데이터 API 호출
             const response = await api.get<TournamentDetailResponse>(`/admin/votes/${activity.voteId}/matches`);
-            const data = response.data;
-            
-            // 3. 참가자 풀 파싱
-            const participants: LocalParticipant[] = (data.participants || []).map(p => ({
-                participantId: p.participantId,
-                name: p.name,
-                gender: p.gender === 'MALE' ? '남' : '여',
-                participantType: p.participantType
-            }));
-            setParticipantsPool(participants);
             setSelectedActivity(activity);
-
-            // 4. 대진 데이터가 있는 경우 상태 복구 (수정 모드)
-            if (activity.matchRegistered && data.matches) {
-                const newBrackets: Record<string, BracketRow[]> = {
-                    '1코트': [], '2코트': [], '3코트': [], '4코트': []
-                };
-                const newAssignments: Record<string, LocalParticipant[]> = { '1코트': [], '2코트': [], '3코트': [], '4코트': [] };
-
-                // 1. 모든 코트 초기화
-                ['1코트', '2코트', '3코트', '4코트'].forEach(courtKey => {
-                    newBrackets[courtKey] = initialBracket();
-                });
-
-                // 2. 서버 데이터 매핑
-                data.matches.forEach((m) => {
-                    const courtKey = `${m.courtNumber}코트`;
-                    
-                    // 💡 여기서 m.courtMatches를 순회해야 합니다!
-                    m.courtMatches.forEach((match) => {
-                        const matchIdx = match.matchNumber - 1; // 여기서 matchNumber를 사용
-                        
-                        // 행이 부족하면 추가
-                        while (newBrackets[courtKey].length <= matchIdx) {
-                            newBrackets[courtKey].push(createEmptyRow());
-                        }
-
-                        const row: BracketRow = [null, null, null, null];
-                        const allTeamMembers = [...match.team1, ...match.team2];
-                        
-                        allTeamMembers.forEach((member, idx) => {
-                            const pData = participants.find(p => p.participantId === member.participantId);
-                            if (pData) {
-                                row[idx] = pData;
-                                // 명단 중복 방지 추가
-                                if (!newAssignments[courtKey].some(a => a.participantId === pData.participantId)) {
-                                    newAssignments[courtKey].push(pData);
-                                }
-                            }
-                        });
-                        newBrackets[courtKey][matchIdx] = row;
-                    });
-                });
-
-                // 3. 상태 한 번에 업데이트
-                setAssignments(newAssignments);
-                setCourtBrackets(newBrackets);
-                setMatchId(data.matchId || null);
-                setIsEditMode(true);
-                // 수정 모드 진입 시 기존 대진 전체를 먼저 보여준다
-                setCurrentCourt('전체');
-            } else {
-                // 수정 모드가 아닐 때 초기화
-                setAssignments({ '1코트': [], '2코트': [], '3코트': [], '4코트': [] });
-                setCourtBrackets({
-                    '1코트': initialBracket(), '2코트': initialBracket(), 
-                    '3코트': initialBracket(), '4코트': initialBracket()
-                });
-                setIsEditMode(false);
-                setMatchId(null);
-            }
+            hydrateTournament(response.data);
         } catch (err) {
             console.error('❌ [Load Tournament Error]:', err);
             showToast('대진 정보를 불러오지 못했습니다.', 'error');
@@ -363,13 +357,18 @@ export default function TournamentPage() {
 
         setLoading(true);
         try {
-            await api.post(`/admin/votes/${selectedActivity.voteId}/matches/generate`, {
+            const res = await api.post<TournamentDetailResponse>(`/admin/votes/${selectedActivity.voteId}/matches/generate`, {
                 courtCount: courtAssignments.length,
                 courtAssignments,
             });
             showToast('서버에서 대진이 랜덤 생성되었습니다.', 'success');
-            // 확정·저장된 대진을 캐노니컬 데이터로 다시 불러와 대진표에 반영
-            await handleSelectActivity(selectedActivity);
+            // generate 응답이 대진(matches)을 바로 반환하면 그걸로 즉시 렌더,
+            // 아니면 GET으로 재조회하여 반영한다.
+            if (res.data && res.data.matches && res.data.matches.length > 0) {
+                hydrateTournament(res.data);
+            } else {
+                await handleSelectActivity(selectedActivity);
+            }
         } catch (err: unknown) {
             const message = (err as { response?: { data?: { message?: string } } })
                 ?.response?.data?.message || '대진 랜덤 생성 중 오류가 발생했습니다.';
