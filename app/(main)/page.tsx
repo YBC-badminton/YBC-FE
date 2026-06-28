@@ -254,12 +254,12 @@ export default function YBCMainPage() {
       <section className="w-full bg-gradient-to-b from-[#fefff4] to-[#ffffff] pt-6 pb-16 sm:pt-36 sm:pb-24">
         <div className="max-w-screen-lg mx-auto px-6 flex flex-col items-center text-center gap-6">
           {/* 타이틀 명 (Figma 전용 폰트 스타일 및 시그니처 컬러 반영) */}
-          <h2 className="text-[26px] sm:text-5xl font-display text-[#5b6b0f] tracking-wide break-keep">
+          <h2 className="text-[26px] sm:text-[50px] font-display text-[#5b6b0f] break-keep">
             YBC badminton club
           </h2>
 
           {/* 소개 텍스트 본문 */}
-          <div className="text-base sm:text-lg font-medium text-[#666] leading-relaxed max-w-2xl space-y-1.5">
+          <div className="text-base sm:text-[18px] font-normal text-[#484848] leading-[1.5] max-w-2xl space-y-1.5">
             <p>
               양질의 배드민턴을 추구하는 사람들이 모인 동아리, 양배추입니다.
             </p>
@@ -286,14 +286,14 @@ export default function YBCMainPage() {
               className="w-full sm:flex-1 max-w-[240px] sm:max-w-none min-h-[180px] sm:min-h-[220px] bg-[#E8F5E9] flex flex-col items-center justify-center gap-2 px-6 text-center shadow-sm transition-transform hover:scale-[1.02]"
               style={{ borderRadius: "62% 38% 43% 57% / 46% 54% 46% 54%" }}
             >
-              <p className="text-sm font-bold text-[#769e37] tracking-tight">
+              <p className="text-sm sm:text-base font-normal text-[#80917d]">
                 정기 활동
               </p>
               <p className="flex items-baseline gap-1">
-                <span className="text-xl font-bold text-[#5b6b0f] mr-1">
+                <span className="text-2xl sm:text-[40px] font-normal text-[#74bf63] mr-1">
                   주
                 </span>
-                <span className="text-4xl sm:text-5xl font-black text-[#5b6b0f]">
+                <span className="text-5xl sm:text-[66px] font-bold text-[#74bf63] leading-none">
                   2회
                 </span>
               </p>
@@ -304,14 +304,14 @@ export default function YBCMainPage() {
               className="w-full sm:flex-1 max-w-[240px] sm:max-w-none min-h-[180px] sm:min-h-[220px] bg-[#EDF1EC] flex flex-col items-center justify-center gap-2 px-6 text-center shadow-sm transition-transform hover:scale-[1.02]"
               style={{ borderRadius: "44% 56% 42% 58% / 55% 45% 55% 45%" }}
             >
-              <p className="text-sm font-bold text-slate-500 tracking-tight">
+              <p className="text-sm sm:text-base font-normal text-[#80917d]">
                 부원 수
               </p>
               <p className="flex items-baseline gap-1">
-                <span className="text-4xl sm:text-5xl font-black text-[#5b6b0f]">
+                <span className="text-5xl sm:text-[66px] font-bold text-[#5b6b0f] leading-none">
                   50+
                 </span>
-                <span className="text-xl font-bold text-[#5b6b0f] ml-1">
+                <span className="text-2xl sm:text-[40px] font-normal text-[#5b6b0f] ml-1">
                   명
                 </span>
               </p>
