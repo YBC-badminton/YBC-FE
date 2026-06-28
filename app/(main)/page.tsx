@@ -276,34 +276,35 @@ export default function YBCMainPage() {
             alt=""
             className="hidden lg:block pointer-events-none select-none absolute -top-[150px] right-[72px] w-[246px] h-[282px]"
           />
-        <div className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-          {/* 3번째 카드 뒤에서 빼꼼 나오는 마스코트 (모바일 숨김) */}
-          <img
-            src="/images/mascot-peek.svg"
-            alt=""
-            className="hidden lg:block pointer-events-none select-none absolute -top-[150px] right-[72px] w-[246px] h-[282px]"
-          />
-          {isLoading ? (
-            Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className={`rounded-[28px] p-6 border border-line/60 bg-brand-wash animate-pulse flex flex-col gap-5 ${i === 2 ? "hidden lg:flex" : ""}`}>
-                <div className="flex gap-2">
-                  <div className="w-12 h-6 bg-line rounded-full" />
-                  <div className="w-16 h-6 bg-line rounded-full" />
+          <div className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+            {/* 3번째 카드 뒤에서 빼꼼 나오는 마스코트 (모바일 숨김) */}
+            <img
+              src="/images/mascot-peek.svg"
+              alt=""
+              className="hidden lg:block pointer-events-none select-none absolute -top-[150px] right-[72px] w-[246px] h-[282px]"
+            />
+            {isLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className={`rounded-[28px] p-6 border border-line/60 bg-brand-wash animate-pulse flex flex-col gap-5 ${i === 2 ? "hidden lg:flex" : ""}`}>
+                  <div className="flex gap-2">
+                    <div className="w-12 h-6 bg-line rounded-full" />
+                    <div className="w-16 h-6 bg-line rounded-full" />
+                  </div>
+                  <div className="h-5 w-3/4 bg-line rounded" />
+                  <div className="h-4 w-1/2 bg-line rounded" />
+                  <div className="h-3 w-full bg-line rounded-full mt-4" />
                 </div>
-                <div className="h-5 w-3/4 bg-line rounded" />
-                <div className="h-4 w-1/2 bg-line rounded" />
-                <div className="h-3 w-full bg-line rounded-full mt-4" />
+              ))
+            ) : recentVotes.length > 0 ? (
+              recentVotes.map((vote, idx) => (
+                <MeetingCard key={vote.voteId ?? idx} vote={vote} active={idx === 0} isLoggedIn={!!user} />
+              ))
+            ) : (
+              <div className="col-span-full bg-brand-wash border border-dashed border-line rounded-[28px] p-12 text-center text-subtle font-semibold">
+                현재 진행 중인 정기모임 투표가 없습니다.
               </div>
-            ))
-          ) : recentVotes.length > 0 ? (
-            recentVotes.map((vote, idx) => (
-              <MeetingCard key={vote.voteId ?? idx} vote={vote} active={idx === 0} isLoggedIn={!!user} />
-            ))
-          ) : (
-            <div className="col-span-full bg-brand-wash border border-dashed border-line rounded-[28px] p-12 text-center text-subtle font-semibold">
-              현재 진행 중인 정기모임 투표가 없습니다.
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </section>
 
