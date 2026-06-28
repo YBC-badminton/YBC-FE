@@ -10,8 +10,10 @@ import FooterSection from '../../components/ui/FooterSection'; // 푸터 저작�
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <Header /> 
-      <main className="min-h-screen">{children}</main>
+      <main className="min-h-screen">
+        <Header /> 
+        {children}
+      </main>
     </>
   );
 }

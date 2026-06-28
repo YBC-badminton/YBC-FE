@@ -88,7 +88,7 @@ export default function ReviewPage() {
     }, [fetchReviews]);
 
     return (
-        <div className="min-h-screen bg-[#F8F9FA] py-8 sm:py-12 px-4 sm:px-6 lg:px-24 font-sans text-left">
+        <div className="min-h-screen bg-white py-8 sm:py-12 px-4 sm:px-6 lg:px-24 font-sans text-left">
             <div className="max-w-screen-xl mx-auto space-y-8">
                 {/* 헤더 섹션 */}
                 <div className="space-y-2">

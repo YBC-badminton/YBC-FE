@@ -285,7 +285,7 @@ export default function ActivityVotePage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#F8F9FA] py-10 px-6 lg:px-24 font-sans select-none flex items-center justify-center">
+            <div className="min-h-screen bg-white py-10 px-6 lg:px-24 font-sans select-none flex items-center justify-center">
                 <div className="text-center text-slate-400 font-bold">불러오는 중...</div>
             </div>
         );
@@ -293,7 +293,7 @@ export default function ActivityVotePage() {
 
     if (error || !activity) {
         return (
-            <div className="min-h-screen bg-[#F8F9FA] py-10 px-6 lg:px-24 font-sans select-none">
+            <div className="min-h-screen bg-white py-10 px-6 lg:px-24 font-sans select-none">
                 <div className="max-w-3xl mx-auto space-y-6">
                     <Link href="/activities" className="flex items-center gap-2 text-slate-400 font-bold text-sm hover:text-slate-600 transition-colors">
                         ← 목록으로 돌아가기
@@ -307,7 +307,7 @@ export default function ActivityVotePage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#F8F9FA] py-10 px-4 sm:px-6 lg:px-24 font-sans select-none relative pb-32">
+        <div className="min-h-screen bg-white py-10 px-4 sm:px-6 lg:px-24 font-sans select-none relative pb-32">
         <div className="max-w-3xl mx-auto space-y-8">
 
             {/* 상단 뒤로가기 */}

@@ -59,7 +59,7 @@ export default function TournamentPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#F8F9FA] py-10 px-6 lg:px-24 font-sans select-none">
+            <div className="min-h-screen bg-white py-10 px-6 lg:px-24 font-sans select-none">
                 <div className="max-w-4xl mx-auto py-20 text-center text-slate-400 font-bold">불러오는 중...</div>
             </div>
         );
@@ -67,7 +67,7 @@ export default function TournamentPage() {
 
     if (error || !matchData) {
         return (
-            <div className="min-h-screen bg-[#F8F9FA] py-10 px-6 lg:px-24 font-sans select-none">
+            <div className="min-h-screen bg-white py-10 px-6 lg:px-24 font-sans select-none">
                 <div className="max-w-4xl mx-auto space-y-6">
                     <Link href={`/activities/${voteId}`} className="flex items-center gap-2 text-slate-400 font-bold text-sm hover:text-slate-600 transition-colors mb-4">
                         ← 목록으로 돌아가기
@@ -81,7 +81,7 @@ export default function TournamentPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#F8F9FA] py-10 px-6 lg:px-24 font-sans select-none pb-20">
+        <div className="min-h-screen bg-white py-10 px-6 lg:px-24 font-sans select-none pb-20">
             <div className="max-w-4xl mx-auto space-y-6">
                 <Link
                     href={`/activities/${voteId}`}
@@ -131,7 +131,7 @@ export default function TournamentPage() {
                                 </div>
 
                                 {openCourt === court.courtNumber && court.courtMatches.length > 0 && (
-                                    <div className="px-8 pb-10 pt-4 bg-[#F8F9FA]/50 border-t border-slate-50 space-y-6">
+                                    <div className="px-8 pb-10 pt-4 bg-white/50 border-t border-slate-50 space-y-6">
                                         {court.courtMatches.map((match) => (
                                             <div key={match.matchNumber} className="relative">
                                                 <div className="absolute left-1/2 -top-3 -translate-x-1/2 z-10 bg-slate-800 text-white text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-tighter">

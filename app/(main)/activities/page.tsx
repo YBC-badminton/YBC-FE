@@ -112,7 +112,7 @@ export default function ActivitiesPage() {
     const filteredPast = filterByTab(pastActivities);
 
     return (
-        <div className="min-h-screen bg-[#F8F9FA] py-12 px-6 lg:px-24 font-sans select-none">
+        <div className="min-h-screen bg-white py-12 px-6 lg:px-24 font-sans select-none">
             <div className="max-w-screen-xl mx-auto space-y-10 sm:space-y-16">
 
                 {/* 상단 탭 및 버튼 바 */}

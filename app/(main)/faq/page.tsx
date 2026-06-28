@@ -46,7 +46,7 @@ export default function InquiryPage() {
     );
 
     return (
-        <div className="min-h-screen bg-[#F8F9FA] py-12 px-6 lg:px-24 font-sans select-none">
+        <div className="min-h-screen bg-white py-12 px-6 lg:px-24 font-sans select-none">
             <div className="max-w-screen-xl mx-auto space-y-12">
 
                 {/* 헤더 + 검색 통합 카드 */}
