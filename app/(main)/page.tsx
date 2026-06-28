@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Script from "next/script";
 import api from "../../lib/axios";
+import { useAuth } from "../../context/AuthContext";
 
 // Kakao Maps SDK는 전역 window.kakao 객체로 노출됩니다.
 declare global {
@@ -132,6 +133,7 @@ export default function YBCMainPage() {
   const [recentVotes, setRecentVotes] = useState<VoteData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [recruiting, setRecruiting] = useState<boolean | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchActiveVotes = async () => {
@@ -354,6 +356,7 @@ export default function YBCMainPage() {
                 key={vote.voteId ?? idx}
                 vote={vote}
                 active={idx === 0}
+                isLoggedIn={!!user}
               />
             ))
           ) : (
@@ -518,7 +521,7 @@ export default function YBCMainPage() {
 }
 
 /* ── 정기모임 카드 ──────────────────────────────────────── */
-function MeetingCard({ vote, active }: { vote: VoteData; active: boolean }) {
+function MeetingCard({ vote, active, isLoggedIn }: { vote: VoteData; active: boolean; isLoggedIn: boolean }) {
   const title = vote.name || vote.title || "정기 운동";
   const currentCount =
     vote.currentParticipantCount ?? vote.attendance?.currentAttendees ?? 0;
@@ -587,23 +590,23 @@ function MeetingCard({ vote, active }: { vote: VoteData; active: boolean }) {
             <div className="flex items-center justify-between mb-1.5">
               <span className="flex items-center gap-1.5 text-sm font-semibold text-muted">
                 <PeopleIcon className="w-4 h-4 text-brand-dark" />
-                {currentCount} / {maxCount}명
+                {isLoggedIn ? `${currentCount} / ${maxCount}명` : "?? / ??명"}
               </span>
               <span className="text-sm font-bold text-brand-dark">
-                {ratio}%
+                {isLoggedIn ? `${ratio}%` : "??%"}
               </span>
             </div>
             <div className="w-full h-2.5 bg-line/70 rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-1000 ease-out ${full ? "bg-brand-dark" : "bg-brand"}`}
-                style={{ width: `${ratio}%` }}
+                style={{ width: `${isLoggedIn ? ratio : 0}%` }}
               />
             </div>
           </>
         ) : (
           <span className="flex items-center gap-1.5 text-sm font-semibold text-muted">
             <PeopleIcon className="w-4 h-4 text-brand-dark" />
-            {currentCount}명 참가
+            {isLoggedIn ? `${currentCount}명 참가` : "??명 참가"}
           </span>
         )}
       </div>
