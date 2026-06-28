@@ -136,9 +136,7 @@ export default function YBCMainPage() {
   useEffect(() => {
     const fetchActiveVotes = async () => {
       try {
-        const response = await api.get("/votes/recent", {
-          params: { open: true, page: 0, size: 50 },
-        });
+        const response = await api.get("/votes/recent");
 
         let data = [];
         if (Array.isArray(response.data)) {
