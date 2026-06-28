@@ -13,7 +13,7 @@ import { MapPin, Calendar as CalendarIcon } from 'lucide-react'; // 💡 아이�
 interface VoteItem {
     voteId: number;
     name: string;
-    type: 'REGULAR' | 'FLUSH' | 'EVENT';
+    type: 'REGULAR' | 'FLASH' | 'EVENT';
     location: string;
     voteStartAt: string;
     voteEndAt: string;
@@ -37,7 +37,7 @@ interface VotesHistory {
 // API type → 한글 라벨
 const TYPE_LABEL: Record<string, string> = {
     'REGULAR': '정기모임',
-    'FLUSH': '번개모임',
+    'FLASH': '번개모임',
     'EVENT': '이벤트',
 };
 

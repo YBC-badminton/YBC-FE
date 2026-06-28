@@ -6,7 +6,7 @@ import api from '@/lib/axios';
 
 interface VoteQueueItem {
     voteId: number;
-    activityType: 'REGULAR' | 'FLUSH' | 'EVENT';
+    activityType: 'REGULAR' | 'FLASH' | 'EVENT';
     title: string;
     activityDate: string;
     activityTime: string;
@@ -23,7 +23,7 @@ interface VoteQueueResponse {
 
 const ACTIVITY_TYPE_LABEL: Record<string, string> = {
     REGULAR: '정기 운동',
-    FLUSH: '번개 운동',
+    FLASH: '번개 운동',
     EVENT: '이벤트 운동',
 };
 
@@ -46,7 +46,7 @@ export default function ReservationQueue() {
                     <div>
                         <span className={`px-2 py-1 rounded text-xs mb-2 inline-block font-bold ${
                             item.activityType === 'REGULAR' ? 'bg-blue-100 text-blue-600' :
-                            item.activityType === 'FLUSH' ? 'bg-yellow-100 text-yellow-600' :
+                            item.activityType === 'FLASH' ? 'bg-yellow-100 text-yellow-600' :
                             'bg-green-100 text-green-600'
                         }`}>
                             {ACTIVITY_TYPE_LABEL[item.activityType] || item.activityType}

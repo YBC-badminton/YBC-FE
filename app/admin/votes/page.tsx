@@ -4,12 +4,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/axios';
 import { useToast } from '@/components/ui/Toast';
 
-type ActivityType = 'REGULAR' | 'FLUSH' | 'EVENT';
+type ActivityType = 'REGULAR' | 'FLASH' | 'EVENT';
 type VoteStatusType = 'UPCOMING' | 'IN_PROGRESS' | 'COMPLETED';
 
 const ACTIVITY_TYPE_LABEL: Record<ActivityType, string> = {
     REGULAR: '정기',
-    FLUSH: '번개',
+    FLASH: '번개',
     EVENT: '이벤트',
 };
 
@@ -212,7 +212,7 @@ function VoteCard({ vote, onDelete, onRefresh }: { vote: VoteItem; onDelete: (id
                         <label className="block text-xs text-gray-400 mb-1">활동 유형</label>
                         <select value={editForm.activityType} onChange={(e) => setEditForm({ ...editForm, activityType: e.target.value as ActivityType })} className="w-full p-2 border rounded-lg text-sm">
                             <option value="REGULAR">정기 운동</option>
-                            <option value="FLUSH">번개 운동</option>
+                            <option value="FLASH">번개 운동</option>
                             <option value="EVENT">이벤트 운동</option>
                         </select>
                     </div>
@@ -266,7 +266,7 @@ function VoteCard({ vote, onDelete, onRefresh }: { vote: VoteItem; onDelete: (id
                 <div className="flex items-center gap-2 sm:gap-3">
                     <span className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded text-[10px] sm:text-xs font-bold whitespace-nowrap ${
                         vote.activityType === 'REGULAR' ? 'bg-blue-50 text-blue-600' :
-                        vote.activityType === 'FLUSH' ? 'bg-purple-50 text-purple-600' :
+                        vote.activityType === 'FLASH' ? 'bg-purple-50 text-purple-600' :
                         'bg-green-50 text-green-600'
                     }`}>
                         {typeLabel}

@@ -12,7 +12,7 @@ import { MapPin, Clock, Calendar as CalendarIcon, Users, Trash2, X } from 'lucid
 interface VoteDetail {
     voteId: number;
     name: string;
-    type: 'REGULAR' | 'FLUSH' | 'EVENT';
+    type: 'REGULAR' | 'FLASH' | 'EVENT';
     activityDate: string;
     activityTime: string;
     location: string;
@@ -21,6 +21,8 @@ interface VoteDetail {
     voteEndAt: string;
     capacity: number;
     currentParticipantCount: number;
+    openedByMemberId?: number;   // 번개 모임 개설자
+    openedByNickname?: string;
 }
 
 interface AttendanceStatusResponse {
@@ -60,7 +62,7 @@ interface GuestsResponse {
 
 const TYPE_LABEL: Record<string, string> = {
     'REGULAR': '정기모임',
-    'FLUSH': '번개모임',
+    'FLASH': '번개모임',
     'EVENT': '이벤트',
 };
 
@@ -322,6 +324,9 @@ export default function ActivityVotePage() {
                 <InfoItem icon={<Clock className="w-5 h-5 text-[#5b6b0f]" />} label="시간" value={activity.activityTime} />
                 <InfoItem icon={<CalendarIcon className="w-5 h-5 text-[#5b6b0f]" />} label="활동 날짜" value={formatDate(activity.activityDate)} />
                 <InfoItem icon={<Users className="w-5 h-5 text-[#5b6b0f]" />} label="인원제한" value={`${activity.capacity}명`} />
+                {activity.openedByNickname && (
+                    <InfoItem icon={<Users className="w-5 h-5 text-[#5b6b0f]" />} label="개설자" value={activity.openedByNickname} />
+                )}
             </div>
 
             {activity.memo && (

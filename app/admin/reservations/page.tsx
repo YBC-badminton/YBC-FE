@@ -9,7 +9,7 @@ import { useToast } from '@/components/ui/Toast';
 // API 응답 타입 (spec 기준)
 interface VoteQueueItem {
     voteId: number;
-    activityType: 'REGULAR' | 'FLUSH' | 'EVENT';
+    activityType: 'REGULAR' | 'FLASH' | 'EVENT';
     title: string;
     activityDate: string;
     activityTime: string;
@@ -26,7 +26,7 @@ interface VoteQueueResponse {
 
 // 투표 예약 요청 타입 (spec 기준)
 interface VoteReserveRequest {
-    activityType: 'REGULAR' | 'FLUSH' | 'EVENT';
+    activityType: 'REGULAR' | 'FLASH' | 'EVENT';
     title: string;
     activityDate: string;
     activityTime: string;
@@ -42,7 +42,7 @@ type VoteReserveFormState = Omit<VoteReserveRequest, 'capacity'> & { capacity: s
 
 const ACTIVITY_TYPE_LABEL: Record<string, string> = {
     'REGULAR': '정기 운동',
-    'FLUSH': '번개 운동',
+    'FLASH': '번개 운동',
     'EVENT': '이벤트 운동',
 };
 
@@ -123,7 +123,7 @@ export default function VoteReservationPage() {
                                 <div className="flex items-center gap-2 mb-4">
                                     <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${
                                         item.activityType === 'REGULAR' ? 'bg-blue-50 text-blue-600' :
-                                        item.activityType === 'FLUSH' ? 'bg-yellow-50 text-yellow-600' :
+                                        item.activityType === 'FLASH' ? 'bg-yellow-50 text-yellow-600' :
                                         'bg-green-50 text-green-600'
                                     }`}>
                                         {ACTIVITY_TYPE_LABEL[item.activityType] || item.activityType}
