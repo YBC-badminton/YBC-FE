@@ -726,10 +726,10 @@ function MapAppButton({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={`h-[42px] px-3 sm:px-4 rounded-md flex items-center justify-center gap-1 text-[13px] font-bold transition-all ${
+      className={`h-[42px] px-3 sm:px-4 rounded-md flex items-center justify-center gap-1 text-[15px] font-medium transition-all ${
         primary
           ? "bg-white border border-[#93C54B] text-[#5b6b0f] hover:bg-[#F1F6EC]"
-          : "bg-white border border-gray-200 text-gray-400 hover:text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+          : "bg-white border border-gray-200 text-[#5b6b0f] hover:border-[#93C54B] hover:bg-[#F1F6EC]"
       }`}
     >
       {label}
@@ -778,10 +778,10 @@ function GymLocationSection() {
 
       {/* 상단 헤더 영역 */}
       <div className="text-center space-y-3 mb-12 sm:mb-16">
-        <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
+        <h2 className="text-2xl sm:text-[40px] font-bold text-ink">
           체육관 위치
         </h2>
-        <p className="text-sm sm:text-base font-bold text-gray-400">
+        <p className="text-sm sm:text-[18px] font-normal text-[#494949]">
           매주 화요일, 토요일에 만나요!
         </p>
       </div>
@@ -795,7 +795,7 @@ function GymLocationSection() {
               <button
                 key={g.key}
                 onClick={() => setActiveKey(g.key)}
-                className={`w-[100px] sm:w-[120px] py-2.5 rounded-full text-[15px] font-bold transition-colors ${
+                className={`w-[100px] sm:w-[120px] py-2.5 rounded-full text-[15px] sm:text-[18px] font-semibold transition-colors ${
                   activeKey === g.key
                     ? "bg-[#A3C668] text-white shadow-sm"
                     : "text-gray-400 hover:text-gray-700"
@@ -808,11 +808,11 @@ function GymLocationSection() {
 
           {/* 체육관 상세 정보 */}
           <div className="flex-1 flex flex-col gap-6">
-            <h3 className="text-[22px] sm:text-[26px] font-black text-gray-900 tracking-tight">
+            <h3 className="text-[22px] sm:text-[24px] font-bold text-black">
               {gym.name}
             </h3>
 
-            <div className="flex flex-col gap-3.5 text-[15px] font-bold text-gray-600">
+            <div className="flex flex-col gap-3.5 text-[15px] sm:text-[18px] font-normal text-black">
               <p className="flex items-center gap-2">
                 <PinIcon className="w-5 h-5 text-[#93C54B] shrink-0" />
                 {gym.address}
