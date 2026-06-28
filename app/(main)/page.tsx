@@ -269,42 +269,28 @@ export default function YBCMainPage() {
           </Link>
         </div>
 
-        <div className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-          {/* 3번째 카드 뒤에서 빼꼼 나오는 마스코트 (모바일 숨김) */}
-          <img
-            src="/images/mascot-peek.svg"
-            alt=""
-            className="hidden lg:block pointer-events-none select-none absolute -top-[150px] right-[72px] w-[246px] h-[282px]"
-          />
-          <div className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-            {/* 3번째 카드 뒤에서 빼꼼 나오는 마스코트 (모바일 숨김) */}
-            <img
-              src="/images/mascot-peek.svg"
-              alt=""
-              className="hidden lg:block pointer-events-none select-none absolute -top-[150px] right-[72px] w-[246px] h-[282px]"
-            />
-            {isLoading ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className={`rounded-[28px] p-6 border border-line/60 bg-brand-wash animate-pulse flex flex-col gap-5 ${i === 2 ? "hidden lg:flex" : ""}`}>
-                  <div className="flex gap-2">
-                    <div className="w-12 h-6 bg-line rounded-full" />
-                    <div className="w-16 h-6 bg-line rounded-full" />
-                  </div>
-                  <div className="h-5 w-3/4 bg-line rounded" />
-                  <div className="h-4 w-1/2 bg-line rounded" />
-                  <div className="h-3 w-full bg-line rounded-full mt-4" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          {isLoading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className={`rounded-[28px] p-6 border border-line/60 bg-brand-wash animate-pulse flex flex-col gap-5 ${i === 2 ? "hidden lg:flex" : ""}`}>
+                <div className="flex gap-2">
+                  <div className="w-12 h-6 bg-line rounded-full" />
+                  <div className="w-16 h-6 bg-line rounded-full" />
                 </div>
-              ))
-            ) : recentVotes.length > 0 ? (
-              recentVotes.map((vote, idx) => (
-                <MeetingCard key={vote.voteId ?? idx} vote={vote} active={idx === 0} isLoggedIn={!!user} />
-              ))
-            ) : (
-              <div className="col-span-full bg-brand-wash border border-dashed border-line rounded-[28px] p-12 text-center text-subtle font-semibold">
-                현재 진행 중인 정기모임 투표가 없습니다.
+                <div className="h-5 w-3/4 bg-line rounded" />
+                <div className="h-4 w-1/2 bg-line rounded" />
+                <div className="h-3 w-full bg-line rounded-full mt-4" />
               </div>
-            )}
-          </div>
+            ))
+          ) : recentVotes.length > 0 ? (
+            recentVotes.map((vote, idx) => (
+              <MeetingCard key={vote.voteId ?? idx} vote={vote} active={idx === 0} />
+            ))
+          ) : (
+            <div className="col-span-full bg-brand-wash border border-dashed border-line rounded-[28px] p-12 text-center text-subtle font-semibold">
+              현재 진행 중인 정기모임 투표가 없습니다.
+            </div>
+          )}
         </div>
       </section>
 
@@ -449,7 +435,7 @@ function InfoBlob({
 }
 
 /* ── 정기모임 카드 ──────────────────────────────────────── */
-function MeetingCard({ vote, active, isLoggedIn }: { vote: VoteData; active: boolean; isLoggedIn: boolean }) {
+function MeetingCard({ vote, active }: { vote: VoteData; active: boolean }) {
   const title = vote.name || vote.title || "정기 운동";
   const currentCount = vote.currentParticipantCount ?? vote.attendance?.currentAttendees ?? 0;
   const maxCount = vote.capacity ?? vote.attendance?.totalParticipants ?? 20;
@@ -465,14 +451,6 @@ function MeetingCard({ vote, active, isLoggedIn }: { vote: VoteData; active: boo
           : "bg-brand-wash border border-line/70 hover:shadow-[var(--shadow-card)]"
       }`}
     >
-      {active && (
-        <img
-          src="/images/shuttlecock.svg"
-          alt=""
-          style={{ transform: "rotate(103.35deg)" }}
-          className="absolute -top-12 -right-6 w-[75.713px] h-[73.41px] pointer-events-none drop-shadow-sm"
-        />
-      )}
       {active && (
         <img
           src="/images/shuttlecock.svg"
@@ -514,14 +492,14 @@ function MeetingCard({ vote, active, isLoggedIn }: { vote: VoteData; active: boo
         <div className="flex items-center justify-between mb-1.5">
           <span className="flex items-center gap-1.5 text-sm font-semibold text-muted">
             <PeopleIcon className="w-4 h-4 text-brand-dark" />
-            {isLoggedIn ? `${currentCount} / ${maxCount}명` : "?? / ??명"}
+            {currentCount} / {maxCount}명
           </span>
-          <span className="text-sm font-bold text-brand-dark">{isLoggedIn ? `${ratio}%` : "??%"}</span>
+          <span className="text-sm font-bold text-brand-dark">{ratio}%</span>
         </div>
         <div className="w-full h-2.5 bg-line/70 rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-1000 ease-out ${full ? "bg-brand-dark" : "bg-brand"}`}
-            style={{ width: `${isLoggedIn ? ratio : 0}%` }}
+            style={{ width: `${ratio}%` }}
           />
         </div>
       </div>
