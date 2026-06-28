@@ -114,10 +114,16 @@ export default function ActivityVotePage() {
     const [showAttending, setShowAttending] = useState(false);
     const [showAbsent, setShowAbsent] = useState(false);
 
-    // 투표 진행 중 여부
-    const isVoteActive = activity
-        ? new Date() >= new Date(activity.voteStartAt) && new Date() <= new Date(activity.voteEndAt)
-        : false;
+    // 투표 상태: 시작 전(BEFORE) / 진행 중(ONGOING) / 마감(ENDED)
+    const voteStatus: 'BEFORE' | 'ONGOING' | 'ENDED' = (() => {
+        if (!activity) return 'ENDED';
+        const now = new Date();
+        if (now < new Date(activity.voteStartAt)) return 'BEFORE';
+        if (now > new Date(activity.voteEndAt)) return 'ENDED';
+        return 'ONGOING';
+    })();
+    // 실제 투표(참석/불참·게스트)는 진행 중일 때만 가능
+    const isVoteActive = voteStatus === 'ONGOING';
 
     // 진행률 계산
     const attendanceRate = activity && activity.capacity > 0
@@ -340,13 +346,18 @@ export default function ActivityVotePage() {
                 <CalendarIcon className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
                 <span className="break-keep leading-relaxed">투표 기간: {formatDateTime(activity.voteStartAt)} ~ {formatDateTime(activity.voteEndAt)}</span>
                 </div>
-                {isVoteActive ? (
+                {voteStatus === 'ONGOING' ? (
                     <div className="flex items-center gap-2 text-[#5b6b0f] font-black text-xs sm:text-sm">
                     <div className="relative flex h-3 w-3 ml-0.5">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-green-600"></span>
                     </div>
                     투표 진행 중!
+                    </div>
+                ) : voteStatus === 'BEFORE' ? (
+                    <div className="flex items-center gap-2 text-amber-500 font-black text-xs sm:text-sm">
+                    <span className="inline-flex h-2.5 w-2.5 rounded-full bg-amber-400 ml-0.5"></span>
+                    아직 투표가 시작되지 않았습니다.
                     </div>
                 ) : (
                     <div className="flex items-center gap-2 text-slate-400 font-bold text-xs sm:text-sm">
