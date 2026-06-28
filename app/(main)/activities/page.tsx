@@ -163,7 +163,7 @@ export default function ActivitiesPage() {
                             <div className="flex justify-between items-end">
                                 <h2 className="text-2xl font-black text-slate-800 tracking-tight">이전 활동</h2>
                                 <span className="bg-gray-100 text-gray-400 px-4 py-1.5 rounded-full text-xs font-black">
-                                    {history ? `올해 ${history.thisYearVotes}회 활동` : `+ ${filteredPast.length} ACTIVITIES`}
+                                    {history ? `이번 기수 ${history.thisYearVotes}회 활동` : `+ ${filteredPast.length} ACTIVITIES`}
                                 </span>
                             </div>
                             <div className="grid grid-cols-1 gap-4 opacity-60 grayscale-[0.3]">
