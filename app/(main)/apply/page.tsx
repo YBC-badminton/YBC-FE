@@ -629,7 +629,7 @@ function FormTextarea({
 }) {
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-bold text-slate-600 pb-2">
+      <label className="block text-sm font-bold text-slate-600">
         {label}
         {required && <span className="text-red-400 ml-1">*</span>}
       </label>
@@ -661,7 +661,7 @@ function FormRadioGroup({
 }) {
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-bold text-slate-600 pb-2">
+      <label className="block text-sm font-bold text-slate-600">
         {label}
         {required && <span className="text-red-400 ml-1">*</span>}
       </label>
@@ -718,7 +718,7 @@ function FormCheckboxGroup({
 }) {
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-bold text-slate-600 pb-2">
+      <label className="block text-sm font-bold text-slate-600">
         {label}
         {required && <span className="text-red-400 ml-1">*</span>}
       </label>
