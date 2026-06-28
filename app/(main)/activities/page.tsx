@@ -150,7 +150,9 @@ export default function ActivitiesPage() {
                             <div className="flex justify-between items-end">
                                 <h2 className="text-2xl font-black text-slate-800 tracking-tight">참여 가능 활동</h2>
                                 <span className="bg-[#F2F8E1] text-[#5b6b0f] px-4 py-1.5 rounded-full text-xs font-black border border-[#E2EBC8]">
-                                    {history ? `${history.joinableVotes}개 참여 가능` : `+ ${filteredAvailable.length} ACTIVITIES`}
+                                    {activeTab === '전체'
+                                        ? `${history?.joinableVotes ?? availableActivities.length}개 참여 가능`
+                                        : `${filteredAvailable.length}개 참여 가능`}
                                 </span>
                             </div>
                             <div className="grid grid-cols-1 gap-4">
