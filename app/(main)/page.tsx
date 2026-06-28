@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Script from "next/script";
 import api from "../../lib/axios";
-import { useAuth } from "../../context/AuthContext";
 
 // Kakao Maps SDK는 전역 window.kakao 객체로 노출됩니다.
 declare global {
@@ -93,7 +92,7 @@ function InstagramIcon({ className = "" }: { className?: string }) {
 export default function YBCMainPage() {
   const [recentVotes, setRecentVotes] = useState<VoteData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const { user, loginKakao, isLoading: isAuthLoading } = useAuth();
+  const [recruiting, setRecruiting] = useState<boolean | null>(null);
 
   useEffect(() => {
     const fetchActiveVotes = async () => {
@@ -111,11 +110,8 @@ export default function YBCMainPage() {
 
         setRecentVotes(data.slice(0, 3));
       } catch (error) {
-        console.warn("진행 중인 투표를 불러오지 못했습니다. 기본 활성 데이터를 노출합니다.", error);
-        setRecentVotes([
-          { voteId: 998, name: "이번 주 화요 정기 운동", activityDate: "2026-06-09", activityTime: "19:00", location: "마곡실내배드민턴장", currentParticipantCount: 15, capacity: 20 },
-          { voteId: 999, name: "이번 주 토요 정기 운동", activityDate: "2026-06-13", activityTime: "13:30", location: "망원나들목체육관", currentParticipantCount: 18, capacity: 20 },
-        ]);
+        console.warn("진행 중인 투표를 불러오지 못했습니다.", error);
+        setRecentVotes([]);
       } finally {
         setIsLoading(false);
       }
@@ -124,9 +120,12 @@ export default function YBCMainPage() {
     fetchActiveVotes();
   }, []);
 
-  const scrollToApply = () => {
-    document.getElementById("apply-section")?.scrollIntoView({ behavior: "smooth" });
-  };
+  // 모집 여부 조회 (recruiting=true 일 때만 '지원하기' 버튼 노출)
+  useEffect(() => {
+    api.get("/recruitments/message")
+      .then((res) => setRecruiting(!!res.data?.recruiting))
+      .catch(() => setRecruiting(false));
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col font-sans select-none bg-white">
@@ -156,11 +155,13 @@ export default function YBCMainPage() {
 
           {/* 3. 액션 버튼 그룹 */}
           <div className="flex flex-row items-center justify-center gap-3 sm:gap-4 w-full max-w-[320px] sm:max-w-[350px] mx-auto">
-            {/* 지원하기 버튼 (초록 바탕) */}
-            <Link href="/apply" className="flex-1 flex items-center justify-center gap-1.5 bg-[#93C54B] text-white py-3 sm:py-3.5 rounded-full font-black text-sm sm:text-base shadow-sm hover:bg-[#81b23c] active:scale-95 transition-all duration-200">
-              지원하기 <span className="ml-5 font-bold">↗</span>
-            </Link>
-            
+            {/* 지원하기 버튼 (초록 바탕) — 모집중일 때만 노출 */}
+            {recruiting === true && (
+              <Link href="/apply" className="flex-1 flex items-center justify-center gap-1.5 bg-[#93C54B] text-white py-3 sm:py-3.5 rounded-full font-black text-sm sm:text-base shadow-sm hover:bg-[#81b23c] active:scale-95 transition-all duration-200">
+                지원하기 <span className="ml-5 font-bold">↗</span>
+              </Link>
+            )}
+
             {/* 정기모임 보기 버튼 (흰 바탕 + 초록 테두리) */}
             <Link href="/activities" className="flex-1 flex items-center justify-center gap-1.5 bg-white border-2 border-[#93C54B] text-[#769e37] py-3 sm:py-3.5 rounded-full font-black text-sm sm:text-base shadow-sm hover:bg-[#f6fbf0] active:scale-95 transition-all duration-200">
               정기모임 보기 <span className="font-bold">↗</span>
@@ -400,36 +401,6 @@ export default function YBCMainPage() {
           </Link>
         </div>
       </section>
-    </div>
-  );
-}
-
-/* ── 소개 블롭 카드 ─────────────────────────────────────── */
-function InfoBlob({
-  label,
-  prefix,
-  value,
-  suffix,
-  tone,
-}: {
-  label: string;
-  prefix?: string;
-  value: string;
-  suffix?: string;
-  tone: "soft" | "neutral";
-}) {
-  return (
-    <div
-      className={`flex-1 max-w-[220px] mx-auto sm:mx-0 rounded-[40px] min-h-[150px] flex flex-col items-center justify-center gap-1.5 px-6 text-center shadow-[var(--shadow-card)] ${
-        tone === "soft" ? "bg-brand-tint" : "bg-[#ededed]"
-      }`}
-    >
-      <p className="text-sm font-semibold text-subtle tracking-tight">{label}</p>
-      <p className="flex items-baseline gap-1">
-        {prefix && <span className="text-lg font-bold text-brand-dark">{prefix}</span>}
-        <span className="text-4xl sm:text-5xl font-black text-brand-dark">{value}</span>
-        {suffix && <span className="text-lg font-bold text-brand-dark">{suffix}</span>}
-      </p>
     </div>
   );
 }
