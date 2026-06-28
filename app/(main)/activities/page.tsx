@@ -243,15 +243,24 @@ function ActivityCard({ data, isPast }: { data: VoteItem; isPast: boolean }) {
 
                 <div className="w-full sm:w-48 sm:text-right space-y-2 sm:space-y-3 pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-50 flex-shrink-0">
                     <div className="text-xs font-black text-slate-400 uppercase tracking-tighter">참여 인원</div>
-                    <div className="text-xl sm:text-2xl font-black text-slate-800">
-                        {data.currentParticipantCount} / <span className="text-slate-300">{data.capacity}</span>
-                    </div>
-                    <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                            className={`h-full transition-all duration-500 ${isPast ? 'bg-slate-400' : 'bg-[#5b6b0f]'}`}
-                            style={{ width: `${percentage}%` }}
-                        />
-                    </div>
+                    {data.type === 'FLASH' ? (
+                        // 번개 모임은 정원이 없어 참가 인원만 표시
+                        <div className="text-xl sm:text-2xl font-black text-slate-800">
+                            {data.currentParticipantCount}<span className="text-base font-bold text-slate-400 ml-1">명 참가</span>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="text-xl sm:text-2xl font-black text-slate-800">
+                                {data.currentParticipantCount} / <span className="text-slate-300">{data.capacity}</span>
+                            </div>
+                            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div
+                                    className={`h-full transition-all duration-500 ${isPast ? 'bg-slate-400' : 'bg-[#5b6b0f]'}`}
+                                    style={{ width: `${percentage}%` }}
+                                />
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
         </div>
