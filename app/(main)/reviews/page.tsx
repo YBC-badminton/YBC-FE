@@ -182,12 +182,18 @@ export default function ReviewPage() {
 function ReviewDetailModal({ review, onClose, isAuthor, onChanged, showToast }: any) {
     const [isEditing, setIsEditing] = useState(false);
     const [editContent, setEditContent] = useState(review.content);
+    const [editRating, setEditRating] = useState<number>(review.rating);
+    const [editUsageMonth, setEditUsageMonth] = useState<string>(String(review.usageMonth ?? ''));
     const [busy, setBusy] = useState(false);
 
     const saveEdit = async () => {
+        const month = Number(editUsageMonth);
+        if (editRating < 1 || editRating > 5) { showToast('별점을 선택해 주세요.', 'error'); return; }
+        if (Number.isNaN(month) || month < 0) { showToast('사용 개월을 올바르게 입력해 주세요.', 'error'); return; }
+        if (!editContent.trim()) { showToast('후기 내용을 입력해 주세요.', 'error'); return; }
         setBusy(true);
         try {
-            await api.patch(`/reviews/${review.reviewId}`, { rating: review.rating, content: editContent, usageMonth: review.usageMonth });
+            await api.patch(`/reviews/${review.reviewId}`, { rating: editRating, usageMonth: month, content: editContent });
             showToast('수정되었습니다.', 'success');
             setIsEditing(false);
             onChanged();
@@ -224,9 +230,45 @@ function ReviewDetailModal({ review, onClose, isAuthor, onChanged, showToast }: 
                     </div>
                 </div>
 
-                <div className="flex text-amber-400 text-2xl mb-8">
-                    {'★'.repeat(review.rating) + '☆'.repeat(5 - review.rating)}
-                </div>
+                {isEditing ? (
+                    <div className="space-y-4 mb-6">
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-black text-slate-500">별점</label>
+                            <div className="flex gap-1.5 text-3xl">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <button
+                                        key={star}
+                                        type="button"
+                                        onClick={() => setEditRating(star)}
+                                        className={`transition-colors ${star <= editRating ? 'text-amber-400' : 'text-slate-200'}`}
+                                    >
+                                        ★
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-black text-slate-500">사용 개월</label>
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="number"
+                                    min={0}
+                                    value={editUsageMonth}
+                                    onChange={(e) => setEditUsageMonth(e.target.value)}
+                                    className="w-28 p-2.5 border border-gray-200 rounded-xl text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-[#5b6b0f]/20"
+                                />
+                                <span className="text-sm font-bold text-slate-500">개월</span>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex items-center gap-3 mb-8">
+                        <div className="flex text-amber-400 text-2xl">
+                            {'★'.repeat(review.rating) + '☆'.repeat(5 - review.rating)}
+                        </div>
+                        <span className="text-sm font-bold text-slate-400">· 사용 {review.usageMonth}개월</span>
+                    </div>
+                )}
 
                 <div className="py-8 border-y border-slate-100 min-h-[250px]">
                     {isEditing ? (
