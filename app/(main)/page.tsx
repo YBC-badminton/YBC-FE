@@ -31,6 +31,7 @@ interface VoteData {
   };
 }
 
+
 /* ── 공용 아이콘 (Figma: tabler / solar 세트) ─────────────── */
 function PinIcon({ className = "" }: { className?: string }) {
   return (
@@ -61,13 +62,30 @@ function ArrowUpRight({ className = "" }: { className?: string }) {
     </svg>
   );
 }
-function ShuttleIcon({ className = "" }: { className?: string }) {
+
+function MailIcon({ className = "" }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 64 64" fill="none" aria-hidden="true">
-      <circle cx="48" cy="48" r="9" fill="#fff" stroke="#5b6b0f" strokeWidth="2.5" />
-      <path d="M44 44 18 18" stroke="#5b6b0f" strokeWidth="2.5" strokeLinecap="round" />
-      <path d="M18 18 8 8M22 16 14 6M16 22 6 14" stroke="#a1c852" strokeWidth="3" strokeLinecap="round" />
-      <path d="M6 6 4 4" stroke="#5b6b0f" strokeWidth="2.5" strokeLinecap="round" />
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect width="20" height="16" x="2" y="4" rx="2" />
+      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+    </svg>
+  );
+}
+
+function PhoneIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+    </svg>
+  );
+}
+
+function InstagramIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
     </svg>
   );
 }
@@ -113,73 +131,131 @@ export default function YBCMainPage() {
   return (
     <div className="min-h-screen flex flex-col font-sans select-none bg-white">
       {/* ── 히어로 ───────────────────────────────────────── */}
-      <section className="relative w-full overflow-hidden -mt-[80px] pt-[120px] pb-16 sm:pb-24 bg-gradient-to-b from-brand-soft via-brand-wash to-white">
-        <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.18]">
-          <img src="/images/symbol.png" alt="" className="absolute top-[6%] left-[-2%] w-[16%] max-w-[220px] -rotate-12 object-contain" />
-          <img src="/images/symbol.png" alt="" className="absolute bottom-[8%] right-[-2%] w-[18%] max-w-[260px] rotate-12 object-contain" />
+      <section className="relative w-full overflow-hidden -mt-[100px] pt-[120px] pb-16 sm:pb-24 min-h-[500px] sm:min-h-[650px] lg:min-h-[800px] bg-gradient-to-b from-brand-soft via-brand-wash to-white">
+        
+        {/* 1. 배경 및 캐릭터 이미지 영역 (z-0) */}
+        <div className="absolute inset-0 z-0 flex items-end justify-center pointer-events-none">
+          <img 
+            src="/images/background.png" 
+            alt="양배추 배드민턴 배경" 
+            // object-bottom을 유지하되, 컨테이너 높이가 넉넉해져서 상단이 잘리지 않습니다.
+            className="w-full h-full object-cover object-bottom"
+          />
         </div>
 
-        <div className="max-w-screen-xl mx-auto px-6 relative z-10 flex flex-col items-center text-center gap-6 sm:gap-8">
-          <div className="flex items-end justify-center gap-1 sm:gap-6">
-            <img src="/images/mascot.png" alt="YBC 마스코트" className="w-16 sm:w-[150px] h-auto object-contain -scale-x-100 animate-fade-in-left" />
-            <h1 className="font-black text-brand-dark text-5xl sm:text-8xl tracking-tight leading-none drop-shadow-sm">
-              양배추
-            </h1>
-            <img src="/images/mascot.png" alt="YBC 마스코트" className="w-16 sm:w-[150px] h-auto object-contain" />
+        {/* 2. 콘텐츠 및 버튼 영역 (z-10으로 이미지 위로 띄움) */}
+        <div className="relative z-10 max-w-5xl mx-auto px-4 flex flex-col items-center text-center mt-10 sm:mt-16">
+          
+          <div className="mb-8 sm:mb-10">
+            <img 
+              src="/images/text-title.svg" 
+              alt="양배추 양질의 배드민턴 추구" 
+              className="w-[150px] sm:w-[250px] h-auto object-contain drop-shadow-sm" 
+            />
           </div>
 
-          <p className="text-lg sm:text-2xl font-semibold text-brand-ink/90 tracking-tight">
-            양질의 배드민턴 추구
-          </p>
-
-          <div className="flex flex-wrap items-center justify-center gap-3 mt-1">
-            <button
-              onClick={scrollToApply}
-              className="bg-white px-6 py-2.5 rounded-full shadow-[var(--shadow-card)] flex items-center gap-2.5 transition-transform hover:scale-105 active:scale-95"
-            >
-              <span className="relative flex h-3.5 w-3.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75" />
-                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-brand" />
-              </span>
-              <span className="text-base font-bold text-ink tracking-tight">모집중</span>
-            </button>
-
-            {!user && (
-              <button
-                onClick={() => loginKakao()}
-                disabled={isAuthLoading}
-                className="bg-[#FEE500] px-6 py-2.5 rounded-full shadow-[var(--shadow-card)] flex items-center gap-2 transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
-              >
-                <svg className="w-5 h-5 text-[#191919]" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 3C6.48 3 2 6.36 2 10.44c0 2.62 1.74 4.93 4.36 6.24-.14.52-.9 3.37-.93 3.58 0 0-.02.17.09.23.11.07.23.03.23.03.31-.04 3.56-2.33 4.12-2.73.7.1 1.42.15 2.13.15 5.52 0 10-3.36 10-7.5S17.52 3 12 3z" />
-                </svg>
-                <span className="text-base font-bold text-[#191919] tracking-tight">
-                  {isAuthLoading ? "로그인 중..." : "카카오 로그인"}
-                </span>
-              </button>
-            )}
+          {/* 3. 액션 버튼 그룹 */}
+          <div className="flex flex-row items-center justify-center gap-3 sm:gap-4 w-full max-w-[320px] sm:max-w-[350px] mx-auto">
+            {/* 지원하기 버튼 (초록 바탕) */}
+            <Link href="/apply" className="flex-1 flex items-center justify-center gap-1.5 bg-[#93C54B] text-white py-3 sm:py-3.5 rounded-full font-black text-sm sm:text-base shadow-sm hover:bg-[#81b23c] active:scale-95 transition-all duration-200">
+              지원하기 <span className="ml-5 font-bold">↗</span>
+            </Link>
+            
+            {/* 정기모임 보기 버튼 (흰 바탕 + 초록 테두리) */}
+            <Link href="/activities" className="flex-1 flex items-center justify-center gap-1.5 bg-white border-2 border-[#93C54B] text-[#769e37] py-3 sm:py-3.5 rounded-full font-black text-sm sm:text-base shadow-sm hover:bg-[#f6fbf0] active:scale-95 transition-all duration-200">
+              정기모임 보기 <span className="font-bold">↗</span>
+            </Link>
           </div>
+
+        </div>
+
+        {/* 2. 캐릭터 개별 배치 영역 (z-5) */}
+        {/* max-w-screen-xl 기준 컨테이너 안에서 absolute 기준점을 잡아 화면 해상도가 커져도 캐릭터 위치가 유지됩니다. */}
+        <div className="absolute inset-x-0 bottom-0 top-0 z-5 max-w-screen-xl mx-auto w-full pointer-events-none">
+          
+          {/* [왼쪽 캐릭터] 서서 라켓 들고 손 흔드는 양배추 */}
+          <div className="absolute -left-[23%] bottom-[4%] sm:bottom-[1%] w-[200px] sm:w-[200px] md:w-[200px] lg:w-[270px]">
+            <img 
+              src="/images/character-left.svg" 
+              alt="손 흔드는 양배추 캐릭터" 
+              className="w-full h-auto object-contain"
+            />
+          </div>
+
+          {/* [가운데 캐릭터] 코트에 슬라이딩하며 리시브하는 양배추 */}
+          <div className="absolute left-[10%] md:left-[20%] bottom-[2%] sm:bottom-[9%] w-[130px] sm:w-[200px] md:w-[240px] lg:w-[400px]">
+            <img 
+              src="/images/character-center.svg" 
+              alt="슬라이딩하는 양배추 캐릭터" 
+              className="w-full h-auto object-contain"
+            />
+          </div>
+
+          {/* [오른쪽 캐릭터 + 셔틀콕] 점프하며 스매싱 시도하는 양배추 */}
+          <div className="absolute -right-[23%] bottom-[2%] sm:bottom-[2%] w-[150px] sm:w-[230px] md:w-[280px] lg:w-[500px]">
+            <img 
+              src="/images/character-right.svg" 
+              alt="스매싱하는 양배추 캐릭터" 
+              className="w-full h-auto object-contain"
+            />
+          </div>
+
         </div>
       </section>
 
       {/* ── 동아리 소개 ──────────────────────────────────── */}
-      <section className="w-full bg-white py-16 sm:py-24">
-        <div className="max-w-screen-lg mx-auto px-6 flex flex-col items-center text-center gap-5">
-          <h2 className="font-display text-[26px] sm:text-5xl text-brand-dark tracking-wide break-keep">
+      <section className="w-full bg-white pt-6 pb-16 sm:pt-36 sm:pb-24">
+        <div className="max-w-screen-lg mx-auto px-6 flex flex-col items-center text-center gap-6">
+          
+          {/* 타이틀 명 (Figma 전용 폰트 스타일 및 시그니처 컬러 반영) */}
+          <h2 className="text-[26px] sm:text-5xl font-black text-[#5b6b0f] tracking-wide break-keep">
             YBC badminton club
           </h2>
-          <div className="text-base sm:text-lg font-medium text-muted leading-relaxed max-w-2xl space-y-1">
+          
+          {/* 소개 텍스트 본문 */}
+          <div className="text-base sm:text-lg font-medium text-[#666] leading-relaxed max-w-2xl space-y-1.5">
             <p>양질의 배드민턴을 추구하는 사람들이 모인 동아리, 양배추입니다.</p>
             <p>매주 화요일·토요일, 실력보다 열정을 가진 분들과 함께합니다.</p>
             <p>처음이어도 괜찮아요. 함께 즐기며 성장하는 배드민턴을 경험하세요.</p>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch justify-center gap-5 sm:gap-6 mt-8 w-full">
-            <div className="flex-1 max-w-[420px] mx-auto sm:mx-0 bg-brand rounded-[40px] min-h-[150px] flex items-center justify-center text-white/85 font-semibold text-sm sm:text-base shadow-[var(--shadow-card)] px-6 text-center">
-              동아리 실제 활동 사진 삽입
+          {/* 하단 카드 레이아웃 영역 */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-5 sm:gap-6 mt-10 w-full max-w-4xl">
+            
+            {/* 1. 동아리 실제 활동 사진 블롭 카드 (초록 배경) */}
+            <div 
+              className="w-full sm:flex-[1.3] max-w-[380px] sm:max-w-none min-h-[180px] sm:min-h-[220px] bg-[#93C54B] flex items-center justify-center text-white/90 font-bold text-sm sm:text-base px-8 text-center shadow-md overflow-hidden transition-transform hover:scale-[1.02]"
+              style={{ borderRadius: "42% 58% 40% 60% / 45% 45% 55% 55%" }}
+            >
+              {/* 💡 추후 실제 이미지 삽입 시 아래 주석 해제 후 사용하세요 */}
+              {/* <img src="/images/activity.png" alt="동아리 실제 활동 사진" className="w-full h-full object-cover" /> */}
+              <span>동아리 실제 활동 사진 삽입</span>
             </div>
-            <InfoBlob label="정기 활동" prefix="주" value="2회" tone="soft" />
-            <InfoBlob label="부원 수" value="50+" suffix="명" tone="neutral" />
+
+            {/* 2. 정기 활동 블롭 카드 (연두빛 틴트 배경) */}
+            <div 
+              className="w-full sm:flex-1 max-w-[240px] sm:max-w-none min-h-[180px] sm:min-h-[220px] bg-[#E8F5E9] flex flex-col items-center justify-center gap-2 px-6 text-center shadow-sm transition-transform hover:scale-[1.02]"
+              style={{ borderRadius: "55% 45% 42% 58% / 48% 52% 48% 52%" }}
+            >
+              <p className="text-sm font-bold text-[#769e37] tracking-tight">정기 활동</p>
+              <p className="flex items-baseline gap-1">
+                <span className="text-xl font-bold text-[#5b6b0f] mr-1">주</span>
+                <span className="text-4xl sm:text-5xl font-black text-[#5b6b0f]">2회</span>
+              </p>
+            </div>
+
+            {/* 3. 부원 수 블롭 카드 (연한 그레이시 그린 배경) */}
+            <div 
+              className="w-full sm:flex-1 max-w-[240px] sm:max-w-none min-h-[180px] sm:min-h-[220px] bg-[#EDF1EC] flex flex-col items-center justify-center gap-2 px-6 text-center shadow-sm transition-transform hover:scale-[1.02]"
+              style={{ borderRadius: "45% 55% 52% 48% / 55% 45% 55% 45%" }}
+            >
+              <p className="text-sm font-bold text-slate-500 tracking-tight">부원 수</p>
+              <p className="flex items-baseline gap-1">
+                <span className="text-4xl sm:text-5xl font-black text-[#5b6b0f]">50+</span>
+                <span className="text-xl font-bold text-[#5b6b0f] ml-1">명</span>
+              </p>
+            </div>
+
           </div>
         </div>
       </section>
@@ -193,7 +269,13 @@ export default function YBCMainPage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+        <div className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          {/* 3번째 카드 뒤에서 빼꼼 나오는 마스코트 (모바일 숨김) */}
+          <img
+            src="/images/mascot-peek.svg"
+            alt=""
+            className="hidden lg:block pointer-events-none select-none absolute -top-[150px] right-[72px] w-[246px] h-[282px]"
+          />
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className={`rounded-[28px] p-6 border border-line/60 bg-brand-wash animate-pulse flex flex-col gap-5 ${i === 2 ? "hidden lg:flex" : ""}`}>
@@ -221,21 +303,104 @@ export default function YBCMainPage() {
       {/* ── 체육관 위치 ──────────────────────────────────── */}
       <GymLocationSection />
 
-      {/* ── 지원하기 ─────────────────────────────────────── */}
+      {/* ── 지원하기 및 푸터 ─────────────────────────────────────── */}
       <section
         id="apply-section"
-        className="relative w-full mt-10 overflow-hidden bg-gradient-to-b from-brand-wash to-brand-soft"
+        className="relative w-full mt-10 pt-20 sm:pt-28 pb-6 overflow-hidden bg-[#EDF3E3]"
       >
-        <img src="/images/symbol.png" alt="" className="absolute -bottom-6 right-4 w-24 sm:w-36 opacity-20 rotate-12 pointer-events-none" />
-        <div className="max-w-screen-lg mx-auto px-6 py-20 sm:py-28 flex flex-col items-center text-center gap-6 relative z-10">
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-brand-dark tracking-tight">지원하기</h2>
-          <p className="text-base sm:text-lg font-medium text-muted max-w-xl leading-relaxed">
-            YBC 배드민턴 클럽은 실력보다 열정을 가진{" "}
-            <br className="hidden sm:block" />
+
+        <div className="absolute top-0 left-0 w-full overflow-hidden leading-[0] z-10 pointer-events-none">
+          <svg 
+            viewBox="0 0 1200 120" 
+            preserveAspectRatio="none"
+            className="relative block w-full h-[40px] sm:h-[60px] md:h-[80px]"
+          >
+            <path 
+              d="M0,0V56.28C108.54,95.78,241.6,104.75,372,93c121.2-10.92,233.15-46.61,353.4-60.8C857,16.8,989.46,25,1200,60V0Z" 
+              fill="#ffffff"
+            ></path>
+          </svg>
+        </div>
+
+        {/* 1. 뒷배경 코트 이미지 */}
+        <div className="absolute inset-0 z-0 pointer-events-none flex justify-end">
+          <img 
+            src="/images/court-bg.svg" 
+            alt="배드민턴 코트 배경" 
+            className="w-[60%] object-cover object-right-top opacity-90" 
+          />
+        </div>
+
+        {/* 2. 지원하기 좌측 텍스트 콘텐츠 */}
+        <div className="relative z-10 max-w-screen-xl mx-auto px-8 sm:px-16 flex flex-col justify-start min-h-[300px]">
+          <h2 className="text-2xl sm:text-[34px] font-black text-gray-900 tracking-tight mb-5">
+            지원하기
+          </h2>
+          <p className="text-[14px] sm:text-[15px] font-bold text-gray-600 leading-relaxed mb-8">
+            YBC 배드민턴 클럽은 실력보다 열정을 가진 <br />
             새로운 가족을 언제나 기다리고 있습니다.
           </p>
-          <Link href="/apply">
-            <button className="bg-brand text-white text-base font-bold px-12 py-3.5 rounded-full shadow-[var(--shadow-card)] hover:bg-brand-hover hover:-translate-y-0.5 transition-all duration-300">
+          <Link href="/apply" className="w-fit">
+            <button className="flex items-center justify-center gap-2 bg-[#A3C668] text-white text-[15px] font-bold px-8 py-3 rounded-full shadow-sm hover:bg-[#93C54B] active:scale-95 transition-all duration-200">
+              지원하기 <ArrowUpRight className="w-4 h-4" />
+            </button>
+          </Link>
+        </div>
+
+        {/* 3. 하단 반투명 푸터 박스 */}
+        <div className="relative z-20 w-full max-w-screen-4xl mx-auto px-4 sm:px-6 mt-16">
+          <div className="bg-[#F8FAF3]/85 backdrop-blur-md rounded-[28px] sm:rounded-[36px] p-8 sm:p-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-10 shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-white/50">
+            
+            {/* 좌측 정보 영역 */}
+            <div className="flex flex-col gap-6">
+              {/* 💡 YBC 로고 이미지 경로 */}
+              <img src="/images/logo.png" alt="YBC Logo" className="h-6 sm:h-7 object-contain self-start" />
+              
+              <div className="flex flex-col gap-2.5 text-[13px] sm:text-sm font-bold text-gray-500">
+                <p className="flex items-center gap-2.5">
+                  <MailIcon className="w-4.5 h-4.5 text-gray-400" />
+                  contact@ybc-badminton.com
+                </p>
+                <p className="flex items-center gap-2.5">
+                  <PhoneIcon className="w-4.5 h-4.5 text-gray-400" />
+                  000-0000-0000
+                </p>
+              </div>
+            </div>
+
+            {/* 우측 약관 및 저작권 영역 */}
+            <div className="flex flex-col items-start md:items-end gap-6 text-[13px] font-bold text-gray-400">
+              {/* 인스타그램 버튼 */}
+              <a href="#" className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] flex items-center justify-center text-white hover:opacity-85 transition-opacity shadow-sm">
+                <InstagramIcon className="w-4.5 h-4.5" />
+              </a>
+              
+              <div className="flex flex-col items-start md:items-end gap-1.5">
+                <a href="#" className="text-gray-700 hover:text-gray-900 transition-colors font-extrabold">개인정보 처리방침</a>
+                <p>Copyright c 2026 YBC Badminton Club. All Rights Reserved</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 4. 코트를 바라보는 뒷모습 캐릭터 (푸터 위로 겹침) */}
+        <div className="absolute left-[50%] sm:left-[45%] bottom-[160px] sm:bottom-[180px] w-[160px] sm:w-[350px] z-30 pointer-events-none transform -translate-x-1/2 drop-shadow-lg">
+          <img 
+            src="/images/character-back.svg" 
+            alt="코트를 바라보는 캐릭터" 
+            className="w-full h-auto object-contain"
+          />
+        </div>
+
+        {/* 5. 우측 하단 플로팅 지원하기 버튼 (FAB) */}
+        <div className="absolute bottom-8 right-8 z-40 hidden md:block">
+          <Link href="/apply" className="relative group flex flex-col items-center">
+            {/* 셔틀콕 데코레이션 */}
+            <div className="absolute -top-6 right-2 w-10 h-10 pointer-events-none drop-shadow-sm group-hover:-translate-y-1.5 transition-transform duration-300">
+              
+            </div>
+            {/* 동그란 버튼 본체 */}
+            <button className="bg-[#93C54B] text-white text-[13px] font-black w-[68px] h-[68px] rounded-full shadow-lg border-[3px] border-white flex items-center justify-center hover:bg-[#81b23c] active:scale-95 transition-all">
               지원하기
             </button>
           </Link>
@@ -292,7 +457,14 @@ function MeetingCard({ vote, active }: { vote: VoteData; active: boolean }) {
           : "bg-brand-wash border border-line/70 hover:shadow-[var(--shadow-card)]"
       }`}
     >
-      {active && <ShuttleIcon className="absolute -top-4 -right-3 w-12 h-12 rotate-12" />}
+      {active && (
+        <img
+          src="/images/shuttlecock.svg"
+          alt=""
+          style={{ transform: "rotate(103.35deg)" }}
+          className="absolute -top-12 -right-6 w-[75.713px] h-[73.41px] pointer-events-none drop-shadow-sm"
+        />
+      )}
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -425,13 +597,19 @@ function GymMap({ gym, sdkReady }: { gym: Gym; sdkReady: boolean }) {
 
   if (!KAKAO_MAP_API_KEY) {
     return (
-      <div className="w-full h-full min-h-[300px] rounded-[28px] bg-brand-soft flex items-center justify-center text-subtle text-sm font-medium px-6 text-center">
+      <div className="w-full h-full bg-[#F0F7FA] flex items-center justify-center text-gray-400 text-sm font-bold px-6 text-center">
         NEXT_PUBLIC_KAKAO_MAP_API_KEY 설정 후 지도가 표시됩니다.
       </div>
     );
   }
 
-  return <div ref={mapRef} title={`${gym.name} 지도`} className="w-full h-full min-h-[300px] rounded-[28px] overflow-hidden" />;
+  return (
+    <div 
+      ref={mapRef} 
+      title={`${gym.name} 지도`} 
+      className="w-full h-full"
+    />
+  );
 }
 
 function MapAppButton({ label, href, primary }: { label: string; href: string; primary?: boolean }) {
@@ -440,14 +618,14 @@ function MapAppButton({ label, href, primary }: { label: string; href: string; p
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={`h-12 rounded-lg flex items-center justify-center gap-1.5 text-[15px] font-medium transition-colors ${
+      className={`h-[42px] px-3 sm:px-4 rounded-md flex items-center justify-center gap-1 text-[13px] font-bold transition-all ${
         primary
-          ? "bg-white border border-brand-dark text-brand-dark hover:bg-brand-soft"
-          : "bg-white border border-line text-subtle hover:bg-brand-soft"
+          ? "bg-white border border-[#93C54B] text-[#5b6b0f] hover:bg-[#F1F6EC]"
+          : "bg-white border border-gray-200 text-gray-400 hover:text-gray-600 hover:border-gray-300 hover:bg-gray-50"
       }`}
     >
       {label}
-      <ArrowUpRight className="w-4 h-4" />
+      <ArrowUpRight className="w-3.5 h-3.5" />
     </a>
   );
 }
@@ -483,21 +661,27 @@ function GymLocationSection() {
         />
       )}
 
-      <div className="text-center space-y-2 mb-8 sm:mb-12">
-        <h2 className="text-2xl sm:text-4xl font-extrabold text-ink tracking-tight">체육관 위치</h2>
-        <p className="text-base sm:text-lg font-medium text-subtle">매주 화요일, 토요일에 만나요!</p>
+      {/* 상단 헤더 영역 */}
+      <div className="text-center space-y-3 mb-12 sm:mb-16">
+        <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">체육관 위치</h2>
+        <p className="text-sm sm:text-base font-bold text-gray-400">매주 화요일, 토요일에 만나요!</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-stretch">
-        {/* 좌측: 탭 + 정보 (Pretendard) */}
-        <div className="flex flex-col font-body">
-          <div className="self-start bg-white rounded-full shadow-[var(--shadow-card)] p-2.5 flex gap-2.5 mb-10">
+      <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-center justify-between">
+        
+        {/* 좌측: 탭 메뉴 및 상세 정보 */}
+        <div className="w-full lg:w-[45%] flex flex-col font-body">
+          
+          {/* 탭 메뉴 (소프트 쉐도우 및 둥근 형태 반영) */}
+          <div className="self-start bg-white rounded-full shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-1.5 flex gap-1 mb-10">
             {GYMS.map((g) => (
               <button
                 key={g.key}
                 onClick={() => setActiveKey(g.key)}
-                className={`w-[120px] sm:w-[140px] py-3 rounded-full text-base font-semibold transition-colors ${
-                  activeKey === g.key ? "bg-brand text-white" : "text-[#666] hover:text-brand-dark"
+                className={`w-[100px] sm:w-[120px] py-2.5 rounded-full text-[15px] font-bold transition-colors ${
+                  activeKey === g.key 
+                    ? "bg-[#A3C668] text-white shadow-sm" 
+                    : "text-gray-400 hover:text-gray-700"
                 }`}
               >
                 {g.tab}
@@ -505,27 +689,27 @@ function GymLocationSection() {
             ))}
           </div>
 
-          <div className="flex-1 flex flex-col justify-center gap-7">
-            <div className="flex flex-col gap-5">
-              <h3 className="text-xl sm:text-2xl font-bold text-black">{gym.name}</h3>
-              <div className="flex flex-col gap-3 text-base text-black/90">
-                <p className="flex items-center gap-1.5">
-                  <PinIcon className="w-5 h-5 text-brand-dark shrink-0" />
-                  {gym.address}
-                </p>
-                <p className="flex items-center gap-1.5">
-                  <PinIcon className="w-5 h-5 text-brand-dark shrink-0" />
-                  {gym.parking}
-                </p>
-                <p className="flex items-center gap-1.5">
-                  <CalendarIcon className="w-5 h-5 text-brand-dark shrink-0" />
-                  {gym.scheduleLabel} · {gym.scheduleTime.join(" / ")}
-                </p>
-              </div>
+          {/* 체육관 상세 정보 */}
+          <div className="flex-1 flex flex-col gap-6">
+            <h3 className="text-[22px] sm:text-[26px] font-black text-gray-900 tracking-tight">
+              {gym.name}
+            </h3>
+            
+            <div className="flex flex-col gap-3.5 text-[15px] font-bold text-gray-600">
+              <p className="flex items-center gap-2">
+                <PinIcon className="w-5 h-5 text-[#93C54B] shrink-0" />
+                {gym.address}
+              </p>
+              <p className="flex items-center gap-2">
+                <PinIcon className="w-5 h-5 text-[#93C54B] shrink-0" />
+                {gym.parking}
+              </p>
             </div>
 
-            <div className="h-px w-full bg-line" />
+            {/* 구분선 */}
+            <div className="h-px w-full bg-gray-100 my-2" />
 
+            {/* 지도 앱 바로가기 버튼 그룹 */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               {mapApps.map((m) => (
                 <MapAppButton key={m.label} {...m} />
@@ -534,10 +718,28 @@ function GymLocationSection() {
           </div>
         </div>
 
-        {/* 우측: 지도 */}
-        <div className="min-h-[300px] lg:min-h-[420px]">
-          <GymMap gym={gym} sdkReady={sdkReady} />
+        {/* 우측: 유기적인 조약돌 형태의 카카오 맵 & 데코레이션 캐릭터 */}
+        <div className="w-full lg:w-[50%] relative mt-8 lg:mt-0">
+          
+          {/* 지도 컨테이너 (Blob 테두리 곡선 적용) */}
+          <div 
+            className="w-full h-[320px] sm:h-[400px] relative overflow-hidden shadow-sm"
+            style={{ borderRadius: "50% 45% 55% 45% / 55% 45% 55% 45%" }}
+          >
+            <GymMap gym={gym} sdkReady={sdkReady} />
+          </div>
+
+          {/* 💡 피그마 시안 우측 하단 라켓 든 양배추 캐릭터 주입 */}
+          <div className="absolute -bottom-6 -right-4 sm:-right-8 w-32 sm:w-48 z-10 pointer-events-none drop-shadow-md">
+            <img 
+              src="/images/character-map.svg" 
+              alt="양배추 캐릭터" 
+              className="w-full h-auto object-contain" 
+            />
+          </div>
+
         </div>
+
       </div>
     </section>
   );

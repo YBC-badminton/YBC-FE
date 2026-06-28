@@ -12,7 +12,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     <>
       <Header /> 
       <main className="min-h-screen">{children}</main>
-      <FooterSection />
     </>
   );
 }
