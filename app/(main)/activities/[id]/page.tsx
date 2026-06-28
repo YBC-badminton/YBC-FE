@@ -6,13 +6,13 @@ import { useParams } from 'next/navigation';
 import api from '../../../../lib/axios';
 import { useToast } from '../../../../components/ui/Toast';
 import { useAuth } from '../../../../context/AuthContext';
-import { MapPin, Clock, Calendar as CalendarIcon, Users, Pencil, Trash2, X, Check } from 'lucide-react';
+import { MapPin, Clock, Calendar as CalendarIcon, Users, Trash2, X } from 'lucide-react';
 
 // API 응답 타입
 interface VoteDetail {
     voteId: number;
     name: string;
-    type: 'REGULAR' | 'FLUSH' | 'EVENT';
+    type: 'REGULAR' | 'FLASH' | 'EVENT';
     activityDate: string;
     activityTime: string;
     location: string;
@@ -21,6 +21,8 @@ interface VoteDetail {
     voteEndAt: string;
     capacity: number;
     currentParticipantCount: number;
+    openedByMemberId?: number;   // 번개 모임 개설자
+    openedByNickname?: string;
 }
 
 interface AttendanceStatusResponse {
@@ -60,7 +62,7 @@ interface GuestsResponse {
 
 const TYPE_LABEL: Record<string, string> = {
     'REGULAR': '정기모임',
-    'FLUSH': '번개모임',
+    'FLASH': '번개모임',
     'EVENT': '이벤트',
 };
 
@@ -105,20 +107,23 @@ export default function ActivityVotePage() {
     const [guestLevel, setGuestLevel] = useState('');
     const [guestSubmitting, setGuestSubmitting] = useState(false);
 
-    // 게스트 수정 상태
-    const [editingGuestId, setEditingGuestId] = useState<number | null>(null);
-    const [editGuestName, setEditGuestName] = useState('');
-    const [editGuestGender, setEditGuestGender] = useState('');
-    const [editGuestLevel, setEditGuestLevel] = useState('');
-    
+    // 게스트 등록 확인 모달 (등록 후 수정 불가 정책 안내)
+    const [showGuestConfirm, setShowGuestConfirm] = useState(false);
+
     // 명단 토글
     const [showAttending, setShowAttending] = useState(false);
     const [showAbsent, setShowAbsent] = useState(false);
 
-    // 투표 진행 중 여부
-    const isVoteActive = activity
-        ? new Date() >= new Date(activity.voteStartAt) && new Date() <= new Date(activity.voteEndAt)
-        : false;
+    // 투표 상태: 시작 전(BEFORE) / 진행 중(ONGOING) / 마감(ENDED)
+    const voteStatus: 'BEFORE' | 'ONGOING' | 'ENDED' = (() => {
+        if (!activity) return 'ENDED';
+        const now = new Date();
+        if (now < new Date(activity.voteStartAt)) return 'BEFORE';
+        if (now > new Date(activity.voteEndAt)) return 'ENDED';
+        return 'ONGOING';
+    })();
+    // 실제 투표(참석/불참·게스트)는 진행 중일 때만 가능
+    const isVoteActive = voteStatus === 'ONGOING';
 
     // 진행률 계산
     const attendanceRate = activity && activity.capacity > 0
@@ -252,42 +257,17 @@ export default function ActivityVotePage() {
             showToast(message, 'error');
         } finally {
             setGuestSubmitting(false);
+            setShowGuestConfirm(false);
         }
     };
 
-    const startEditGuest = (g: GuestItem) => {
-        setEditingGuestId(g.guestId);
-        setEditGuestName(g.guestName);
-        setEditGuestGender(g.gender);
-        setEditGuestLevel(g.level);
-    };
-
-    const cancelEditGuest = () => {
-        setEditingGuestId(null);
-        setEditGuestName('');
-        setEditGuestGender('');
-        setEditGuestLevel('');
-    };
-
-    const saveEditGuest = async (guestId: number) => {
-        if (!editGuestName.trim() || !editGuestGender || !editGuestLevel) {
+    // 등록 버튼 → 유효성 검사 후 확인 모달 열기 (등록 후 수정 불가 정책 안내)
+    const openGuestConfirm = () => {
+        if (!guestName.trim() || !guestGender || !guestLevel) {
             showToast('이름, 성별, 실력을 모두 입력해 주세요.', 'error');
             return;
         }
-        try {
-            await api.patch(`/votes/${voteId}/guests/${guestId}`, {
-                name: editGuestName.trim(),
-                gender: editGuestGender,
-                level: editGuestLevel,
-            });
-            showToast('게스트 정보가 수정되었습니다.', 'success');
-            cancelEditGuest();
-            await fetchGuests();
-        } catch (err: unknown) {
-            const message = (err as { response?: { data?: { message?: string } } })
-                ?.response?.data?.message || '게스트 수정 중 오류가 발생했습니다.';
-            showToast(message, 'error');
-        }
+        setShowGuestConfirm(true);
     };
 
     const deleteGuest = async (guestId: number, name: string) => {
@@ -349,7 +329,9 @@ export default function ActivityVotePage() {
                 <InfoItem icon={<MapPin className="w-5 h-5 text-[#5b6b0f]" />} label="장소" value={activity.location} />
                 <InfoItem icon={<Clock className="w-5 h-5 text-[#5b6b0f]" />} label="시간" value={activity.activityTime} />
                 <InfoItem icon={<CalendarIcon className="w-5 h-5 text-[#5b6b0f]" />} label="활동 날짜" value={formatDate(activity.activityDate)} />
-                <InfoItem icon={<Users className="w-5 h-5 text-[#5b6b0f]" />} label="인원제한" value={`${activity.capacity}명`} />
+                {activity.openedByNickname && (
+                    <InfoItem icon={<Users className="w-5 h-5 text-[#5b6b0f]" />} label="개설자" value={activity.openedByNickname} />
+                )}
             </div>
 
             {activity.memo && (
@@ -364,13 +346,18 @@ export default function ActivityVotePage() {
                 <CalendarIcon className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
                 <span className="break-keep leading-relaxed">투표 기간: {formatDateTime(activity.voteStartAt)} ~ {formatDateTime(activity.voteEndAt)}</span>
                 </div>
-                {isVoteActive ? (
+                {voteStatus === 'ONGOING' ? (
                     <div className="flex items-center gap-2 text-[#5b6b0f] font-black text-xs sm:text-sm">
                     <div className="relative flex h-3 w-3 ml-0.5">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-green-600"></span>
                     </div>
                     투표 진행 중!
+                    </div>
+                ) : voteStatus === 'BEFORE' ? (
+                    <div className="flex items-center gap-2 text-amber-500 font-black text-xs sm:text-sm">
+                    <span className="inline-flex h-2.5 w-2.5 rounded-full bg-amber-400 ml-0.5"></span>
+                    아직 투표가 시작되지 않았습니다.
                     </div>
                 ) : (
                     <div className="flex items-center gap-2 text-slate-400 font-bold text-xs sm:text-sm">
@@ -482,7 +469,7 @@ export default function ActivityVotePage() {
                     onClick={() => submitAttendance(false)}
                     disabled={submitting || myAttendance === false}
                     aria-pressed={myAttendance === false}
-                    className={`py-4 sm:py-5 font-black rounded-2xl transition-all shadow-sm active:scale-[0.98] disabled:cursor-not-allowed ${
+                    className={`py-3 sm:py-3.5 font-black rounded-2xl transition-all shadow-sm active:scale-[0.98] disabled:cursor-not-allowed ${
                         myAttendance === false
                             ? 'bg-slate-800 text-white ring-2 ring-slate-800 opacity-100'
                             : 'bg-white border border-gray-200 text-slate-800 hover:bg-slate-50 disabled:opacity-50'
@@ -494,7 +481,7 @@ export default function ActivityVotePage() {
                     onClick={() => submitAttendance(true)}
                     disabled={submitting || myAttendance === true}
                     aria-pressed={myAttendance === true}
-                    className={`py-4 sm:py-5 font-black rounded-2xl transition-all shadow-md active:scale-[0.98] disabled:cursor-not-allowed ${
+                    className={`py-3 sm:py-3.5 font-black rounded-2xl transition-all shadow-md active:scale-[0.98] disabled:cursor-not-allowed ${
                         myAttendance === true
                             ? 'bg-[#46530c] text-white ring-2 ring-[#46530c] opacity-100'
                             : 'bg-[#5b6b0f] text-white hover:bg-[#46530c] disabled:opacity-50'
@@ -520,45 +507,6 @@ export default function ActivityVotePage() {
                 <ul className="space-y-3">
                     {guests.map((g) => {
                         const canManage = !!user && user.name === g.inviterName;
-                        const isEditing = editingGuestId === g.guestId;
-
-                        if (isEditing) {
-                            return (
-                                <li key={g.guestId} className="bg-slate-50 rounded-2xl border border-gray-100 px-4 sm:px-5 py-3 sm:py-4 space-y-3">
-                                    <input
-                                        type="text"
-                                        value={editGuestName}
-                                        onChange={(e) => setEditGuestName(e.target.value)}
-                                        placeholder="게스트 이름"
-                                        className="w-full p-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                                    />
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <select value={editGuestGender} onChange={(e) => setEditGuestGender(e.target.value)} className="p-2.5 border border-gray-200 rounded-xl text-sm font-bold bg-white focus:outline-none cursor-pointer">
-                                            <option value="">성별</option>
-                                            <option value="MALE">남</option>
-                                            <option value="FEMALE">여</option>
-                                        </select>
-                                        <select value={editGuestLevel} onChange={(e) => setEditGuestLevel(e.target.value)} className="p-2.5 border border-gray-200 rounded-xl text-sm font-bold bg-white focus:outline-none cursor-pointer">
-                                            <option value="">실력</option>
-                                            <option value="왕초심">왕초심</option>
-                                            <option value="초심">초심</option>
-                                            <option value="D">D</option>
-                                            <option value="C">C</option>
-                                            <option value="B">B</option>
-                                            <option value="A">A</option>
-                                        </select>
-                                    </div>
-                                    <div className="flex justify-end gap-2">
-                                        <button onClick={cancelEditGuest} className="flex items-center gap-1 px-3 py-1.5 text-xs font-black text-slate-500 bg-white border border-gray-200 rounded-full hover:bg-gray-100">
-                                            <X className="w-3.5 h-3.5" /> 취소
-                                        </button>
-                                        <button onClick={() => saveEditGuest(g.guestId)} className="flex items-center gap-1 px-3 py-1.5 text-xs font-black text-white bg-[#5b6b0f] rounded-full hover:bg-[#46530c]">
-                                            <Check className="w-3.5 h-3.5" /> 저장
-                                        </button>
-                                    </div>
-                                </li>
-                            );
-                        }
 
                         return (
                             <li key={g.guestId} className="flex justify-between items-center bg-slate-50 rounded-2xl border border-gray-100 px-4 sm:px-5 py-3 sm:py-4">
@@ -580,14 +528,9 @@ export default function ActivityVotePage() {
                                         {g.level}
                                     </span>
                                     {canManage && (
-                                        <>
-                                            <button onClick={() => startEditGuest(g)} className="text-slate-400 hover:text-[#5b6b0f] p-1" aria-label="게스트 수정">
-                                                <Pencil className="w-4 h-4" />
-                                            </button>
-                                            <button onClick={() => deleteGuest(g.guestId, g.guestName)} className="text-slate-400 hover:text-red-500 p-1" aria-label="게스트 취소">
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </>
+                                        <button onClick={() => deleteGuest(g.guestId, g.guestName)} className="text-slate-400 hover:text-red-500 p-1" aria-label="게스트 취소">
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
                                     )}
                                 </div>
                             </li>
@@ -605,14 +548,14 @@ export default function ActivityVotePage() {
                     <input
                     type="text"
                     placeholder="게스트 이름"
-                    className="w-full p-3.5 sm:p-4 border border-gray-200 rounded-xl text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                    className="w-full px-3.5 py-3 sm:px-4 sm:py-3.5 border border-gray-200 rounded-xl text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500/20"
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
                     disabled={guestSubmitting}
                     />
                     <div className="grid grid-cols-2 gap-3 sm:gap-4">
                     <select
-                        className="p-3.5 sm:p-4 border border-gray-200 rounded-xl text-sm sm:text-base text-slate-700 font-bold bg-white focus:outline-none cursor-pointer disabled:opacity-50"
+                        className="px-3.5 py-3 sm:px-4 sm:py-3.5 border border-gray-200 rounded-xl text-sm sm:text-base text-slate-700 font-bold bg-white focus:outline-none cursor-pointer disabled:opacity-50"
                         value={guestGender}
                         onChange={(e) => setGuestGender(e.target.value)}
                         disabled={guestSubmitting}
@@ -622,7 +565,7 @@ export default function ActivityVotePage() {
                         <option value="FEMALE">여</option>
                     </select>
                     <select
-                        className="p-3.5 sm:p-4 border border-gray-200 rounded-xl text-sm sm:text-base text-slate-700 font-bold bg-white focus:outline-none cursor-pointer disabled:opacity-50"
+                        className="px-3.5 py-3 sm:px-4 sm:py-3.5 border border-gray-200 rounded-xl text-sm sm:text-base text-slate-700 font-bold bg-white focus:outline-none cursor-pointer disabled:opacity-50"
                         value={guestLevel}
                         onChange={(e) => setGuestLevel(e.target.value)}
                         disabled={guestSubmitting}
@@ -637,14 +580,61 @@ export default function ActivityVotePage() {
                     </select>
                     </div>
                     <button
-                        onClick={submitGuest}
+                        onClick={openGuestConfirm}
                         disabled={guestSubmitting}
-                        className="w-full py-4 sm:py-5 bg-[#5b6b0f] text-white font-black rounded-2xl shadow-md hover:bg-[#46530c] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                        className="w-full py-3 sm:py-3.5 bg-[#5b6b0f] text-white font-black rounded-2xl shadow-md hover:bg-[#46530c] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                     >
                     {guestSubmitting ? '등록 중...' : '등록'}
                     </button>
                 </div>
                 </section>
+            )}
+
+            {/* 게스트 등록 확인 모달 (등록 후 수정 불가 안내) */}
+            {showGuestConfirm && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div
+                  className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                  onClick={() => !guestSubmitting && setShowGuestConfirm(false)}
+                />
+                <div className="relative bg-white w-full max-w-sm rounded-[24px] shadow-2xl p-6 sm:p-7 space-y-5 animate-in zoom-in duration-150">
+                  <button
+                    onClick={() => setShowGuestConfirm(false)}
+                    disabled={guestSubmitting}
+                    aria-label="닫기"
+                    className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 disabled:opacity-40"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                  <h3 className="text-lg font-black text-slate-800">게스트 등록 확인</h3>
+                  <p className="text-sm font-bold text-slate-500 leading-relaxed break-keep">
+                    게스트 등록 시 정보 수정이 불가능하며, 정보 수정을 원할 경우 삭제 후 다시 등록해야 합니다.
+                  </p>
+                  <div className="flex items-center justify-center gap-2 bg-slate-50 border border-gray-100 rounded-2xl py-3 px-4">
+                    <span className="font-black text-slate-800 break-keep">{guestName.trim()}</span>
+                    <span className="text-slate-300">·</span>
+                    <span className="text-sm font-bold text-slate-600">{GENDER_LABEL[guestGender] || guestGender}</span>
+                    <span className="text-slate-300">·</span>
+                    <span className="text-sm font-bold text-slate-600">{guestLevel}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => setShowGuestConfirm(false)}
+                      disabled={guestSubmitting}
+                      className="py-3 font-black rounded-2xl bg-white border border-gray-200 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                    >
+                      취소
+                    </button>
+                    <button
+                      onClick={submitGuest}
+                      disabled={guestSubmitting}
+                      className="py-3 font-black rounded-2xl bg-[#5b6b0f] text-white hover:bg-[#46530c] disabled:opacity-50"
+                    >
+                      {guestSubmitting ? '등록 중...' : '등록'}
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
 
         </div>

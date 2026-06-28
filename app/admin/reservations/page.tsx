@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Calendar, MapPin } from 'lucide-react';
+import { Calendar, MapPin, Clock, Vote } from 'lucide-react';
 import api from '@/lib/axios';
 import { useAxios } from '@/hooks/useAxios';
 import { useToast } from '@/components/ui/Toast';
@@ -9,7 +9,7 @@ import { useToast } from '@/components/ui/Toast';
 // API 응답 타입 (spec 기준)
 interface VoteQueueItem {
     voteId: number;
-    activityType: 'REGULAR' | 'FLUSH' | 'EVENT';
+    activityType: 'REGULAR' | 'FLASH' | 'EVENT';
     title: string;
     activityDate: string;
     activityTime: string;
@@ -26,7 +26,7 @@ interface VoteQueueResponse {
 
 // 투표 예약 요청 타입 (spec 기준)
 interface VoteReserveRequest {
-    activityType: 'REGULAR' | 'FLUSH' | 'EVENT';
+    activityType: 'REGULAR' | 'FLASH' | 'EVENT';
     title: string;
     activityDate: string;
     activityTime: string;
@@ -42,7 +42,7 @@ type VoteReserveFormState = Omit<VoteReserveRequest, 'capacity'> & { capacity: s
 
 const ACTIVITY_TYPE_LABEL: Record<string, string> = {
     'REGULAR': '정기 운동',
-    'FLUSH': '번개 운동',
+    'FLASH': '번개 운동',
     'EVENT': '이벤트 운동',
 };
 
@@ -118,21 +118,25 @@ export default function VoteReservationPage() {
                 {!loading && !error && queue.length > 0 ? (
                     <div className="space-y-4">
                         {queue.map((item) => (
-                            <div key={item.voteId} className="flex justify-between items-center p-4 border rounded-lg hover:bg-gray-50">
-                                <div>
-                                    <span className={`text-xs px-2 py-1 rounded-full font-bold mb-2 inline-block ${
+                            <div key={item.voteId} className="p-5 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
+                                {/* 헤더: 활동 유형 배지 + 제목 */}
+                                <div className="flex items-center gap-2 mb-4">
+                                    <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${
                                         item.activityType === 'REGULAR' ? 'bg-blue-50 text-blue-600' :
-                                        item.activityType === 'FLUSH' ? 'bg-yellow-50 text-yellow-600' :
+                                        item.activityType === 'FLASH' ? 'bg-yellow-50 text-yellow-600' :
                                         'bg-green-50 text-green-600'
                                     }`}>
                                         {ACTIVITY_TYPE_LABEL[item.activityType] || item.activityType}
                                     </span>
-                                    <p className="font-bold text-gray-800">{item.title}</p>
-                                    <p className="text-sm text-gray-500 flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 shrink-0" /> {item.activityDate} <span className="text-gray-300">|</span> <MapPin className="w-3.5 h-3.5 shrink-0" /> {item.location}</p>
+                                    <p className="font-bold text-gray-800 truncate">{item.title}</p>
                                 </div>
-                                <div className="text-right text-xs text-gray-400">
-                                    <p>운동 시간: {item.activityTime}</p>
-                                    <p>투표: {item.voteStartAt?.slice(0, 16)} ~ {item.voteEndAt?.slice(0, 16)}</p>
+
+                                {/* 상세 정보: 반응형 그리드 */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-sm">
+                                    <InfoRow icon={Calendar} label="활동 날짜" value={item.activityDate} />
+                                    <InfoRow icon={Clock} label="운동 시간" value={item.activityTime} />
+                                    <InfoRow icon={MapPin} label="장소" value={item.location} />
+                                    <InfoRow icon={Vote} label="투표 기간" value={`${item.voteStartAt?.slice(0, 16)} ~ ${item.voteEndAt?.slice(0, 16)}`} />
                                 </div>
                             </div>
                         ))}
@@ -141,6 +145,17 @@ export default function VoteReservationPage() {
                     !loading && <p className="text-center text-gray-400 italic">현재 대기 중인 예약이 없습니다.</p>
                 )}
             </div>
+        </div>
+    );
+}
+
+// 대기열 카드 상세 정보 한 줄 (아이콘 + 라벨 + 값)
+function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
+    return (
+        <div className="flex items-start gap-2 text-gray-600">
+            <Icon className="w-4 h-4 shrink-0 mt-0.5 text-gray-400" />
+            <span className="text-gray-400 shrink-0">{label}</span>
+            <span className="font-medium text-gray-700 break-words">{value}</span>
         </div>
     );
 }

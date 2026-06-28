@@ -67,7 +67,6 @@ const STATUS_COLOR: Record<ApplicationStatus, string> = {
 export default function ApplicantsPage() {
     const { showToast } = useToast();
     const [applicants, setApplicants] = useState<ApplicantListItem[]>([]);
-    const [totalCount, setTotalCount] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -83,7 +82,6 @@ export default function ApplicantsPage() {
         try {
             const res = await api.get<ApplicantsResponse>('/admin/applications');
             setApplicants(res.data.applicants);
-            setTotalCount(res.data.totalCount);
         } catch (err: unknown) {
             const message = (err as { response?: { data?: { message?: string } } })
                 ?.response?.data?.message || '지원자 목록을 불러오는 중 오류가 발생했습니다.';
@@ -202,7 +200,7 @@ export default function ApplicantsPage() {
             <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-8">
                 <div className="bg-white p-3 sm:p-6 rounded-xl border border-gray-100 shadow-sm text-center sm:text-left">
                     <p className="text-[10px] sm:text-sm text-gray-400 mb-1">전체</p>
-                    <p className="text-lg sm:text-3xl font-bold text-gray-800">{totalCount}명</p>
+                    <p className="text-lg sm:text-3xl font-bold text-gray-800">{filteredApplicants.length}명</p>
                 </div>
                 <div className="bg-white p-3 sm:p-6 rounded-xl border border-gray-100 shadow-sm text-center sm:text-left">
                     <p className="text-[10px] sm:text-sm text-gray-400 mb-1">1차 합격</p>

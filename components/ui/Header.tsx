@@ -5,13 +5,13 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 
-const NAV_LINKS = [
+const NAV_LINKS: { href: string; label: string; authOnly?: boolean }[] = [
   { href: "/activities", label: "정기 모임" },
   { href: "/reviews", label: "장비 후기" },
   { href: "/past-activities", label: "지난 활동" },
   { href: "/faq", label: "문의하기" },
   { href: "/apply", label: "지원하기" },
-  { href: "/minigame", label: "미니게임" },
+  { href: "/minigame", label: "미니게임", authOnly: true },
 ];
 
 function LoginIcon({ className = "" }: { className?: string }) {
@@ -35,6 +35,9 @@ export default function Header() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+
+  // 비로그인 시 authOnly 메뉴(미니게임) 숨김
+  const visibleLinks = NAV_LINKS.filter((l) => !l.authOnly || !!user);
 
   const handleLogout = async () => {
     await logout();
@@ -81,7 +84,7 @@ export default function Header() {
         {/* [중앙] 데스크톱 메뉴 */}
         <nav className="hidden lg:block">
           <ul className="flex items-center gap-9 text-[15px] font-medium text-ink whitespace-nowrap">
-            {NAV_LINKS.map((item) => (
+            {visibleLinks.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}
@@ -195,8 +198,8 @@ export default function Header() {
             </button>
           </div>
 
-          <nav className="flex flex-col items-center gap-7 pt-16">
-            {NAV_LINKS.map((item) => (
+          <nav className="flex flex-col items-start gap-8 px-9 pt-14">
+            {visibleLinks.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
