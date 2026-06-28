@@ -5,6 +5,7 @@ import Link from "next/link";
 import Script from "next/script";
 import api from "../../lib/axios";
 
+
 // Kakao Maps SDK는 전역 window.kakao 객체로 노출됩니다.
 declare global {
   interface Window {
@@ -208,7 +209,7 @@ export default function YBCMainPage() {
       </section>
 
       {/* ── 동아리 소개 ──────────────────────────────────── */}
-      <section className="w-full bg-white pt-6 pb-16 sm:pt-36 sm:pb-24">
+      <section className="w-full bg-gradient-to-b from-[#fefff4] to-[#ffffff] pt-6 pb-16 sm:pt-36 sm:pb-24">
         <div className="max-w-screen-lg mx-auto px-6 flex flex-col items-center text-center gap-6">
           
           {/* 타이틀 명 (Figma 전용 폰트 스타일 및 시그니처 컬러 반영) */}
@@ -229,7 +230,7 @@ export default function YBCMainPage() {
             {/* 1. 동아리 실제 활동 사진 블롭 카드 (초록 배경) */}
             <div 
               className="w-full sm:flex-[1.3] max-w-[380px] sm:max-w-none min-h-[180px] sm:min-h-[220px] bg-[#93C54B] flex items-center justify-center text-white/90 font-bold text-sm sm:text-base px-8 text-center shadow-md overflow-hidden transition-transform hover:scale-[1.02]"
-              style={{ borderRadius: "42% 58% 40% 60% / 45% 45% 55% 55%" }}
+              style={{ borderRadius: "28% 72% 38% 62% / 45% 36% 64% 55%" }}
             >
               {/* 💡 추후 실제 이미지 삽입 시 아래 주석 해제 후 사용하세요 */}
               {/* <img src="/images/activity.png" alt="동아리 실제 활동 사진" className="w-full h-full object-cover" /> */}
@@ -239,7 +240,7 @@ export default function YBCMainPage() {
             {/* 2. 정기 활동 블롭 카드 (연두빛 틴트 배경) */}
             <div 
               className="w-full sm:flex-1 max-w-[240px] sm:max-w-none min-h-[180px] sm:min-h-[220px] bg-[#E8F5E9] flex flex-col items-center justify-center gap-2 px-6 text-center shadow-sm transition-transform hover:scale-[1.02]"
-              style={{ borderRadius: "55% 45% 42% 58% / 48% 52% 48% 52%" }}
+              style={{ borderRadius: "62% 38% 43% 57% / 46% 54% 46% 54%" }}
             >
               <p className="text-sm font-bold text-[#769e37] tracking-tight">정기 활동</p>
               <p className="flex items-baseline gap-1">
@@ -251,7 +252,7 @@ export default function YBCMainPage() {
             {/* 3. 부원 수 블롭 카드 (연한 그레이시 그린 배경) */}
             <div 
               className="w-full sm:flex-1 max-w-[240px] sm:max-w-none min-h-[180px] sm:min-h-[220px] bg-[#EDF1EC] flex flex-col items-center justify-center gap-2 px-6 text-center shadow-sm transition-transform hover:scale-[1.02]"
-              style={{ borderRadius: "45% 55% 52% 48% / 55% 45% 55% 45%" }}
+              style={{ borderRadius: "44% 56% 42% 58% / 55% 45% 55% 45%" }}
             >
               <p className="text-sm font-bold text-slate-500 tracking-tight">부원 수</p>
               <p className="flex items-baseline gap-1">
@@ -304,7 +305,7 @@ export default function YBCMainPage() {
       {/* ── 지원하기 및 푸터 ─────────────────────────────────────── */}
       <section
         id="apply-section"
-        className="relative w-full mt-10 pt-20 sm:pt-28 pb-6 overflow-hidden bg-[#EDF3E3]"
+        className="relative w-full mt-10 pt-20 sm:pt-28 pb-6 overflow-hidden bg-gradient-to-b from-[#E3EDA9] to-[#F8FAF3] sm:rounded-t-[36px] md:rounded-t-[48px]"
       >
 
         {/* 0. 상단 파도치는 디자인 (SVG Shape Divider) */}
@@ -715,7 +716,7 @@ function GymLocationSection() {
           {/* 지도 컨테이너 (시안과 일치하는 유기적 Blob 테두리 곡선 적용) */}
           <div 
             className="w-[95%] sm:w-full h-[320px] sm:h-[400px] relative overflow-hidden shadow-sm"
-            style={{ borderRadius: "70% 31% 60% 50% / 35% 30% 60% 70%" }}
+            style={{ borderRadius: "82% 18% 56% 44% / 29% 20% 80% 71%" }}
           >
             <GymMap gym={gym} sdkReady={sdkReady} />
           </div>
