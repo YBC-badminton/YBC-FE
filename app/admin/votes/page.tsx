@@ -298,7 +298,11 @@ function VoteCard({ vote, onDelete, onRefresh }: { vote: VoteItem; onDelete: (id
                 <InfoField label="날짜" value={vote.activityDate} />
                 <InfoField label="시간" value={vote.activityTime} />
                 <InfoField label="장소" value={vote.location} />
-                <InfoField label="참가자" value={`${vote.attendance.totalParticipants} / ${vote.capacity}명 (회원 ${vote.attendance.currentAttendees} + 게스트 ${vote.attendance.currentGuests})`} />
+                <InfoField
+                    label="참가자"
+                    value={`${vote.attendance.totalParticipants} / ${vote.capacity}명`}
+                    sub={`회원 ${vote.attendance.currentAttendees} · 게스트 ${vote.attendance.currentGuests}`}
+                />
             </div>
 
             <div className="border-t border-gray-100 pt-4 space-y-2 text-[12px] sm:text-sm text-gray-500">
@@ -318,11 +322,12 @@ function VoteCard({ vote, onDelete, onRefresh }: { vote: VoteItem; onDelete: (id
     );
 }
 
-function InfoField({ label, value }: { label: string; value: string }) {
+function InfoField({ label, value, sub }: { label: string; value: string; sub?: string }) {
     return (
         <div className="min-w-0">
             <p className="text-[10px] sm:text-xs text-gray-400 mb-0.5">{label}</p>
-            <p className="font-medium text-gray-700 truncate">{value}</p>
+            <p className="font-medium text-gray-700 break-words">{value}</p>
+            {sub && <p className="text-[11px] sm:text-xs text-gray-400 mt-0.5 break-words">{sub}</p>}
         </div>
     );
 }
