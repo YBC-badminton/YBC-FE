@@ -204,7 +204,7 @@ export default function YBCMainPage() {
             ))
           ) : recentVotes.length > 0 ? (
             recentVotes.map((vote, idx) => (
-              <MeetingCard key={vote.voteId ?? idx} vote={vote} active={idx === 0} />
+              <MeetingCard key={vote.voteId ?? idx} vote={vote} active={idx === 0} isLoggedIn={!!user} />
             ))
           ) : (
             <div className="col-span-full bg-brand-wash border border-dashed border-line rounded-[28px] p-12 text-center text-subtle font-semibold">
@@ -272,7 +272,7 @@ function InfoBlob({
 }
 
 /* ── 정기모임 카드 ──────────────────────────────────────── */
-function MeetingCard({ vote, active }: { vote: VoteData; active: boolean }) {
+function MeetingCard({ vote, active, isLoggedIn }: { vote: VoteData; active: boolean; isLoggedIn: boolean }) {
   const title = vote.name || vote.title || "정기 운동";
   const currentCount = vote.currentParticipantCount ?? vote.attendance?.currentAttendees ?? 0;
   const maxCount = vote.capacity ?? vote.attendance?.totalParticipants ?? 20;
@@ -329,14 +329,14 @@ function MeetingCard({ vote, active }: { vote: VoteData; active: boolean }) {
         <div className="flex items-center justify-between mb-1.5">
           <span className="flex items-center gap-1.5 text-sm font-semibold text-muted">
             <PeopleIcon className="w-4 h-4 text-brand-dark" />
-            {currentCount} / {maxCount}명
+            {isLoggedIn ? `${currentCount} / ${maxCount}명` : "?? / ??명"}
           </span>
-          <span className="text-sm font-bold text-brand-dark">{ratio}%</span>
+          <span className="text-sm font-bold text-brand-dark">{isLoggedIn ? `${ratio}%` : "??%"}</span>
         </div>
         <div className="w-full h-2.5 bg-line/70 rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-1000 ease-out ${full ? "bg-brand-dark" : "bg-brand"}`}
-            style={{ width: `${ratio}%` }}
+            style={{ width: `${isLoggedIn ? ratio : 0}%` }}
           />
         </div>
       </div>
