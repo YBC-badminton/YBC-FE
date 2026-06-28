@@ -240,7 +240,7 @@ export default function MembersPage() {
                                         <td className="p-3 w-32"><input className="w-full border p-1 rounded text-sm" value={editForm.university || ''} onChange={e => setEditForm({...editForm, university: e.target.value})} /></td>
                                         <td className="p-3 w-20"><input className="w-full border p-1 rounded text-sm" value={editForm.term || ''} onChange={e => setEditForm({...editForm, term: e.target.value})} /></td>
                                         <td className="p-3 w-40"><input className="w-full border p-1 rounded text-sm" value={editForm.phone || ''} onChange={e => setEditForm({...editForm, phone: e.target.value})} /></td>
-                                        <td className="p-3 w-40"><input className="w-full border p-1 rounded text-sm" value={editForm.email || ''} onChange={e => setEditForm({...editForm, email: e.target.value})} /></td>
+                                        <td className="p-3 w-44"><input className="w-full border p-1 rounded text-sm" value={editForm.email || ''} onChange={e => setEditForm({...editForm, email: e.target.value})} /></td>
                                         <td className="p-3 w-16 text-center"><input type="checkbox" checked={!!editForm.isMapoResident} onChange={e => setEditForm({...editForm, isMapoResident: e.target.checked})} /></td>
                                         <td className="p-3 w-24 flex justify-center items-center h-full gap-2">
                                             <button onClick={() => handleSaveEdit(m.memberId)} className="text-blue-600 font-bold"><Check className="w-5 h-5"/></button>
@@ -255,7 +255,7 @@ export default function MembersPage() {
                                         <td className="p-4 w-32"><p className="p-[1px]">{m.university}</p></td>
                                         <td className="p-4 w-20"><p className="p-[1px]">{m.term}</p></td>
                                         <td className="p-4 w-40"><p className="p-[1px]">{m.phone}</p></td>
-                                        <td className="p-4 w-40 truncate"><p className="p-[1px]">{m.email}</p></td>
+                                        <td className="p-4 w-44 truncate"><p className="p-[1px]">{m.email}</p></td>
                                         <td className="p-4 w-16 text-center"><p className="p-[1px]">{m.isMapoResident ? 'O' : 'X'}</p></td>
                                         <td className="p-4 w-24 flex justify-center items-center gap-3">
                                             <button onClick={() => { setEditingId(m.memberId); setEditForm(m); }} className="text-blue-600 hover:text-blue-800"><Edit2 className="w-4 h-4"/></button>
