@@ -61,16 +61,6 @@ function ArrowUpRight({ className = "" }: { className?: string }) {
     </svg>
   );
 }
-function ShuttleIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 64 64" fill="none" aria-hidden="true">
-      <circle cx="48" cy="48" r="9" fill="#fff" stroke="#5b6b0f" strokeWidth="2.5" />
-      <path d="M44 44 18 18" stroke="#5b6b0f" strokeWidth="2.5" strokeLinecap="round" />
-      <path d="M18 18 8 8M22 16 14 6M16 22 6 14" stroke="#a1c852" strokeWidth="3" strokeLinecap="round" />
-      <path d="M6 6 4 4" stroke="#5b6b0f" strokeWidth="2.5" strokeLinecap="round" />
-    </svg>
-  );
-}
 
 export default function YBCMainPage() {
   const [recentVotes, setRecentVotes] = useState<VoteData[]>([]);
@@ -292,7 +282,13 @@ function MeetingCard({ vote, active }: { vote: VoteData; active: boolean }) {
           : "bg-brand-wash border border-line/70 hover:shadow-[var(--shadow-card)]"
       }`}
     >
-      {active && <ShuttleIcon className="absolute -top-4 -right-3 w-12 h-12 rotate-12" />}
+      {active && (
+        <img
+          src="/images/shuttlecock.svg"
+          alt=""
+          className="absolute -top-4 -right-3 w-12 h-auto rotate-12 pointer-events-none drop-shadow-sm"
+        />
+      )}
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
