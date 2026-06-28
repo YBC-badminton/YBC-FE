@@ -482,7 +482,7 @@ export default function ActivityVotePage() {
                     onClick={() => submitAttendance(false)}
                     disabled={submitting || myAttendance === false}
                     aria-pressed={myAttendance === false}
-                    className={`py-4 sm:py-5 font-black rounded-2xl transition-all shadow-sm active:scale-[0.98] disabled:cursor-not-allowed ${
+                    className={`py-3 sm:py-3.5 font-black rounded-2xl transition-all shadow-sm active:scale-[0.98] disabled:cursor-not-allowed ${
                         myAttendance === false
                             ? 'bg-slate-800 text-white ring-2 ring-slate-800 opacity-100'
                             : 'bg-white border border-gray-200 text-slate-800 hover:bg-slate-50 disabled:opacity-50'
@@ -494,7 +494,7 @@ export default function ActivityVotePage() {
                     onClick={() => submitAttendance(true)}
                     disabled={submitting || myAttendance === true}
                     aria-pressed={myAttendance === true}
-                    className={`py-4 sm:py-5 font-black rounded-2xl transition-all shadow-md active:scale-[0.98] disabled:cursor-not-allowed ${
+                    className={`py-3 sm:py-3.5 font-black rounded-2xl transition-all shadow-md active:scale-[0.98] disabled:cursor-not-allowed ${
                         myAttendance === true
                             ? 'bg-[#46530c] text-white ring-2 ring-[#46530c] opacity-100'
                             : 'bg-[#5b6b0f] text-white hover:bg-[#46530c] disabled:opacity-50'
@@ -605,14 +605,14 @@ export default function ActivityVotePage() {
                     <input
                     type="text"
                     placeholder="게스트 이름"
-                    className="w-full p-3.5 sm:p-4 border border-gray-200 rounded-xl text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                    className="w-full px-3.5 py-3 sm:px-4 sm:py-3.5 border border-gray-200 rounded-xl text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500/20"
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
                     disabled={guestSubmitting}
                     />
                     <div className="grid grid-cols-2 gap-3 sm:gap-4">
                     <select
-                        className="p-3.5 sm:p-4 border border-gray-200 rounded-xl text-sm sm:text-base text-slate-700 font-bold bg-white focus:outline-none cursor-pointer disabled:opacity-50"
+                        className="px-3.5 py-3 sm:px-4 sm:py-3.5 border border-gray-200 rounded-xl text-sm sm:text-base text-slate-700 font-bold bg-white focus:outline-none cursor-pointer disabled:opacity-50"
                         value={guestGender}
                         onChange={(e) => setGuestGender(e.target.value)}
                         disabled={guestSubmitting}
@@ -622,7 +622,7 @@ export default function ActivityVotePage() {
                         <option value="FEMALE">여</option>
                     </select>
                     <select
-                        className="p-3.5 sm:p-4 border border-gray-200 rounded-xl text-sm sm:text-base text-slate-700 font-bold bg-white focus:outline-none cursor-pointer disabled:opacity-50"
+                        className="px-3.5 py-3 sm:px-4 sm:py-3.5 border border-gray-200 rounded-xl text-sm sm:text-base text-slate-700 font-bold bg-white focus:outline-none cursor-pointer disabled:opacity-50"
                         value={guestLevel}
                         onChange={(e) => setGuestLevel(e.target.value)}
                         disabled={guestSubmitting}
@@ -639,7 +639,7 @@ export default function ActivityVotePage() {
                     <button
                         onClick={submitGuest}
                         disabled={guestSubmitting}
-                        className="w-full py-4 sm:py-5 bg-[#5b6b0f] text-white font-black rounded-2xl shadow-md hover:bg-[#46530c] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                        className="w-full py-3 sm:py-3.5 bg-[#5b6b0f] text-white font-black rounded-2xl shadow-md hover:bg-[#46530c] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                     >
                     {guestSubmitting ? '등록 중...' : '등록'}
                     </button>
