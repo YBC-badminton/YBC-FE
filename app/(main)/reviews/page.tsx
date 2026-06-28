@@ -41,6 +41,14 @@ function formatDate(dateStr: string): string {
     } catch { return dateStr; }
 }
 
+// 작성자 이름 가운데를 *로 마스킹 (첫·끝 글자 유지). 예: 양은서 → 양*서, 김철수2 → 김**2
+function maskName(name: string): string {
+    if (!name) return '';
+    if (name.length <= 1) return name;
+    if (name.length === 2) return `${name[0]}*`;
+    return `${name[0]}${'*'.repeat(name.length - 2)}${name[name.length - 1]}`;
+}
+
 export default function ReviewPage() {
     const [activeTab, setActiveTab] = useState('전체');
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -146,7 +154,7 @@ export default function ReviewPage() {
                                             {'★'.repeat(review.rating)}
                                         </div>
                                         <p className="text-[10px] font-bold text-slate-400">
-                                            {review.memberNickname}
+                                            {maskName(review.memberNickname)}
                                         </p>
                                     </div>
                                 </div>
@@ -225,7 +233,7 @@ function ReviewDetailModal({ review, onClose, isAuthor, onChanged, showToast }: 
                         {review.brandName} - {review.productName}
                     </h2>
                     <div className="flex justify-between items-center text-sm font-bold text-slate-400 pt-2">
-                        <span>작성자: {review.memberNickname}</span>
+                        <span>작성자: {maskName(review.memberNickname)}</span>
                         <span>작성일: {formatDate(review.createdAt)}</span>
                     </div>
                 </div>
