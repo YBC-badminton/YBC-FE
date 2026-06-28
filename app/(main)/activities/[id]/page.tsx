@@ -323,7 +323,6 @@ export default function ActivityVotePage() {
                 <InfoItem icon={<MapPin className="w-5 h-5 text-[#5b6b0f]" />} label="장소" value={activity.location} />
                 <InfoItem icon={<Clock className="w-5 h-5 text-[#5b6b0f]" />} label="시간" value={activity.activityTime} />
                 <InfoItem icon={<CalendarIcon className="w-5 h-5 text-[#5b6b0f]" />} label="활동 날짜" value={formatDate(activity.activityDate)} />
-                <InfoItem icon={<Users className="w-5 h-5 text-[#5b6b0f]" />} label="인원제한" value={`${activity.capacity}명`} />
                 {activity.openedByNickname && (
                     <InfoItem icon={<Users className="w-5 h-5 text-[#5b6b0f]" />} label="개설자" value={activity.openedByNickname} />
                 )}
