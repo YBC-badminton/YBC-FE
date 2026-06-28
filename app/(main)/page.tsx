@@ -428,7 +428,7 @@ function GymMap({ gym, sdkReady }: { gym: Gym; sdkReady: boolean }) {
     );
   }
 
-  return <div ref={mapRef} title={`${gym.name} 지도`} className="w-full h-full min-h-[300px] rounded-[28px] overflow-hidden" />;
+  return <div ref={mapRef} title={`${gym.name} 지도`} className="relative z-0 w-full h-full min-h-[300px] rounded-[28px] overflow-hidden" />;
 }
 
 function MapAppButton({ label, href, primary }: { label: string; href: string; primary?: boolean }) {
@@ -532,8 +532,13 @@ function GymLocationSection() {
         </div>
 
         {/* 우측: 지도 */}
-        <div className="min-h-[300px] lg:min-h-[420px]">
+        <div className="relative min-h-[300px] lg:min-h-[420px]">
           <GymMap gym={gym} sdkReady={sdkReady} />
+          <img
+            src="/images/mascot-walk.svg"
+            alt=""
+            className="pointer-events-none select-none absolute -bottom-10 sm:-bottom-16 -right-1 sm:-right-4 w-40 h-auto sm:w-[352px] sm:h-[265px] drop-shadow-sm z-20"
+          />
         </div>
       </div>
     </section>
