@@ -40,7 +40,6 @@ interface ServerMatch {
     team2: TeamMember[];
 }
 
-// 💡 지워졌던 CourtMatchGroup 인터페이스 복구 및 통합
 interface CourtMatchGroup {
     courtNumber: number;
     courtMatches: ServerMatch[];
@@ -66,12 +65,12 @@ type BracketRow = (LocalParticipant | null)[];
 
 export default function TournamentPage() {
     const { showToast } = useToast();
-    // API 통신 상태 제어
+    
     const [activities, setActivities] = useState<AdminActivity[]>([]);
     const [selectedActivity, setSelectedActivity] = useState<AdminActivity | null>(null);
     const [participantsPool, setParticipantsPool] = useState<LocalParticipant[]>([]);
     const [matchId, setMatchId] = useState<number | null>(null);
-    const [isEditMode, setIsEditMode] = useState<boolean>(false); // 신규 등록 vs 수정 모드 판별
+    const [isEditMode, setIsEditMode] = useState<boolean>(false);
     
     const [currentCourt, setCurrentCourt] = useState('1코트');
     const [completedActivityIds, setCompletedActivityIds] = useState<number[]>([]);
@@ -80,40 +79,33 @@ export default function TournamentPage() {
     const [mobileStep, setMobileStep] = useState(1);
     const [isMobile, setIsMobile] = useState(false);
 
-    // 코트별 담겨있는 인원 명단 상태 (대진 폼 상단 박스용)
     const [assignments, setAssignments] = useState<Record<string, LocalParticipant[]>>({
         '1코트': [], '2코트': [], '3코트': [], '4코트': []
     });
 
-    // 💡 클릭 배치용 상태 추가
     const [selectedMember, setSelectedMember] = useState<LocalParticipant | null>(null);
 
+    // 💡 새로운 배열 인스턴스를 반환하여 메모리 참조 꼬임 방지
     const createEmptyRow = (): BracketRow => [null, null, null, null];
     const initialBracket = (): BracketRow[] => [
         createEmptyRow(), createEmptyRow(), createEmptyRow(), createEmptyRow()
     ];
     
-    // 핵심 대진표 그리드 매트릭스 상태
     const [courtBrackets, setCourtBrackets] = useState<Record<string, BracketRow[]>>({
         '1코트': initialBracket(), '2코트': initialBracket(), '3코트': initialBracket(), '4코트': initialBracket(),
     });
 
-    // 화면 크기 체크 (모바일 가드)
     useEffect(() => {
-        const checkMobile = () => {
-            setIsMobile(window.innerWidth < 768);
-        };
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
         checkMobile();
         window.addEventListener('resize', checkMobile);
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
-    // [API 1] 투표 완료된 전체 활동 목록 로드
     const fetchAdminActivities = useCallback(async () => {
         setLoading(true);
         try {
             const response = await api.get<any>('/admin/votes?status=completed');
-            console.log("🎯 [Admin Activities Fetch Success]:", response.data);
             
             if (response.data && Array.isArray(response.data)) {
                 setActivities(response.data);
@@ -134,7 +126,6 @@ export default function TournamentPage() {
         fetchAdminActivities();
     }, [fetchAdminActivities]);
 
-    // 전체 진행도 계산 유틸
     const progress = useMemo(() => {
         const totalSlots = Object.values(courtBrackets).flat(2).length;
         if (totalSlots === 0) return 0;
@@ -142,11 +133,17 @@ export default function TournamentPage() {
         return Math.floor((filledSlots / totalSlots) * 100);
     }, [courtBrackets]);
 
-    // 응답 데이터(participants + matches)를 화면 상태로 반영하는 공용 함수
-    // 선택 시 조회 / 서버 생성 응답 모두에서 재사용한다.
-    const hydrateTournament = (data: TournamentDetailResponse) => {
-        // 1. 참가자 풀 파싱
-        const participants: LocalParticipant[] = (data.participants || []).map(p => ({
+    // 💡 [수정됨] 응답 데이터(participants + matches)를 화면 상태로 반영하는 함수
+    const hydrateTournament = (responseData: any) => {
+        // API 래퍼 구조(data 내부에 실제 객체)를 안전하게 벗겨냅니다.
+        const data: TournamentDetailResponse = responseData.data || responseData;
+
+        if (!data || !data.participants) {
+            showToast('데이터 구조를 파싱할 수 없습니다.', 'error');
+            return;
+        }
+
+        const participants: LocalParticipant[] = data.participants.map(p => ({
             participantId: p.participantId,
             name: p.name,
             gender: p.gender === 'MALE' ? '남' : '여',
@@ -154,7 +151,7 @@ export default function TournamentPage() {
         }));
         setParticipantsPool(participants);
 
-        // 2. 대진(matches)이 내려온 경우에만 복구 (과거 플래그가 아닌 실제 데이터 유무로 판단)
+        // 과거 대진 데이터(matches)가 있는 경우 복구
         if (data.matches && data.matches.length > 0) {
             const newBrackets: Record<string, BracketRow[]> = {
                 '1코트': [], '2코트': [], '3코트': [], '4코트': []
@@ -167,22 +164,40 @@ export default function TournamentPage() {
 
             data.matches.forEach((m) => {
                 const courtKey = `${m.courtNumber}코트`;
+                if (!newBrackets[courtKey]) return;
+
                 m.courtMatches.forEach((match) => {
-                    const matchIdx = match.matchNumber - 1;
+                    const matchIdx = (match.matchNumber || 1) - 1;
+                    
+                    // 로우가 부족하면 확장
                     while (newBrackets[courtKey].length <= matchIdx) {
                         newBrackets[courtKey].push(createEmptyRow());
                     }
+                    
                     const row: BracketRow = [null, null, null, null];
-                    const allTeamMembers = [...match.team1, ...match.team2];
-                    allTeamMembers.forEach((member, idx) => {
+                    
+                    // 헬퍼 함수: 자리에 멤버를 배치하고 코트 상단 멤버 리스트에 추가
+                    const assignMember = (member: TeamMember, index: number) => {
+                        if (!member) return;
                         const pData = participants.find(p => p.participantId === member.participantId);
                         if (pData) {
-                            row[idx] = pData;
+                            row[index] = pData;
                             if (!newAssignments[courtKey].some(a => a.participantId === pData.participantId)) {
                                 newAssignments[courtKey].push(pData);
                             }
                         }
-                    });
+                    };
+
+                    // 💡 [수정됨] Team 1은 무조건 왼쪽(0, 1번), Team 2는 무조건 오른쪽(2, 3번) 배치
+                    if (match.team1 && match.team1.length > 0) {
+                        assignMember(match.team1[0], 0);
+                        if (match.team1.length > 1) assignMember(match.team1[1], 1);
+                    }
+                    if (match.team2 && match.team2.length > 0) {
+                        assignMember(match.team2[0], 2);
+                        if (match.team2.length > 1) assignMember(match.team2[1], 3);
+                    }
+
                     newBrackets[courtKey][matchIdx] = row;
                 });
             });
@@ -191,8 +206,7 @@ export default function TournamentPage() {
             setCourtBrackets(newBrackets);
             setMatchId(data.matchId || null);
             setIsEditMode(true);
-            // 대진이 있으면 전체 코트 현황을 먼저 보여준다
-            setCurrentCourt('전체');
+            setCurrentCourt('전체'); // 대진이 있으면 전체 현황 뷰로 시작
         } else {
             // 대진이 없으면 빈 작성 상태
             setAssignments({ '1코트': [], '2코트': [], '3코트': [], '4코트': [] });
@@ -206,22 +220,21 @@ export default function TournamentPage() {
         }
     };
 
-    // [API 2] 특정 모임 선택 시 명단 로드 및 대진표 복구 (Hydration)
     const handleSelectActivity = async (activity: AdminActivity) => {
         setLoading(true);
         try {
-            // 상태 초기화
+            // 💡 [수정됨] 참조 버그를 해결하기 위해 각 코트마다 고유하게 initialBracket() 호출
             setAssignments({ '1코트': [], '2코트': [], '3코트': [], '4코트': [] });
-            const emptyBracket = initialBracket();
             setCourtBrackets({
-                '1코트': emptyBracket, '2코트': emptyBracket,
-                '3코트': emptyBracket, '4코트': emptyBracket
+                '1코트': initialBracket(), '2코트': initialBracket(),
+                '3코트': initialBracket(), '4코트': initialBracket()
             });
             setCurrentCourt('1코트');
             setMobileStep(1);
 
-            const response = await api.get<TournamentDetailResponse>(`/admin/votes/${activity.voteId}/matches`);
+            const response = await api.get(`/admin/votes/${activity.voteId}/matches`);
             setSelectedActivity(activity);
+            
             hydrateTournament(response.data);
         } catch (err) {
             console.error('❌ [Load Tournament Error]:', err);
@@ -231,7 +244,6 @@ export default function TournamentPage() {
         }
     };
 
-    // 게임 수 조절 핸들러 (+ / -)
     const handleMatchCount = (type: 'plus' | 'minus') => {
         if (currentCourt === '전체') return;
         setCourtBrackets(prev => {
@@ -246,14 +258,12 @@ export default function TournamentPage() {
         });
     };
 
-    // 상단 코트 배치 박스 배정 핸들러
     const handleAssign = (person: LocalParticipant) => {
         if (currentCourt === '전체') return;
         if (assignments[currentCourt].some(p => p.participantId === person.participantId)) return;
         setAssignments(prev => ({ ...prev, [currentCourt]: [...prev[currentCourt], person] }));
     };
 
-    // 배정 인원 취소 및 셀 내용 클리어 핸들러
     const handleRemoveMember = (court: string, person: LocalParticipant) => {
         setAssignments(prev => ({ ...prev, [court]: prev[court].filter(p => p.participantId !== person.participantId) }));
         setCourtBrackets(prev => {
@@ -262,7 +272,6 @@ export default function TournamentPage() {
         });
     };
 
-    // 드롭존 배치 핸들러
     const onDrop = (e: React.DragEvent, row: number, col: number) => {
         e.preventDefault();
         const data = e.dataTransfer.getData('memberData');
@@ -280,7 +289,6 @@ export default function TournamentPage() {
         }
     };
 
-    // 랜덤 배치 엔진 로직
     const handleRandomAssign = () => {
         const currentMembers = assignments[currentCourt];
         if (currentMembers.length < 4) {
@@ -310,17 +318,14 @@ export default function TournamentPage() {
         setCourtBrackets(prev => ({ ...prev, [currentCourt]: newBracket }));
     };
 
-    // 명단 클릭 시 멤버 선택
     const handleSelectMember = (member: LocalParticipant) => {
         setSelectedMember(member);
         showToast(`${member.name} 선택됨. 배치할 자리를 클릭하세요.`, 'info');
     };
 
-    // 배치 함수: cell 클릭 시 호출
     const handlePlaceMember = (row: number, col: number) => {
         if (!selectedMember) return;
         
-        // 중복 체크
         if (courtBrackets[currentCourt][row].some(cell => cell?.participantId === selectedMember.participantId)) {
             showToast(`${selectedMember.name}님은 이미 이 경기에 있습니다.`, 'error');
             return;
@@ -331,12 +336,10 @@ export default function TournamentPage() {
             newB[row][col] = selectedMember;
             return { ...prev, [currentCourt]: newB };
         });
-        setSelectedMember(null); // 선택 해제
+        setSelectedMember(null);
         showToast('배치 완료!', 'success');
     };
 
-    // [API] 서버 랜덤 대진 생성 (POST /admin/votes/{voteId}/matches/generate)
-    // 코트별 배정 인원을 서버로 보내 성비/최소 게임수 규칙에 맞춰 랜덤 배치 후, 확정된 대진을 다시 로드한다.
     const handleServerGenerate = async () => {
         if (!selectedActivity) return;
 
@@ -357,15 +360,16 @@ export default function TournamentPage() {
 
         setLoading(true);
         try {
-            const res = await api.post<TournamentDetailResponse>(`/admin/votes/${selectedActivity.voteId}/matches/generate`, {
+            const res = await api.post<any>(`/admin/votes/${selectedActivity.voteId}/matches/generate`, {
                 courtCount: courtAssignments.length,
                 courtAssignments,
             });
             showToast('서버에서 대진이 랜덤 생성되었습니다.', 'success');
-            // generate 응답이 대진(matches)을 바로 반환하면 그걸로 즉시 렌더,
-            // 아니면 GET으로 재조회하여 반영한다.
-            if (res.data && res.data.matches && res.data.matches.length > 0) {
-                hydrateTournament(res.data);
+            
+            // 💡 [수정됨] 생성 후 반환받은 대진도 래퍼를 안전하게 벗김
+            const resData = res.data?.data || res.data;
+            if (resData && resData.matches && resData.matches.length > 0) {
+                hydrateTournament(resData);
             } else {
                 await handleSelectActivity(selectedActivity);
             }
@@ -378,7 +382,6 @@ export default function TournamentPage() {
         }
     };
 
-    // [API 3] 대진 확정 저장 및 전체 전송 (수정 모드 분기 처리)
     const handleSaveTournament = async () => {
         if (!selectedActivity) return;
         
@@ -413,17 +416,12 @@ export default function TournamentPage() {
                 };
             });
 
-            console.log("📤 [Payload to Server]:", JSON.stringify(payload, null, 2));
-
-            // 💡 [핵심] API 명세서에 따른 신규 등록(POST) vs 수정(PATCH) 라우팅 분기
             if (isEditMode && matchId) {
-                // 수정 모드: PATCH /admin/matches/{matchId}
                 const response = await api.patch(`/admin/matches/${matchId}`, payload);
                 if (response.status === 200 || response.status === 204) {
                     showToast('대진 정보가 수정되었습니다.', 'success');
                 }
             } else {
-                // 신규 모드: POST /admin/votes/{voteId}/matches
                 const targetVoteId = selectedActivity.voteId;
                 const response = await api.post(`/admin/votes/${targetVoteId}/matches`, payload);
                 if (response.status === 200 || response.status === 201 || response.status === 204) {
@@ -466,7 +464,6 @@ export default function TournamentPage() {
                         {activities.length > 0 ? (
                             activities.map((activity) => (
                                 <div key={activity.voteId} onClick={() => handleSelectActivity(activity)} className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm hover:border-blue-500 cursor-pointer transition-all relative group">
-                                    {/* 💡 대진 완료 여부에 따른 뱃지 표시 */}
                                     {activity.matchRegistered ? (
                                         <span className="absolute top-4 right-6 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm">
                                             대진 완료
@@ -477,7 +474,6 @@ export default function TournamentPage() {
 
                                     <h3 className="text-xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors flex items-center gap-2">
                                         {activity.title}
-                                        {/* 💡 여기서도 상태에 따라 버튼명 변경 가능하지만, 아래 버튼에서 처리 */}
                                     </h3>
 
                                     <p className="text-sm text-gray-400 mt-2 font-medium flex items-center gap-1.5 flex-wrap">
@@ -491,7 +487,6 @@ export default function TournamentPage() {
                                             <span className="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-md">회원 {activity.attendance.currentAttendees}명</span>
                                             <span className="bg-purple-50 text-purple-600 px-2.5 py-1 rounded-md">게스트 {activity.attendance.currentGuests}명</span>
                                         </div>
-                                        {/* 💡 조건부 버튼 렌더링 */}
                                         <div className={`px-4 py-2 rounded-xl text-xs font-bold ${activity.matchRegistered ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
                                             {activity.matchRegistered ? '대진 수정하기' : '대진 작성하기'}
                                         </div>
@@ -555,10 +550,10 @@ export default function TournamentPage() {
                                                     key={p.participantId} 
                                                     draggable 
                                                     onDragStart={(e) => e.dataTransfer.setData('memberData', JSON.stringify(p))}
-                                                    onClick={() => handleSelectMember(p)} // 💡 클릭 선택 추가
+                                                    onClick={() => handleSelectMember(p)}
                                                     className={`cursor-pointer px-3 py-2 rounded-xl text-xs font-bold shadow-sm transition active:scale-95 border-2 ${
                                                         selectedMember?.participantId === p.participantId 
-                                                        ? 'bg-blue-600 text-white border-blue-600' // 선택 시 강조
+                                                        ? 'bg-blue-600 text-white border-blue-600' 
                                                         : 'bg-white border-blue-100'
                                                     }`}
                                                 >
