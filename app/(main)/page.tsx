@@ -213,7 +213,7 @@ export default function YBCMainPage() {
         <div className="max-w-screen-lg mx-auto px-6 flex flex-col items-center text-center gap-6">
           
           {/* 타이틀 명 (Figma 전용 폰트 스타일 및 시그니처 컬러 반영) */}
-          <h2 className="text-[26px] sm:text-5xl font-black text-[#5b6b0f] tracking-wide break-keep">
+          <h2 className="text-[26px] sm:text-5xl font-display text-[#5b6b0f] tracking-wide break-keep">
             YBC badminton club
           </h2>
           
