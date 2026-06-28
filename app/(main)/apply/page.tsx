@@ -60,34 +60,41 @@ export default function ApplyPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const [interviewOptions, setInterviewOptions] = useState<string[]>([]);
-  const [interviewTimeMap, setInterviewTimeMap] = useState<Record<string, string>>({});
+  const [interviewTimeMap, setInterviewTimeMap] = useState<
+    Record<string, string>
+  >({});
 
   const [isRecruiting, setIsRecruiting] = useState<boolean | null>(null);
 
   const [recruitmentInfo, setRecruitmentInfo] = useState({
     term: "",
-    message: ""
+    message: "",
   });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         // 1. 안내 문구 API 호출
-        const msgRes = await api.get('/recruitments/message');
-        setRecruitmentInfo({ term: msgRes.data.term, message: msgRes.data.recruitmentMessage });
+        const msgRes = await api.get("/recruitments/message");
+        setRecruitmentInfo({
+          term: msgRes.data.term,
+          message: msgRes.data.recruitmentMessage,
+        });
         setIsRecruiting(msgRes.data.recruiting);
 
         // 2. 면접 시간 API 호출
-        const timeRes = await api.get('/recruitments/interview-times');
-        if (timeRes.data.recruiting) { // 모집 중일 때만 시간 데이터 구성
-          const { interviewDate, interviewFirstTime, interviewSecondTime } = timeRes.data;
+        const timeRes = await api.get("/recruitments/interview-times");
+        if (timeRes.data.recruiting) {
+          // 모집 중일 때만 시간 데이터 구성
+          const { interviewDate, interviewFirstTime, interviewSecondTime } =
+            timeRes.data;
           const options = [
             `${interviewDate} ${interviewFirstTime}`,
-            `${interviewDate} ${interviewSecondTime}`
+            `${interviewDate} ${interviewSecondTime}`,
           ];
           const map = {
             [`${interviewDate} ${interviewFirstTime}`]: "FIRST_SESSION",
-            [`${interviewDate} ${interviewSecondTime}`]: "SECOND_SESSION"
+            [`${interviewDate} ${interviewSecondTime}`]: "SECOND_SESSION",
           };
           setInterviewOptions(options);
           setInterviewTimeMap(map);
@@ -178,7 +185,11 @@ export default function ApplyPage() {
 
   // 1. 데이터 로딩 중 처리
   if (isRecruiting === null) {
-    return <div className="min-h-screen flex items-center justify-center font-bold">불러오는 중...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center font-bold">
+        불러오는 중...
+      </div>
+    );
   }
 
   // 2. 모집 기간이 아닐 때 (isRecruiting === false)
@@ -189,9 +200,12 @@ export default function ApplyPage() {
           <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
             <span className="text-3xl">🏸</span>
           </div>
-          <h2 className="text-2xl font-black text-slate-800">모집 기간이 아닙니다</h2>
+          <h2 className="text-2xl font-black text-slate-800">
+            모집 기간이 아닙니다
+          </h2>
           <p className="text-slate-500 font-bold leading-relaxed">
-            현재는 신규 부원 모집 기간이 아닙니다.<br />
+            현재는 신규 부원 모집 기간이 아닙니다.
+            <br />
             다음 기수 모집 때 꼭 다시 지원해 주세요!
           </p>
           <Link href="/faq">
@@ -247,7 +261,9 @@ export default function ApplyPage() {
       <div className="max-w-screen-xl mx-auto space-y-12">
         {/* 헤더 - activities, reviews 스타일 통일 */}
         <div className="space-y-2">
-          <h1 className="text-4xl font-black text-slate-800">{recruitmentInfo?.term || "신규"} 지원하기</h1>
+          <h1 className="text-4xl font-black text-slate-800">
+            {recruitmentInfo?.term || "신규"} 지원하기
+          </h1>
           <p className="text-slate-400 font-bold">
             양배추 배드민턴 동아리에 오신 것을 환영합니다! 아래 양식을 작성하여
             지원해 주세요.
@@ -258,7 +274,8 @@ export default function ApplyPage() {
         <div className="max-w-3xl mx-auto bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 sm:p-10 space-y-5 text-slate-600">
           <div className="border-l-4 border-[#5b6b0f] pl-4">
             <h2 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">
-              양배추(YBC) 배드민턴 동아리 {recruitmentInfo?.term} 신규 부원 모집 안내
+              양배추(YBC) 배드민턴 동아리 {recruitmentInfo?.term} 신규 부원 모집
+              안내
             </h2>
             <p className="text-sm text-slate-400 font-bold mt-1">
               지원서를 작성하기 전, 아래 안내를 꼭 읽어주세요.
@@ -281,8 +298,12 @@ export default function ApplyPage() {
               </div>
               <ul className="list-disc pl-5 space-y-1">
                 <li>화요일 · 마곡실내배드민턴장 (16:00 - 19:00)</li>
-                <li>토요일 · 망원나들목체육관 (13:30 - 15:30 / 16:00 - 18:00)</li>
-                <li>정기 운동 외에도 번개 모임 및 다양한 이벤트가 진행됩니다.</li>
+                <li>
+                  토요일 · 망원나들목체육관 (13:30 - 15:30 / 16:00 - 18:00)
+                </li>
+                <li>
+                  정기 운동 외에도 번개 모임 및 다양한 이벤트가 진행됩니다.
+                </li>
               </ul>
             </div>
 
@@ -294,8 +315,13 @@ export default function ApplyPage() {
               <ul className="list-disc pl-5 space-y-1">
                 <li>아래 지원서를 작성해 제출해 주세요.</li>
                 <li>제출해 주신 내용을 바탕으로 대면 면접을 진행합니다.</li>
-                <li>가능한 면접 시간에 모두 체크해 주시면 일정 조율에 도움이 됩니다.</li>
-                <li>합격 및 면접 일정은 입력하신 전화번호로 개별 안내드립니다.</li>
+                <li>
+                  가능한 면접 시간에 모두 체크해 주시면 일정 조율에 도움이
+                  됩니다.
+                </li>
+                <li>
+                  합격 및 면접 일정은 입력하신 전화번호로 개별 안내드립니다.
+                </li>
               </ul>
             </div>
 
@@ -306,7 +332,9 @@ export default function ApplyPage() {
               </div>
               <ul className="list-disc pl-5 space-y-1">
                 <li>배드민턴화는 필수이며, 라켓은 없으셔도 지원 가능합니다.</li>
-                <li>제출 후에는 내용 수정이 불가하오니 꼼꼼히 확인해 주세요.</li>
+                <li>
+                  제출 후에는 내용 수정이 불가하오니 꼼꼼히 확인해 주세요.
+                </li>
                 <li>* 표시 항목은 모두 필수 입력 항목입니다.</li>
               </ul>
             </div>
@@ -438,15 +466,17 @@ export default function ApplyPage() {
             description="가능하신 시간에 전부 체크해 주시면 됩니다."
           >
             {interviewOptions.length > 0 ? (
-                <FormCheckboxGroup
+              <FormCheckboxGroup
                 label="면접 가능 시간"
                 required
                 options={interviewOptions}
                 value={form.interviewTimes}
                 onChange={handleCheckbox}
-                />
+              />
             ) : (
-                <p className="text-sm text-slate-400 font-bold">면접 일정을 불러오는 중입니다...</p>
+              <p className="text-sm text-slate-400 font-bold">
+                면접 일정을 불러오는 중입니다...
+              </p>
             )}
           </FormSection>
 
@@ -566,7 +596,7 @@ function FormInput({
 }) {
   return (
     <div className="space-y-2">
-      <label className="text-sm font-bold text-slate-600 mb-3">
+      <label className="block text-sm font-bold text-slate-600">
         {label}
         {required && <span className="text-red-400 ml-1">*</span>}
       </label>
@@ -599,7 +629,7 @@ function FormTextarea({
 }) {
   return (
     <div className="space-y-2">
-      <label className="text-sm font-bold text-slate-600 mb-3">
+      <label className="block text-sm font-bold text-slate-600 pb-2">
         {label}
         {required && <span className="text-red-400 ml-1">*</span>}
       </label>
@@ -631,7 +661,7 @@ function FormRadioGroup({
 }) {
   return (
     <div className="space-y-2">
-      <label className="text-sm font-bold text-slate-600 mb-3">
+      <label className="block text-sm font-bold text-slate-600 pb-2">
         {label}
         {required && <span className="text-red-400 ml-1">*</span>}
       </label>
@@ -688,7 +718,7 @@ function FormCheckboxGroup({
 }) {
   return (
     <div className="space-y-2">
-      <label className="text-sm font-bold text-slate-600 mb-3">
+      <label className="block text-sm font-bold text-slate-600 pb-2">
         {label}
         {required && <span className="text-red-400 ml-1">*</span>}
       </label>
