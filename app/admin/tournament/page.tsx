@@ -139,7 +139,7 @@ function useTournamentManager() {
         );
     }, [participantsPool, assignments]);
 
-    // --- Core Logic ---
+    // --- Core Logic: 대진 데이터 복구 (Hydration) ---
     const hydrateTournament = (responseData: any) => {
         const data = responseData.data?.data || responseData.data || responseData.result || responseData;
 
@@ -200,17 +200,17 @@ function useTournamentManager() {
                         }
                     };
 
+                    // 💡 API 데이터가 객체일 경우 배열로 강제 변환하여 에러 방지
                     const t1 = match.team1 || match.teamA || match.leftTeam || [];
                     const t2 = match.team2 || match.teamB || match.rightTeam || [];
+                    const team1Array = Array.isArray(t1) ? t1 : [t1];
+                    const team2Array = Array.isArray(t2) ? t2 : [t2];
 
-                    if (Array.isArray(t1)) {
-                        if (t1.length > 0) assignMember(t1[0], 0);
-                        if (t1.length > 1) assignMember(t1[1], 1);
-                    }
-                    if (Array.isArray(t2)) {
-                        if (t2.length > 0) assignMember(t2[0], 2);
-                        if (t2.length > 1) assignMember(t2[1], 3);
-                    }
+                    if (team1Array.length > 0) assignMember(team1Array[0], 0);
+                    if (team1Array.length > 1) assignMember(team1Array[1], 1);
+                    
+                    if (team2Array.length > 0) assignMember(team2Array[0], 2);
+                    if (team2Array.length > 1) assignMember(team2Array[1], 3);
 
                     newBrackets[courtKey][matchIdx] = row;
                 });
@@ -220,7 +220,12 @@ function useTournamentManager() {
             setCourtBrackets(newBrackets);
             setMatchId(data.matchId || data.id || null);
             setIsEditMode(true);
-            setCurrentCourt('전체');
+            
+            // 💡 [핵심 수정] 수정 모드 진입 시 전체뷰가 아닌 '데이터가 있는 첫 번째 코트'로 즉시 진입하여 배치 명단과 대진표를 노출합니다.
+            const firstActiveCourt = Object.keys(newAssignments).find(key => newAssignments[key].length > 0) || '1코트';
+            setCurrentCourt(firstActiveCourt);
+            setMobileStep(1); 
+            
         } else {
             setAssignments({ '1코트': [], '2코트': [], '3코트': [], '4코트': [] });
             setCourtBrackets({
@@ -230,6 +235,7 @@ function useTournamentManager() {
             setIsEditMode(false);
             setMatchId(null);
             setCurrentCourt('1코트');
+            setMobileStep(1);
         }
     };
 
@@ -447,26 +453,35 @@ const ActivityListView = ({ m }: { m: TournamentManager }) => (
         <div className="grid grid-cols-1 gap-4">
             {m.activities.length > 0 ? (
                 m.activities.map((activity) => (
-                    <div key={activity.voteId} onClick={() => m.handleSelectActivity(activity)} className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm hover:border-blue-500 cursor-pointer transition-all relative group">
+                    <div key={activity.voteId} className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm transition-all relative group flex flex-col gap-4">
                         {activity.matchRegistered ? (
                             <span className="absolute top-4 right-6 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm">대진 완료</span>
                         ) : m.completedActivityIds.includes(activity.voteId) && (
                             <span className="absolute top-4 right-6 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">완료</span>
                         )}
-                        <h3 className="text-xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors flex items-center gap-2">{activity.title}</h3>
-                        <p className="text-sm text-gray-400 mt-2 font-medium flex items-center gap-1.5 flex-wrap">
+                        <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">{activity.title}</h3>
+                        <p className="text-sm text-gray-400 font-medium flex items-center gap-1.5 flex-wrap">
                             <Calendar className="w-3.5 h-3.5 shrink-0" /> 날짜: {activity.activityDate} ({activity.activityDay}) 
                             <span className="text-gray-300">|</span> 
                             <MapPin className="w-3.5 h-3.5 shrink-0" /> 장소: {activity.location}
                         </p>
-                        <div className="mt-4 flex items-center justify-between">
+                        <div className="mt-2 flex items-center justify-between border-t border-gray-50 pt-4">
                             <div className="flex items-center gap-3 text-xs font-bold text-gray-500">
                                 <span className="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-md">회원 {activity.attendance.currentAttendees}명</span>
                                 <span className="bg-purple-50 text-purple-600 px-2.5 py-1 rounded-md">게스트 {activity.attendance.currentGuests}명</span>
                             </div>
-                            <div className={`px-4 py-2 rounded-xl text-xs font-bold ${activity.matchRegistered ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
-                                {activity.matchRegistered ? '대진 수정하기' : '대진 작성하기'}
-                            </div>
+                            
+                            {/* 💡 [명확한 수정 버튼] 카드가 아닌 '버튼'을 눌렀을 때만 데이터 로드 후 에디터로 진입합니다. */}
+                            <button 
+                                onClick={() => m.handleSelectActivity(activity)}
+                                className={`px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm transition active:scale-95 ${
+                                    activity.matchRegistered 
+                                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                                    : 'bg-green-500 text-white hover:bg-green-600'
+                                }`}
+                            >
+                                {activity.matchRegistered ? '대진표 수정하기 ✏️' : '대진 작성하기 📝'}
+                            </button>
                         </div>
                     </div>
                 ))
@@ -484,7 +499,10 @@ const TournamentHeader = ({ m }: { m: TournamentManager }) => (
     <>
         <header className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-6 sm:mb-8">
             <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-800">{m.selectedActivity!.title}</h1>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2">
+                    {m.selectedActivity!.title}
+                    {m.isEditMode && <span className="bg-blue-100 text-blue-600 px-2 py-0.5 rounded text-[11px] font-black">수정 모드</span>}
+                </h1>
                 <button onClick={() => m.setSelectedActivity(null)} className="text-gray-400 text-sm font-bold mt-2 hover:text-gray-600 transition-colors flex items-center gap-1">← 목록으로 돌아가기</button>
             </div>
             <div className="flex items-center gap-3 sm:gap-4 bg-white p-3 sm:p-4 rounded-xl border border-[#dadada]">
