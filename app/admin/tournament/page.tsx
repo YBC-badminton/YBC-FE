@@ -29,6 +29,7 @@ interface AdminActivity {
     location: string;
     attendance: AttendanceSummary;
     matchRegistered: boolean;
+    matchId?: number;
 }
 
 interface TeamMember {
@@ -263,9 +264,46 @@ function useTournamentManager() {
             setCurrentCourt('1코트');
             setMobileStep(1);
 
-            // API 호출: 대진 정보 가져오기
-            const response = await api.get(`/admin/votes/${activity.voteId}/matches`);
-            console.log(`GET /admin/votes/${activity.voteId}/matches 응답 데이터:`, response.data);
+            let response;
+            let targetMatchId = activity.matchId;
+
+            // 수정 모드인데 목록(activity)에 matchId가 없을 경우 투표 상세에서 가져오기
+            if (activity.matchRegistered && !targetMatchId) {
+                try {
+                    const tempRes = await api.get(`/admin/votes/${activity.voteId}/matches`);
+                    const tempData = tempRes.data?.data || tempRes.data;
+                    targetMatchId = tempData?.matchId || tempData?.id;
+                } catch (e) {
+                    console.warn("투표 대진 정보에서 matchId를 가져오는데 실패했습니다.", e);
+                }
+            }
+
+            if (activity.matchRegistered && targetMatchId) {
+                // 수정 모드: GET /admin/matches/{matchId} 호출
+                response = await api.get(`/admin/matches/${targetMatchId}`);
+                console.log(`GET /admin/matches/${targetMatchId} 응답 데이터:`, response.data);
+                
+                // (안전장치) 응답에 participants(전체 참가자)가 없을 수 있으므로 투표 API에서 보완
+                const resData = response.data?.data || response.data;
+                if (!resData.participants || resData.participants.length === 0) {
+                    try {
+                        const voteRes = await api.get(`/admin/votes/${activity.voteId}/matches`);
+                        const voteData = voteRes.data?.data || voteRes.data;
+                        if (voteData.participants) {
+                            if (response.data.data) response.data.data.participants = voteData.participants;
+                            else response.data.participants = voteData.participants;
+                        }
+                    } catch (e) {}
+                }
+                // (안전장치) matchId 명시
+                if (response.data.data && !response.data.data.matchId) response.data.data.matchId = targetMatchId;
+                else if (!response.data.matchId) response.data.matchId = targetMatchId;
+            } else {
+                // 작성 모드 또는 matchId 확인 불가: 기존대로 GET /admin/votes/{voteId}/matches 호출
+                response = await api.get(`/admin/votes/${activity.voteId}/matches`);
+                console.log(`GET /admin/votes/${activity.voteId}/matches 응답 데이터:`, response.data);
+            }
+            
             setSelectedActivity(activity);
             
             // 데이터 화면 반영
