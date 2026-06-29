@@ -34,6 +34,8 @@ interface AdminActivity {
 interface TeamMember {
     participantType: 'MEMBER' | 'GUEST';
     participantId: number;
+    name?: string;
+    gender?: string;
 }
 
 interface ServerMatch {
@@ -51,7 +53,7 @@ interface TournamentDetailResponse {
     voteId: number;
     matchId?: number;
     totalCount: number;
-    participants: Participant[];
+    participants?: Participant[];
     matches?: CourtMatchGroup[];
 }
 
@@ -143,21 +145,44 @@ function useTournamentManager() {
     const hydrateTournament = (responseData: any) => {
         const data = responseData.data?.data || responseData.data || responseData.result || responseData;
 
-        if (!data || !data.participants) {
+        if (!data) {
             showToast('데이터 구조를 파싱할 수 없습니다.', 'error');
             return;
         }
 
-        const participantsList = data.participants || data.participantList || [];
-        const participants: LocalParticipant[] = participantsList.map((p: any) => ({
+        const matchGroups = data.matches || data.matchGroups || data.courtMatchGroups || data.courtMatches || [];
+        let rawParticipants = data.participants || data.participantList || [];
+
+        // 💡 [초강력 복구 1] 백엔드에서 참가자 명단(participants)을 안 줬을 경우,
+        // matches 데이터 안에서 이름(name)을 긁어모아 가상 명단(Pool)을 생성합니다.
+        if (rawParticipants.length === 0 && matchGroups.length > 0) {
+            let tempIdCounter = -10000;
+            const uniqueNames = new Set<string>();
+            matchGroups.forEach((mg: any) => {
+                (mg.courtMatches || []).forEach((cm: any) => {
+                    const teams = [...(cm.team1 || []), ...(cm.team2 || [])];
+                    teams.forEach((t: any) => {
+                        if (t && t.name && !uniqueNames.has(t.name)) {
+                            uniqueNames.add(t.name);
+                            rawParticipants.push({
+                                participantId: t.participantId || tempIdCounter++,
+                                name: t.name,
+                                gender: t.gender || 'MALE',
+                                participantType: t.participantType || 'MEMBER'
+                            });
+                        }
+                    });
+                });
+            });
+        }
+
+        const participants: LocalParticipant[] = rawParticipants.map((p: any) => ({
             participantId: p.participantId || p.id || p.memberId,
             name: p.name || p.participantName,
             gender: (p.gender === 'MALE' || p.gender === '남') ? '남' : '여',
             participantType: p.participantType || 'MEMBER'
         }));
         setParticipantsPool(participants);
-
-        const matchGroups = data.matches || data.matchGroups || data.courtMatchGroups || data.courtMatches || [];
 
         if (matchGroups && matchGroups.length > 0) {
             const newBrackets: Record<string, BracketRow[]> = {
@@ -189,18 +214,27 @@ function useTournamentManager() {
                     
                     const assignMember = (member: any, index: number) => {
                         if (!member) return;
-                        const pId = typeof member === 'object' ? (member.participantId || member.id || member.memberId) : member;
-                        const pData = participants.find(p => String(p.participantId) === String(pId));
                         
+                        // 💡 [초강력 복구 2] participantId가 없다면 이름(Name)으로 먼저 찾습니다!
+                        let pData: LocalParticipant | undefined;
+                        
+                        if (member.participantId) {
+                            pData = participants.find(p => String(p.participantId) === String(member.participantId));
+                        }
+                        
+                        // ID로 못 찾았거나 ID가 없는 경우 이름으로 서칭
+                        if (!pData && member.name) {
+                            pData = participants.find(p => p.name === member.name);
+                        }
+
                         if (pData) {
                             row[index] = pData;
-                            if (!newAssignments[courtKey].some(a => a.participantId === pData.participantId)) {
+                            if (!newAssignments[courtKey].some(a => a.participantId === pData!.participantId)) {
                                 newAssignments[courtKey].push(pData);
                             }
                         }
                     };
 
-                    // 💡 API 데이터가 객체일 경우 배열로 강제 변환하여 에러 방지
                     const t1 = match.team1 || match.teamA || match.leftTeam || [];
                     const t2 = match.team2 || match.teamB || match.rightTeam || [];
                     const team1Array = Array.isArray(t1) ? t1 : [t1];
@@ -221,7 +255,7 @@ function useTournamentManager() {
             setMatchId(data.matchId || data.id || null);
             setIsEditMode(true);
             
-            // 💡 [핵심 수정] 수정 모드 진입 시 전체뷰가 아닌 '데이터가 있는 첫 번째 코트'로 즉시 진입하여 배치 명단과 대진표를 노출합니다.
+            // 💡 데이터가 있는 첫 번째 코트로 바로 진입하여 화면에 보여줍니다.
             const firstActiveCourt = Object.keys(newAssignments).find(key => newAssignments[key].length > 0) || '1코트';
             setCurrentCourt(firstActiveCourt);
             setMobileStep(1); 
@@ -471,7 +505,6 @@ const ActivityListView = ({ m }: { m: TournamentManager }) => (
                                 <span className="bg-purple-50 text-purple-600 px-2.5 py-1 rounded-md">게스트 {activity.attendance.currentGuests}명</span>
                             </div>
                             
-                            {/* 💡 [명확한 수정 버튼] 카드가 아닌 '버튼'을 눌렀을 때만 데이터 로드 후 에디터로 진입합니다. */}
                             <button 
                                 onClick={() => m.handleSelectActivity(activity)}
                                 className={`px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm transition active:scale-95 ${
