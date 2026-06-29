@@ -80,7 +80,6 @@ const initialBracket = (): BracketRow[] => [
 function useTournamentManager() {
     const { showToast } = useToast();
     
-    // --- States ---
     const [activities, setActivities] = useState<AdminActivity[]>([]);
     const [selectedActivity, setSelectedActivity] = useState<AdminActivity | null>(null);
     const [participantsPool, setParticipantsPool] = useState<LocalParticipant[]>([]);
@@ -103,7 +102,6 @@ function useTournamentManager() {
         '1코트': initialBracket(), '2코트': initialBracket(), '3코트': initialBracket(), '4코트': initialBracket(),
     });
 
-    // --- Effects ---
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 768);
         checkMobile();
@@ -127,7 +125,6 @@ function useTournamentManager() {
 
     useEffect(() => { fetchAdminActivities(); }, [fetchAdminActivities]);
 
-    // --- Computed Values ---
     const progress = useMemo(() => {
         const totalSlots = Object.values(courtBrackets).flat(2).length;
         if (totalSlots === 0) return 0;
@@ -141,50 +138,56 @@ function useTournamentManager() {
         );
     }, [participantsPool, assignments]);
 
-    // --- Core Logic: 대진 데이터 복구 (Hydration) ---
+    // 💡 [핵심] 초강력 데이터 복구 (Hydration) 로직
     const hydrateTournament = (responseData: any) => {
         const data = responseData.data?.data || responseData.data || responseData.result || responseData;
 
         if (!data) {
-            showToast('데이터 구조를 파싱할 수 없습니다.', 'error');
+            showToast('데이터를 불러올 수 없습니다.', 'error');
             return;
         }
 
-        const matchGroups = data.matches || data.matchGroups || data.courtMatchGroups || data.courtMatches || [];
-        let rawParticipants = data.participants || data.participantList || [];
+        // 1. 이름(name)을 Key로 사용하여 중복 없는 참가자 풀을 완벽하게 재구성합니다.
+        const uniqueParticipantsMap = new Map<string, LocalParticipant>();
+        
+        // 서버에서 전체 참가자 목록을 줬다면 먼저 담습니다.
+        const rawParticipants = data.participants || data.participantList || [];
+        rawParticipants.forEach((p: any) => {
+            if (p.name) {
+                uniqueParticipantsMap.set(p.name, {
+                    participantId: p.participantId || p.id || p.memberId,
+                    name: p.name,
+                    gender: (p.gender === 'MALE' || p.gender === '남') ? '남' : '여',
+                    participantType: p.participantType || 'MEMBER'
+                });
+            }
+        });
 
-        // 💡 [초강력 복구 1] 백엔드에서 참가자 명단(participants)을 안 줬을 경우,
-        // matches 데이터 안에서 이름(name)을 긁어모아 가상 명단(Pool)을 생성합니다.
-        if (rawParticipants.length === 0 && matchGroups.length > 0) {
-            let tempIdCounter = -10000;
-            const uniqueNames = new Set<string>();
-            matchGroups.forEach((mg: any) => {
-                (mg.courtMatches || []).forEach((cm: any) => {
-                    const teams = [...(cm.team1 || []), ...(cm.team2 || [])];
-                    teams.forEach((t: any) => {
-                        if (t && t.name && !uniqueNames.has(t.name)) {
-                            uniqueNames.add(t.name);
-                            rawParticipants.push({
-                                participantId: t.participantId || tempIdCounter++,
-                                name: t.name,
-                                gender: t.gender || 'MALE',
-                                participantType: t.participantType || 'MEMBER'
-                            });
-                        }
-                    });
+        // 만약 전체 참가자 목록이 비어있더라도 대진표(matches)를 뒤져서 사람들을 강제로 찾아냅니다.
+        const matchGroups = data.matches || data.matchGroups || data.courtMatchGroups || data.courtMatches || [];
+        let tempId = -9000;
+
+        matchGroups.forEach((mg: any) => {
+            (mg.courtMatches || []).forEach((cm: any) => {
+                const teams = [...(cm.team1 || []), ...(cm.team2 || [])];
+                teams.forEach((t: any) => {
+                    if (t && t.name && !uniqueParticipantsMap.has(t.name)) {
+                        uniqueParticipantsMap.set(t.name, {
+                            participantId: t.participantId || tempId--, // ID가 없으면 임시 ID 부여
+                            name: t.name,
+                            gender: (t.gender === 'MALE' || t.gender === '남') ? '남' : '여',
+                            participantType: t.participantType || 'MEMBER'
+                        });
+                    }
                 });
             });
-        }
+        });
 
-        const participants: LocalParticipant[] = rawParticipants.map((p: any) => ({
-            participantId: p.participantId || p.id || p.memberId,
-            name: p.name || p.participantName,
-            gender: (p.gender === 'MALE' || p.gender === '남') ? '남' : '여',
-            participantType: p.participantType || 'MEMBER'
-        }));
+        const participants = Array.from(uniqueParticipantsMap.values());
         setParticipantsPool(participants);
 
-        if (matchGroups && matchGroups.length > 0) {
+        // 2. 대진표 데이터(Bracket) 화면 반영
+        if (matchGroups.length > 0) {
             const newBrackets: Record<string, BracketRow[]> = {
                 '1코트': initialBracket(), '2코트': initialBracket(), '3코트': initialBracket(), '4코트': initialBracket()
             };
@@ -192,8 +195,8 @@ function useTournamentManager() {
                 '1코트': [], '2코트': [], '3코트': [], '4코트': [] 
             };
 
-            matchGroups.forEach((m: any, cIdx: number) => {
-                const courtNumStr = String(m.courtNumber || m.courtId || (cIdx + 1)).replace(/[^0-9]/g, '');
+            matchGroups.forEach((mg: any, cIdx: number) => {
+                const courtNumStr = String(mg.courtNumber || mg.courtId || (cIdx + 1)).replace(/[^0-9]/g, '');
                 const courtKey = `${courtNumStr || (cIdx + 1)}코트`;
                 
                 if (!newBrackets[courtKey]) {
@@ -201,52 +204,35 @@ function useTournamentManager() {
                     newAssignments[courtKey] = [];
                 }
 
-                const cMatches = m.courtMatches || m.matches || m.matchList || [];
-                
-                cMatches.forEach((match: any, defaultIdx: number) => {
-                    const matchIdx = match.matchNumber ? match.matchNumber - 1 : defaultIdx;
+                const cMatches = mg.courtMatches || mg.matches || [];
+                cMatches.forEach((match: any, mIdx: number) => {
+                    const matchIdx = match.matchNumber ? match.matchNumber - 1 : mIdx;
                     
                     while (newBrackets[courtKey].length <= matchIdx) {
                         newBrackets[courtKey].push(createEmptyRow());
                     }
                     
-                    const row: BracketRow = newBrackets[courtKey][matchIdx] || [null, null, null, null];
+                    const row = newBrackets[courtKey][matchIdx];
                     
-                    const assignMember = (member: any, index: number) => {
-                        if (!member) return;
-                        
-                        // 💡 [초강력 복구 2] participantId가 없다면 이름(Name)으로 먼저 찾습니다!
-                        let pData: LocalParticipant | undefined;
-                        
-                        if (member.participantId) {
-                            pData = participants.find(p => String(p.participantId) === String(member.participantId));
-                        }
-                        
-                        // ID로 못 찾았거나 ID가 없는 경우 이름으로 서칭
-                        if (!pData && member.name) {
-                            pData = participants.find(p => p.name === member.name);
-                        }
-
+                    // 💡 무조건 '이름(name)'을 기준으로 맵에서 사람을 찾아 배치합니다.
+                    const assignToRow = (member: any, index: number) => {
+                        if (!member || !member.name) return;
+                        const pData = participants.find(p => p.name === member.name);
                         if (pData) {
                             row[index] = pData;
-                            if (!newAssignments[courtKey].some(a => a.participantId === pData!.participantId)) {
+                            if (!newAssignments[courtKey].some(a => a.participantId === pData.participantId)) {
                                 newAssignments[courtKey].push(pData);
                             }
                         }
                     };
 
-                    const t1 = match.team1 || match.teamA || match.leftTeam || [];
-                    const t2 = match.team2 || match.teamB || match.rightTeam || [];
-                    const team1Array = Array.isArray(t1) ? t1 : [t1];
-                    const team2Array = Array.isArray(t2) ? t2 : [t2];
+                    const t1 = Array.isArray(match.team1) ? match.team1 : [];
+                    const t2 = Array.isArray(match.team2) ? match.team2 : [];
 
-                    if (team1Array.length > 0) assignMember(team1Array[0], 0);
-                    if (team1Array.length > 1) assignMember(team1Array[1], 1);
-                    
-                    if (team2Array.length > 0) assignMember(team2Array[0], 2);
-                    if (team2Array.length > 1) assignMember(team2Array[1], 3);
-
-                    newBrackets[courtKey][matchIdx] = row;
+                    if (t1.length > 0) assignToRow(t1[0], 0);
+                    if (t1.length > 1) assignToRow(t1[1], 1);
+                    if (t2.length > 0) assignToRow(t2[0], 2);
+                    if (t2.length > 1) assignToRow(t2[1], 3);
                 });
             });
 
@@ -255,17 +241,13 @@ function useTournamentManager() {
             setMatchId(data.matchId || data.id || null);
             setIsEditMode(true);
             
-            // 💡 데이터가 있는 첫 번째 코트로 바로 진입하여 화면에 보여줍니다.
+            // 💡 [개선] 전체 뷰를 건너뛰고, 데이터가 배치된 '첫 번째 코트' 화면으로 즉시 진입
             const firstActiveCourt = Object.keys(newAssignments).find(key => newAssignments[key].length > 0) || '1코트';
             setCurrentCourt(firstActiveCourt);
-            setMobileStep(1); 
             
         } else {
             setAssignments({ '1코트': [], '2코트': [], '3코트': [], '4코트': [] });
-            setCourtBrackets({
-                '1코트': initialBracket(), '2코트': initialBracket(),
-                '3코트': initialBracket(), '4코트': initialBracket()
-            });
+            setCourtBrackets({ '1코트': initialBracket(), '2코트': initialBracket(), '3코트': initialBracket(), '4코트': initialBracket() });
             setIsEditMode(false);
             setMatchId(null);
             setCurrentCourt('1코트');
@@ -281,9 +263,13 @@ function useTournamentManager() {
             setCurrentCourt('1코트');
             setMobileStep(1);
 
+            // API 호출: 대진 정보 가져오기
             const response = await api.get(`/admin/votes/${activity.voteId}/matches`);
             setSelectedActivity(activity);
+            
+            // 데이터 화면 반영
             hydrateTournament(response.data);
+            
         } catch (err) {
             console.error('❌ [Load Tournament Error]:', err);
             showToast('대진 정보를 불러오지 못했습니다.', 'error');
@@ -292,7 +278,6 @@ function useTournamentManager() {
         }
     };
 
-    // --- Action Handlers ---
     const handleMatchCount = (type: 'plus' | 'minus') => {
         if (currentCourt === '전체') return;
         setCourtBrackets(prev => {
@@ -477,7 +462,6 @@ type TournamentManager = ReturnType<typeof useTournamentManager>;
 // 4. UI 컴포넌트 분리 (Sub-Components)
 // ============================================================================
 
-// [4-1] 메인 대진 관리 목록 뷰
 const ActivityListView = ({ m }: { m: TournamentManager }) => (
     <div className="space-y-4 sm:space-y-6">
         <header>
@@ -505,6 +489,7 @@ const ActivityListView = ({ m }: { m: TournamentManager }) => (
                                 <span className="bg-purple-50 text-purple-600 px-2.5 py-1 rounded-md">게스트 {activity.attendance.currentGuests}명</span>
                             </div>
                             
+                            {/* 💡 대진표 수정하기 버튼 */}
                             <button 
                                 onClick={() => m.handleSelectActivity(activity)}
                                 className={`px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm transition active:scale-95 ${
@@ -527,7 +512,6 @@ const ActivityListView = ({ m }: { m: TournamentManager }) => (
     </div>
 );
 
-// [4-2] 선택된 모임 상단 헤더 & 코트 탭
 const TournamentHeader = ({ m }: { m: TournamentManager }) => (
     <>
         <header className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-6 sm:mb-8">
@@ -557,7 +541,6 @@ const TournamentHeader = ({ m }: { m: TournamentManager }) => (
     </>
 );
 
-// [4-3] 전체 코트 대진 현황 뷰
 const OverallView = ({ m }: { m: TournamentManager }) => (
     <section className="animate-in fade-in duration-500 space-y-4">
         <div className="flex justify-between items-center px-1">
@@ -585,7 +568,6 @@ const OverallView = ({ m }: { m: TournamentManager }) => (
     </section>
 );
 
-// [4-4] 개별 코트 배정 및 대진표 뷰 (Step 1 & 2 통합)
 const CourtDetailView = ({ m }: { m: TournamentManager }) => (
     <>
         {(!m.isMobile || m.mobileStep === 1) && (
