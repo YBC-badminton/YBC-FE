@@ -17,7 +17,7 @@ interface Participant {
 
 interface AdminActivity {
     voteId: number;
-    matchId?: number; // 💡 백엔드에서 넘겨줄 수 있는 matchId 보정
+    matchId?: number; // 리스트 API에서 matchId를 내려줄 경우를 위한 필드
     title: string;
     activityDay: string;
     activityDate: string;
@@ -46,7 +46,7 @@ export default function TournamentPage() {
 
     // --- 에디터 전용 상태 ---
     const [activeVoteId, setActiveVoteId] = useState<number | null>(null);
-    const [activeMatchId, setActiveMatchId] = useState<number | null>(null); // 수정 모드 판별
+    const [activeMatchId, setActiveMatchId] = useState<number | null>(null);
     const [activityTitle, setActivityTitle] = useState('');
     const [activeCourt, setActiveCourt] = useState<number>(1);
     
@@ -64,7 +64,7 @@ export default function TournamentPage() {
         4: [createEmptyRow(), createEmptyRow()]
     });
 
-    // 화면 터치 배치용 ID
+    // 화면 터치 배치용 선택된 ID
     const [selectedId, setSelectedId] = useState<number | null>(null);
 
     // ============================================================================
@@ -85,11 +85,11 @@ export default function TournamentPage() {
 
     useEffect(() => { fetchActivities(); }, [fetchActivities]);
 
-    // 💡 [핵심] 수정 모드 진입 시 서버 데이터를 화면에 그리는 로직
+    // 💡 [초강력 복구 로직] 서버 데이터를 화면에 완벽하게 복구합니다.
     const handleOpenEditor = async (activity: AdminActivity) => {
         setLoading(true);
         try {
-            // 엔드포인트 동적 설정 (matchId가 있으면 직접 조회, 없으면 voteId로 조회)
+            // 백엔드가 리스트에서 matchId를 줬다면 해당 API 호출, 아니면 voteId로 우회 호출
             const endpoint = activity.matchRegistered && activity.matchId 
                 ? `/admin/matches/${activity.matchId}` 
                 : `/admin/votes/${activity.voteId}/matches`;
@@ -103,15 +103,15 @@ export default function TournamentPage() {
             setActivityTitle(activity.title);
             setActiveMatchId(data.matchId || data.id || null);
 
-            // 1. 전체 참가자 추출 (Top-level + Nested fallback)
+            // 1. 전체 참가자 추출 (Top-level 파싱)
             const uniqueParticipants = new Map<number, Participant>();
-            
-            // 1-A. 최상위 participants 파싱
             const rawParticipants = data.participants || data.participantList || [];
+            
             rawParticipants.forEach((p: any) => {
-                if (p.participantId) {
-                    uniqueParticipants.set(p.participantId, {
-                        participantId: p.participantId,
+                const id = p.participantId ?? p.id ?? p.memberId;
+                if (id !== undefined && id !== null) {
+                    uniqueParticipants.set(Number(id), {
+                        participantId: Number(id),
                         name: p.name,
                         gender: (p.gender === 'MALE' || p.gender === '남') ? 'MALE' : 'FEMALE',
                         participantType: p.participantType || 'MEMBER'
@@ -121,29 +121,49 @@ export default function TournamentPage() {
 
             const matchGroups = data.matches || data.matchGroups || data.courtMatches || [];
 
-            // 1-B. 대진표 안에 들어있는 사람들을 스캔하여 참가자 풀(Pool) 무결성 보장
+            // 1-B. 혹시라도 최상위 participants에 누락된 사람이 대진표에 있다면 강제로 추출
+            let tempId = -1000;
             matchGroups.forEach((mg: any) => {
                 const cMatches = mg.courtMatches || mg.matches || [];
                 cMatches.forEach((match: any) => {
                     const teams = [...(Array.isArray(match.team1) ? match.team1 : []), ...(Array.isArray(match.team2) ? match.team2 : [])];
                     teams.forEach((t: any) => {
-                        if (t && t.participantId && !uniqueParticipants.has(t.participantId)) {
-                            uniqueParticipants.set(t.participantId, {
-                                participantId: t.participantId,
-                                name: t.name || '알수없음',
-                                gender: (t.gender === 'MALE' || t.gender === '남') ? 'MALE' : 'FEMALE',
-                                participantType: t.participantType || 'MEMBER'
-                            });
+                        if (t && t.name) {
+                            const exists = Array.from(uniqueParticipants.values()).find(p => p.name === t.name);
+                            if (!exists) {
+                                const newId = t.participantId ?? t.id ?? tempId--;
+                                uniqueParticipants.set(Number(newId), {
+                                    participantId: Number(newId),
+                                    name: t.name,
+                                    gender: (t.gender === 'MALE' || t.gender === '남') ? 'MALE' : 'FEMALE',
+                                    participantType: t.participantType || 'MEMBER'
+                                });
+                            }
                         }
                     });
                 });
             });
 
-            setParticipants(Array.from(uniqueParticipants.values()));
+            const finalParticipants = Array.from(uniqueParticipants.values());
+            setParticipants(finalParticipants);
 
-            // 2. 대진표 및 로스터 뼈대 초기화
+            // 2. 대진표 및 로스터 구조 초기화
             const newRosters: Record<number, number[]> = { 1: [], 2: [], 3: [], 4: [] };
             const newBrackets: Record<number, BracketRow[]> = { 1: [], 2: [], 3: [], 4: [] };
+
+            // 💡 [해결 핵심] 백엔드가 team 배열 안에 participantId를 안 줬을 때 이름으로 역추적해서 ID를 찾는 무적의 함수!
+            const resolveParticipantId = (member: any) => {
+                if (!member) return null;
+                if (member.participantId !== undefined) return Number(member.participantId);
+                if (member.id !== undefined) return Number(member.id);
+                
+                // ID가 없으면 '이름'으로 매칭
+                if (member.name) {
+                    const found = finalParticipants.find(p => p.name === member.name);
+                    if (found) return found.participantId;
+                }
+                return null;
+            };
 
             // 3. 서버 데이터를 코트와 대진표 칸에 매핑
             matchGroups.forEach((mg: any, index: number) => {
@@ -160,28 +180,28 @@ export default function TournamentPage() {
                     const t1 = Array.isArray(match.team1) ? match.team1 : [];
                     const t2 = Array.isArray(match.team2) ? match.team2 : [];
 
-                    if (t1[0]?.participantId) row[0] = t1[0].participantId;
-                    if (t1[1]?.participantId) row[1] = t1[1].participantId;
-                    if (t2[0]?.participantId) row[2] = t2[0].participantId;
-                    if (t2[1]?.participantId) row[3] = t2[1].participantId;
+                    // 무조건 식별자(ID)를 찾아서 넣습니다.
+                    row[0] = resolveParticipantId(t1[0]);
+                    row[1] = resolveParticipantId(t1[1]);
+                    row[2] = resolveParticipantId(t2[0]);
+                    row[3] = resolveParticipantId(t2[1]);
 
-                    // 매치 번호에 맞게 배열 칸 늘리기
                     const targetIdx = match.matchNumber ? match.matchNumber - 1 : mIdx;
                     while (newBrackets[cNum].length <= targetIdx) {
                         newBrackets[cNum].push(createEmptyRow());
                     }
                     newBrackets[cNum][targetIdx] = row;
 
-                    // 해당 칸에 배정된 인원을 코트 명단(로스터)에도 추가
+                    // 칸에 배정된 인원을 코트 명단(로스터)에도 추가
                     row.forEach(id => {
-                        if (id && !newRosters[cNum].includes(id)) {
+                        if (id !== null && !newRosters[cNum].includes(id)) {
                             newRosters[cNum].push(id);
                         }
                     });
                 });
             });
 
-            // 데이터가 없는 빈 코트는 기본적으로 2칸의 빈 대진표를 가지게 보정
+            // 데이터가 없는 빈 코트도 기본 2칸을 그리게 설정
             [1, 2, 3, 4].forEach(cNum => {
                 if (!newBrackets[cNum] || newBrackets[cNum].length === 0) {
                     newBrackets[cNum] = [createEmptyRow(), createEmptyRow()];
@@ -191,7 +211,7 @@ export default function TournamentPage() {
             setRosters(newRosters);
             setBrackets(newBrackets);
             
-            // 데이터가 배정된 첫 번째 코트 탭으로 자동 이동
+            // 데이터가 가장 먼저 존재하는 코트 탭으로 자동 이동
             const firstActive = Object.keys(newRosters).find(k => newRosters[Number(k)].length > 0);
             setActiveCourt(firstActive ? Number(firstActive) : 1);
             
@@ -244,7 +264,7 @@ export default function TournamentPage() {
             });
             setSelectedId(null); // 선택 초기화
         } else if (currentOccupantId) {
-            // 선택된 유저가 없을 때 사람이 있는 칸을 누르면 대진표에서만 빼기 (명단엔 남음)
+            // 선택된 유저가 없을 때 사람이 있는 칸을 누르면 대진표에서 빼기 (명단엔 남음)
             setBrackets(prev => {
                 const newB = [...prev[activeCourt].map(r => [...r])];
                 newB[matchIndex][slotIndex] = null;
@@ -260,6 +280,24 @@ export default function TournamentPage() {
             if (delta === -1 && current.length > 1) current.pop();
             return { ...prev, [activeCourt]: current };
         });
+    };
+
+    const randomizeCourt = () => {
+        const pool = [...rosters[activeCourt]];
+        if (pool.length < 4) return showToast('코트에 최소 4명이 필요합니다.', 'error');
+
+        setBrackets(prev => {
+            const newMatches = prev[activeCourt].map(() => [null, null, null, null] as BracketRow);
+            newMatches.forEach(row => {
+                const shuffled = [...pool].sort(() => Math.random() - 0.5);
+                row[0] = shuffled[0] || null;
+                row[1] = shuffled[1] || null;
+                row[2] = shuffled[2] || null;
+                row[3] = shuffled[3] || null;
+            });
+            return { ...prev, [activeCourt]: newMatches };
+        });
+        setSelectedId(null);
     };
 
     const handleSave = async () => {
@@ -373,7 +411,7 @@ export default function TournamentPage() {
                             </button>
                             <div>
                                 <h2 className="text-lg font-black">{activityTitle}</h2>
-                                <p className="text-[11px] font-bold text-gray-400">터치하여 명단을 코트에 넣고, 대진표 빈칸에 배치하세요.</p>
+                                <p className="text-[11px] font-bold text-gray-400">명단을 누르고, 빈칸을 눌러 바로 배치하세요.</p>
                             </div>
                         </div>
                         <button onClick={handleSave} className="flex items-center gap-1.5 bg-gray-900 text-white px-4 py-2 sm:px-6 sm:py-2.5 rounded-full text-sm font-bold active:scale-95 shadow-md">
@@ -428,7 +466,7 @@ export default function TournamentPage() {
                             <div className="flex justify-between items-center mb-3">
                                 <h3 className="text-xs font-black text-[#6d9434] flex items-center gap-1.5">
                                     <Users className="w-4 h-4" /> {activeCourt}코트 명단 
-                                    <span className="text-gray-500 opacity-60 ml-1 font-medium">(터치하여 선택 후 아래 대진표 빈칸에 넣으세요)</span>
+                                    <span className="text-gray-500 opacity-60 ml-1 font-medium">(터치하여 선택 후 아래 빈칸에 넣으세요)</span>
                                 </h3>
                             </div>
                             <div className="flex flex-wrap gap-2 min-h-[40px]">
@@ -470,6 +508,9 @@ export default function TournamentPage() {
                                     <span className="w-8 text-center text-xs font-bold">{brackets[activeCourt].length} G</span>
                                     <button onClick={() => adjustMatchCount(1)} className="w-7 h-7 bg-white rounded flex items-center justify-center text-gray-500 font-black shadow-sm">+</button>
                                 </div>
+                                <button onClick={randomizeCourt} className="text-xs bg-indigo-50 text-indigo-600 font-bold px-3 py-1.5 rounded-lg border border-indigo-100 hover:bg-indigo-100 transition-colors">
+                                    🔀 랜덤 배치
+                                </button>
                             </div>
 
                             <div className="space-y-3">
