@@ -265,6 +265,7 @@ function useTournamentManager() {
 
             // API 호출: 대진 정보 가져오기
             const response = await api.get(`/admin/votes/${activity.voteId}/matches`);
+            console.log(`GET /admin/votes/${activity.voteId}/matches 응답 데이터:`, response.data);
             setSelectedActivity(activity);
             
             // 데이터 화면 반영
@@ -391,6 +392,7 @@ function useTournamentManager() {
                 courtCount: courtAssignments.length,
                 courtAssignments,
             });
+            console.log(`POST /admin/votes/${selectedActivity.voteId}/matches/generate 응답 데이터:`, res.data);
             showToast('서버에서 대진이 랜덤 생성되었습니다.', 'success');
             
             const resData = res.data?.data || res.data;
@@ -431,9 +433,11 @@ function useTournamentManager() {
 
             if (isEditMode && matchId) {
                 const response = await api.patch(`/admin/matches/${matchId}`, payload);
+                console.log(`PATCH /admin/matches/${matchId} 응답 데이터:`, response.data);
                 if (response.status === 200 || response.status === 204) showToast('대진 정보가 수정되었습니다.', 'success');
             } else {
                 const response = await api.post(`/admin/votes/${selectedActivity.voteId}/matches`, payload);
+                console.log(`POST /admin/votes/${selectedActivity.voteId}/matches 응답 데이터:`, response.data);
                 if (response.status === 200 || response.status === 201 || response.status === 204) showToast('대진 정보가 저장되었습니다.', 'success');
             }
 
