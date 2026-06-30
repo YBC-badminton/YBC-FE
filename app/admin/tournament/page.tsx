@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Calendar, MapPin, CheckCircle2, UserPlus, Users, X, RefreshCw, Save, ArrowLeft } from 'lucide-react';
+import { Calendar, MapPin, CheckCircle2, UserPlus, Users, X, RefreshCw, Save, ArrowLeft, Edit3 } from 'lucide-react';
 import api from '../../../lib/axios';
 import { useToast } from '../../../components/ui/Toast';
 
@@ -46,7 +46,7 @@ export default function TournamentPage() {
 
     // --- 에디터 전용 상태 ---
     const [activeVoteId, setActiveVoteId] = useState<number | null>(null);
-    const [activeMatchId, setActiveMatchId] = useState<number | null>(null);
+    const [activeMatchId, setActiveMatchId] = useState<number | null>(null); // 수정 모드 판별용
     const [activityTitle, setActivityTitle] = useState('');
     const [activeCourt, setActiveCourt] = useState<number>(1);
     
@@ -85,11 +85,11 @@ export default function TournamentPage() {
 
     useEffect(() => { fetchActivities(); }, [fetchActivities]);
 
-    // 💡 [핵심 해결 로직] 어떤 구조의 API 응답이 와도 화면에 100% 복구해내는 함수
+    // 💡 대진 조회 및 에디터 진입 (수정 모드 vs 새 작성 모드 자동 판별)
     const handleOpenEditor = async (activity: AdminActivity) => {
         setLoading(true);
         try {
-            // 💡 백엔드에서 matchId를 내려준 경우 대진 조회 API 호출, 없으면 새 대진 조회
+            // 💡 백엔드에서 matchId를 내려준 경우 [GET 대진 조회] API 호출, 없으면 [GET 새 대진 생성용 명단] 조회
             const endpoint = activity.matchId 
                 ? `/admin/matches/${activity.matchId}` 
                 : `/admin/votes/${activity.voteId}/matches`;
@@ -103,6 +103,7 @@ export default function TournamentPage() {
 
             setActiveVoteId(activity.voteId);
             setActivityTitle(activity.title);
+            // 💡 matchId가 존재하면 완벽한 "수정 모드"로 동작합니다.
             setActiveMatchId(data.matchId || data.id || activity.matchId || null);
 
             // 1. 응답 데이터 형태 정규화 (1차원 평탄화 구조 vs 2차원 중첩 구조 완벽 대응)
@@ -111,10 +112,8 @@ export default function TournamentPage() {
 
             rawMatchGroups.forEach((item: any, index: number) => {
                 if (item.team1 || item.team2) {
-                    // 콘솔 스크린샷처럼 코트 구분 없이 1차원 배열(Flat)로 내려온 경우
                     let cNum = item.courtNumber;
                     if (cNum === undefined || cNum === null) {
-                        // 코트 번호가 누락되었다면 인덱스를 기반으로 추론 (2게임당 1코트)
                         cNum = Math.floor(index / 2) + 1;
                     }
                     allMatches.push({
@@ -124,7 +123,6 @@ export default function TournamentPage() {
                         team2: item.team2
                     });
                 } else if (item.courtMatches || item.matches) {
-                    // 이전에 보내주신 JSON처럼 코트별로 중첩(Nested)되어 내려온 경우
                     const cNum = item.courtNumber || item.courtId || (index + 1);
                     const nestedMatches = item.courtMatches || item.matches || [];
                     nestedMatches.forEach((m: any, mIdx: number) => {
@@ -142,14 +140,13 @@ export default function TournamentPage() {
             const uniqueParticipants = new Map<number, Participant>();
             const rawParticipants = data.participants || data.participantList || [];
             
-            // 데이터 최상단 participants 배열에서 추출
             rawParticipants.forEach((p: any) => {
                 const id = p.participantId ?? p.id ?? p.memberId;
                 if (id !== undefined && id !== null) {
                     uniqueParticipants.set(Number(id), {
                         participantId: Number(id),
                         name: p.name,
-                        gender: (p.gender === 'FEMALE' || p.gender === '여') ? 'FEMALE' : 'MALE', // null 대응
+                        gender: (p.gender === 'FEMALE' || p.gender === '여') ? 'FEMALE' : 'MALE', 
                         participantType: p.participantType || 'MEMBER'
                     });
                 }
@@ -209,14 +206,12 @@ export default function TournamentPage() {
                 row[2] = resolveId(t2[0]);
                 row[3] = resolveId(t2[1]);
 
-                // 매치 번호(matchNumber)를 기준으로 배열 인덱스 맞추기
                 const targetIdx = match.matchNumber ? match.matchNumber - 1 : newBrackets[cNum].length;
                 while (newBrackets[cNum].length <= targetIdx) {
                     newBrackets[cNum].push(createEmptyRow());
                 }
                 newBrackets[cNum][targetIdx] = row;
 
-                // 로스터(명단)에 추가 (중복 방지)
                 row.forEach(id => {
                     if (id !== null && !newRosters[cNum].includes(id)) {
                         newRosters[cNum].push(id);
@@ -224,7 +219,6 @@ export default function TournamentPage() {
                 });
             });
 
-            // 빈 코트라도 화면이 깨지지 않게 최소 2칸 생성
             [1, 2, 3, 4].forEach(cNum => {
                 if (!newBrackets[cNum] || newBrackets[cNum].length === 0) {
                     newBrackets[cNum] = [createEmptyRow(), createEmptyRow()];
@@ -234,7 +228,6 @@ export default function TournamentPage() {
             setRosters(newRosters);
             setBrackets(newBrackets);
             
-            // 데이터가 존재하는 가장 첫 번째 코트로 이동
             const firstActive = Object.keys(newRosters).find(k => newRosters[Number(k)].length > 0);
             setActiveCourt(firstActive ? Number(firstActive) : 1);
             
@@ -270,21 +263,16 @@ export default function TournamentPage() {
         });
     };
 
-    // 대진표 칸 터치 배치 제어 함수
     const handleCellClick = (matchIndex: number, slotIndex: number, currentOccupantId: number | null) => {
         if (selectedId) {
             setBrackets(prev => {
                 const newB = [...prev[activeCourt].map(r => [...r])];
                 const currentRow = newB[matchIndex];
 
-                // 조건 1 적용: 선택한 인원이 '동일한 게임' 내의 다른 자리에 이미 있다면 기존 자리 비움 (게임 내 자리이동 가능)
                 for (let c = 0; c < 4; c++) {
-                    if (currentRow[c] === selectedId) {
-                        currentRow[c] = null;
-                    }
+                    if (currentRow[c] === selectedId) currentRow[c] = null;
                 }
 
-                // 조건 2 적용: 타 게임(다른 Row)의 배치 정보는 건드리지 않고 유지 (다른 경기 중복 배정 전면 허용)
                 currentRow[slotIndex] = selectedId;
                 return { ...prev, [activeCourt]: newB };
             });
@@ -325,6 +313,7 @@ export default function TournamentPage() {
         setSelectedId(null);
     };
 
+    // 💡 [핵심] PATCH(대진 수정) / POST(대진 저장) 분기 처리
     const handleSave = async () => {
         setLoading(true);
         try {
@@ -351,9 +340,11 @@ export default function TournamentPage() {
             });
 
             if (activeMatchId) {
+                // 💡 첨부해주신 명세서 사진(image_10bdbf.png)과 동일한 경로 (PATCH /admin/matches/{matchId})
                 await api.patch(`/admin/matches/${activeMatchId}`, payload);
                 showToast('대진표가 성공적으로 수정되었습니다.', 'success');
             } else {
+                // 신규 저장일 경우
                 await api.post(`/admin/votes/${activeVoteId}/matches`, payload);
                 showToast('대진표가 성공적으로 저장되었습니다.', 'success');
             }
@@ -361,7 +352,7 @@ export default function TournamentPage() {
             await fetchActivities();
             setView('LIST');
         } catch (error) {
-            showToast('저장 중 오류가 발생했습니다.', 'error');
+            showToast('저장/수정 중 오류가 발생했습니다.', 'error');
         } finally {
             setLoading(false);
         }
@@ -435,12 +426,23 @@ export default function TournamentPage() {
                                 <ArrowLeft className="w-5 h-5" />
                             </button>
                             <div>
-                                <h2 className="text-lg font-black">{activityTitle}</h2>
-                                <p className="text-[11px] font-bold text-gray-400">명단을 누르고, 빈칸을 눌러 바로 배치하세요.</p>
+                                <div className="flex items-center gap-2">
+                                    <h2 className="text-lg font-black text-gray-900">{activityTitle}</h2>
+                                    {/* 💡 [UI 추가] 수정 모드일 경우 시각적 뱃지 표시 */}
+                                    {activeMatchId && (
+                                        <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-[6px] text-[10px] font-black tracking-wide">
+                                            수정 모드
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="text-[11px] font-bold text-gray-400 mt-0.5">명단을 누르고, 빈칸을 눌러 바로 배치하세요.</p>
                             </div>
                         </div>
-                        <button onClick={handleSave} className="flex items-center gap-1.5 bg-gray-900 text-white px-4 py-2 sm:px-6 sm:py-2.5 rounded-full text-sm font-bold active:scale-95 shadow-md">
-                            <Save className="w-4 h-4" /> 저장
+                        
+                        {/* 💡 [로직 수정] matchId 유무에 따라 버튼 텍스트가 '수정' 또는 '저장'으로 바뀜 */}
+                        <button onClick={handleSave} className={`flex items-center gap-1.5 text-white px-5 py-2.5 sm:px-6 rounded-xl text-sm font-bold active:scale-95 shadow-md transition-colors ${activeMatchId ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-900 hover:bg-gray-800'}`}>
+                            {activeMatchId ? <Edit3 className="w-4 h-4" /> : <Save className="w-4 h-4" />} 
+                            {activeMatchId ? '수정하기' : '저장하기'}
                         </button>
                     </div>
 
