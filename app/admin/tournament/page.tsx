@@ -17,7 +17,7 @@ interface Participant {
 
 interface AdminActivity {
     voteId: number;
-    matchId?: number; // 💡 새롭게 추가된 matchId (대진표 조회/수정용)
+    matchId?: number; // 💡 리스트에서 넘겨받은 matchId
     title: string;
     activityDay: string;
     activityDate: string;
@@ -26,7 +26,7 @@ interface AdminActivity {
     attendance: { currentAttendees: number; currentGuests: number; totalParticipants: number };
 }
 
-type BracketRow = (number | null)[]; // participantId만 저장하여 데이터 정합성 100% 보장
+type BracketRow = (number | null)[];
 
 // ============================================================================
 // 2. 헬퍼 함수
@@ -53,10 +53,10 @@ export default function TournamentPage() {
     // 전체 참가자 풀
     const [participants, setParticipants] = useState<Participant[]>([]);
     
-    // 코트별 명단: Record<코트번호, participantId[]>
+    // 코트별 명단
     const [rosters, setRosters] = useState<Record<number, number[]>>({ 1: [], 2: [], 3: [], 4: [] });
     
-    // 코트별 대진표: Record<코트번호, 배열[팀1_1, 팀1_2, 팀2_1, 팀2_2]>
+    // 코트별 대진표
     const [brackets, setBrackets] = useState<Record<number, BracketRow[]>>({
         1: [createEmptyRow(), createEmptyRow()],
         2: [createEmptyRow(), createEmptyRow()],
@@ -64,11 +64,11 @@ export default function TournamentPage() {
         4: [createEmptyRow(), createEmptyRow()]
     });
 
-    // 화면 터치 배치용 선택된 ID
+    // 터치 배치용 ID
     const [selectedId, setSelectedId] = useState<number | null>(null);
 
     // ============================================================================
-    // API 통신 및 데이터 복구 (Hydration)
+    // 데이터 로드
     // ============================================================================
     const fetchActivities = useCallback(async () => {
         setLoading(true);
@@ -85,81 +85,107 @@ export default function TournamentPage() {
 
     useEffect(() => { fetchActivities(); }, [fetchActivities]);
 
-    // 💡 [핵심] 대진 조회 및 에디터 진입 (Hydration)
+    // 💡 [핵심 해결 로직] 어떤 구조의 API 응답이 와도 화면에 100% 복구해내는 함수
     const handleOpenEditor = async (activity: AdminActivity) => {
         setLoading(true);
         try {
-            // 💡 matchId가 있으면 대진 조회 API(/admin/matches/{matchId}) 호출, 없으면 새 대진 작성이므로 voteId 기반 조회
-            const endpoint = activity.matchRegistered && activity.matchId 
+            // 💡 백엔드에서 matchId를 내려준 경우 대진 조회 API 호출, 없으면 새 대진 조회
+            const endpoint = activity.matchId 
                 ? `/admin/matches/${activity.matchId}` 
                 : `/admin/votes/${activity.voteId}/matches`;
                 
             const res = await api.get(endpoint);
             const data = res.data?.data || res.data;
 
-            // 💡 [요청사항] 콘솔에 응답 데이터 출력
             console.log("🎯 [대진 조회 API 응답 데이터]:", data);
 
             if (!data) throw new Error('대진 데이터 응답이 없습니다.');
 
             setActiveVoteId(activity.voteId);
             setActivityTitle(activity.title);
-            // 백엔드에서 받은 matchId를 우선 사용하고, 없으면 리스트에서 받은 matchId 사용
             setActiveMatchId(data.matchId || data.id || activity.matchId || null);
 
-            // 1. 전체 참가자 추출
+            // 1. 응답 데이터 형태 정규화 (1차원 평탄화 구조 vs 2차원 중첩 구조 완벽 대응)
+            const rawMatchGroups = data.matches || data.matchGroups || data.courtMatches || [];
+            const allMatches: any[] = [];
+
+            rawMatchGroups.forEach((item: any, index: number) => {
+                if (item.team1 || item.team2) {
+                    // 콘솔 스크린샷처럼 코트 구분 없이 1차원 배열(Flat)로 내려온 경우
+                    let cNum = item.courtNumber;
+                    if (cNum === undefined || cNum === null) {
+                        // 코트 번호가 누락되었다면 인덱스를 기반으로 추론 (2게임당 1코트)
+                        cNum = Math.floor(index / 2) + 1;
+                    }
+                    allMatches.push({
+                        courtNumber: cNum,
+                        matchNumber: item.matchNumber,
+                        team1: item.team1,
+                        team2: item.team2
+                    });
+                } else if (item.courtMatches || item.matches) {
+                    // 이전에 보내주신 JSON처럼 코트별로 중첩(Nested)되어 내려온 경우
+                    const cNum = item.courtNumber || item.courtId || (index + 1);
+                    const nestedMatches = item.courtMatches || item.matches || [];
+                    nestedMatches.forEach((m: any, mIdx: number) => {
+                        allMatches.push({
+                            courtNumber: cNum,
+                            matchNumber: m.matchNumber || mIdx + 1,
+                            team1: m.team1,
+                            team2: m.team2
+                        });
+                    });
+                }
+            });
+
+            // 2. 전체 참가자 추출 (중복 제거 및 무결성 확보)
             const uniqueParticipants = new Map<number, Participant>();
             const rawParticipants = data.participants || data.participantList || [];
             
+            // 데이터 최상단 participants 배열에서 추출
             rawParticipants.forEach((p: any) => {
                 const id = p.participantId ?? p.id ?? p.memberId;
                 if (id !== undefined && id !== null) {
                     uniqueParticipants.set(Number(id), {
                         participantId: Number(id),
                         name: p.name,
-                        gender: (p.gender === 'MALE' || p.gender === '남') ? 'MALE' : 'FEMALE',
+                        gender: (p.gender === 'FEMALE' || p.gender === '여') ? 'FEMALE' : 'MALE', // null 대응
                         participantType: p.participantType || 'MEMBER'
                     });
                 }
             });
 
-            const matchGroups = data.matches || data.matchGroups || data.courtMatches || [];
-
-            // (방어 코드) 최상위 participants에 누락된 사람이 대진표에 있다면 강제 추출
+            // 대진표(allMatches) 내부에 있는 사람들도 강제로 긁어모아 누락자 방지
             let tempId = -1000;
-            matchGroups.forEach((mg: any) => {
-                const cMatches = mg.courtMatches || mg.matches || [];
-                cMatches.forEach((match: any) => {
-                    const teams = [...(Array.isArray(match.team1) ? match.team1 : []), ...(Array.isArray(match.team2) ? match.team2 : [])];
-                    teams.forEach((t: any) => {
-                        if (t && t.name) {
-                            const exists = Array.from(uniqueParticipants.values()).find(p => p.name === t.name);
-                            if (!exists) {
-                                const newId = t.participantId ?? t.id ?? tempId--;
-                                uniqueParticipants.set(Number(newId), {
-                                    participantId: Number(newId),
-                                    name: t.name,
-                                    gender: (t.gender === 'MALE' || t.gender === '남') ? 'MALE' : 'FEMALE',
-                                    participantType: t.participantType || 'MEMBER'
-                                });
-                            }
+            allMatches.forEach((match: any) => {
+                const teams = [...(Array.isArray(match.team1) ? match.team1 : []), ...(Array.isArray(match.team2) ? match.team2 : [])];
+                teams.forEach((t: any) => {
+                    if (t && t.name) {
+                        const exists = Array.from(uniqueParticipants.values()).find(p => p.name === t.name);
+                        if (!exists) {
+                            const newId = t.participantId ?? t.id ?? tempId--;
+                            uniqueParticipants.set(Number(newId), {
+                                participantId: Number(newId),
+                                name: t.name,
+                                gender: (t.gender === 'FEMALE' || t.gender === '여') ? 'FEMALE' : 'MALE',
+                                participantType: t.participantType || 'MEMBER'
+                            });
                         }
-                    });
+                    }
                 });
             });
 
             const finalParticipants = Array.from(uniqueParticipants.values());
             setParticipants(finalParticipants);
 
-            // 2. 대진표 및 로스터 구조 초기화
+            // 3. 대진표 및 로스터 화면 반영
             const newRosters: Record<number, number[]> = { 1: [], 2: [], 3: [], 4: [] };
             const newBrackets: Record<number, BracketRow[]> = { 1: [], 2: [], 3: [], 4: [] };
 
-            const resolveParticipantId = (member: any) => {
+            const resolveId = (member: any) => {
                 if (!member) return null;
-                if (member.participantId !== undefined) return Number(member.participantId);
-                if (member.id !== undefined) return Number(member.id);
-                // ID가 없으면 '이름'으로 역추적 매칭 (방어 코드)
+                if (member.participantId !== undefined && member.participantId !== null) return Number(member.participantId);
+                if (member.id !== undefined && member.id !== null) return Number(member.id);
                 if (member.name) {
                     const found = finalParticipants.find(p => p.name === member.name);
                     if (found) return found.participantId;
@@ -167,43 +193,38 @@ export default function TournamentPage() {
                 return null;
             };
 
-            // 3. 서버 데이터를 코트와 대진표 칸에 매핑
-            matchGroups.forEach((mg: any, index: number) => {
-                const cNum = mg.courtNumber || mg.courtId || (index + 1);
+            allMatches.forEach((match: any) => {
+                const cNum = match.courtNumber;
                 if (!newBrackets[cNum]) {
                     newBrackets[cNum] = [];
                     newRosters[cNum] = [];
                 }
 
-                const cMatches = mg.courtMatches || mg.matches || [];
-                
-                cMatches.forEach((match: any, mIdx: number) => {
-                    const row: BracketRow = createEmptyRow();
-                    const t1 = Array.isArray(match.team1) ? match.team1 : [];
-                    const t2 = Array.isArray(match.team2) ? match.team2 : [];
+                const row: BracketRow = createEmptyRow();
+                const t1 = Array.isArray(match.team1) ? match.team1 : [];
+                const t2 = Array.isArray(match.team2) ? match.team2 : [];
 
-                    // 식별자(ID) 삽입
-                    row[0] = resolveParticipantId(t1[0]);
-                    row[1] = resolveParticipantId(t1[1]);
-                    row[2] = resolveParticipantId(t2[0]);
-                    row[3] = resolveParticipantId(t2[1]);
+                row[0] = resolveId(t1[0]);
+                row[1] = resolveId(t1[1]);
+                row[2] = resolveId(t2[0]);
+                row[3] = resolveId(t2[1]);
 
-                    const targetIdx = match.matchNumber ? match.matchNumber - 1 : mIdx;
-                    while (newBrackets[cNum].length <= targetIdx) {
-                        newBrackets[cNum].push(createEmptyRow());
+                // 매치 번호(matchNumber)를 기준으로 배열 인덱스 맞추기
+                const targetIdx = match.matchNumber ? match.matchNumber - 1 : newBrackets[cNum].length;
+                while (newBrackets[cNum].length <= targetIdx) {
+                    newBrackets[cNum].push(createEmptyRow());
+                }
+                newBrackets[cNum][targetIdx] = row;
+
+                // 로스터(명단)에 추가 (중복 방지)
+                row.forEach(id => {
+                    if (id !== null && !newRosters[cNum].includes(id)) {
+                        newRosters[cNum].push(id);
                     }
-                    newBrackets[cNum][targetIdx] = row;
-
-                    // 칸에 배정된 인원을 코트 명단(로스터)에도 추가 (중복 방지)
-                    row.forEach(id => {
-                        if (id !== null && !newRosters[cNum].includes(id)) {
-                            newRosters[cNum].push(id);
-                        }
-                    });
                 });
             });
 
-            // 데이터가 없는 빈 코트도 기본 2칸을 그리게 설정
+            // 빈 코트라도 화면이 깨지지 않게 최소 2칸 생성
             [1, 2, 3, 4].forEach(cNum => {
                 if (!newBrackets[cNum] || newBrackets[cNum].length === 0) {
                     newBrackets[cNum] = [createEmptyRow(), createEmptyRow()];
@@ -213,7 +234,7 @@ export default function TournamentPage() {
             setRosters(newRosters);
             setBrackets(newBrackets);
             
-            // 데이터가 가장 먼저 존재하는 코트 탭으로 자동 이동
+            // 데이터가 존재하는 가장 첫 번째 코트로 이동
             const firstActive = Object.keys(newRosters).find(k => newRosters[Number(k)].length > 0);
             setActiveCourt(firstActive ? Number(firstActive) : 1);
             
@@ -221,14 +242,14 @@ export default function TournamentPage() {
             setSelectedId(null);
         } catch (error) {
             console.error(error);
-            showToast('대진표를 열 수 없습니다. 데이터를 확인하세요.', 'error');
+            showToast('대진표를 열 수 없습니다. 콘솔의 에러를 확인하세요.', 'error');
         } finally {
             setLoading(false);
         }
     };
 
     // ============================================================================
-    // 에디터 핵심 로직 (배치 및 제어)
+    // 에디터 핵심 제어 로직
     // ============================================================================
 
     const unassignedPool = useMemo(() => {
@@ -253,13 +274,11 @@ export default function TournamentPage() {
         if (selectedId) {
             setBrackets(prev => {
                 const newB = [...prev[activeCourt].map(r => [...r])];
-                // 기존 위치에서 삭제
                 for (let r = 0; r < newB.length; r++) {
                     for (let c = 0; c < 4; c++) {
                         if (newB[r][c] === selectedId) newB[r][c] = null;
                     }
                 }
-                // 새 위치에 삽입
                 newB[matchIndex][slotIndex] = selectedId;
                 return { ...prev, [activeCourt]: newB };
             });
@@ -300,7 +319,6 @@ export default function TournamentPage() {
         setSelectedId(null);
     };
 
-    // 💡 [핵심] PATCH / POST 분기 처리
     const handleSave = async () => {
         setLoading(true);
         try {
@@ -326,7 +344,6 @@ export default function TournamentPage() {
                 payload.push({ courtNumber, courtMatches });
             });
 
-            // activeMatchId가 존재하면 명확히 PATCH API로 요청
             if (activeMatchId) {
                 await api.patch(`/admin/matches/${activeMatchId}`, payload);
                 showToast('대진표가 성공적으로 수정되었습니다.', 'success');
