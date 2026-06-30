@@ -17,7 +17,7 @@ interface Participant {
 
 interface AdminActivity {
     voteId: number;
-    matchId?: number; // 💡 리스트에서 넘겨받은 matchId
+    matchId?: number;
     title: string;
     activityDay: string;
     activityDate: string;
@@ -85,11 +85,9 @@ export default function TournamentPage() {
 
     useEffect(() => { fetchActivities(); }, [fetchActivities]);
 
-    // 💡 [핵심 해결 로직] 어떤 구조의 API 응답이 와도 화면에 100% 복구해내는 함수
     const handleOpenEditor = async (activity: AdminActivity) => {
         setLoading(true);
         try {
-            // 💡 백엔드에서 matchId를 내려준 경우 대진 조회 API 호출, 없으면 새 대진 조회
             const endpoint = activity.matchId 
                 ? `/admin/matches/${activity.matchId}` 
                 : `/admin/votes/${activity.voteId}/matches`;
@@ -105,16 +103,14 @@ export default function TournamentPage() {
             setActivityTitle(activity.title);
             setActiveMatchId(data.matchId || data.id || activity.matchId || null);
 
-            // 1. 응답 데이터 형태 정규화 (1차원 평탄화 구조 vs 2차원 중첩 구조 완벽 대응)
+            // 1. 응답 데이터 형태 정규화 (Flat 구조 및 Nested 구조 모두 대응)
             const rawMatchGroups = data.matches || data.matchGroups || data.courtMatches || [];
             const allMatches: any[] = [];
 
             rawMatchGroups.forEach((item: any, index: number) => {
                 if (item.team1 || item.team2) {
-                    // 콘솔 스크린샷처럼 코트 구분 없이 1차원 배열(Flat)로 내려온 경우
                     let cNum = item.courtNumber;
                     if (cNum === undefined || cNum === null) {
-                        // 코트 번호가 누락되었다면 인덱스를 기반으로 추론 (2게임당 1코트)
                         cNum = Math.floor(index / 2) + 1;
                     }
                     allMatches.push({
@@ -124,7 +120,6 @@ export default function TournamentPage() {
                         team2: item.team2
                     });
                 } else if (item.courtMatches || item.matches) {
-                    // 이전에 보내주신 JSON처럼 코트별로 중첩(Nested)되어 내려온 경우
                     const cNum = item.courtNumber || item.courtId || (index + 1);
                     const nestedMatches = item.courtMatches || item.matches || [];
                     nestedMatches.forEach((m: any, mIdx: number) => {
@@ -138,24 +133,22 @@ export default function TournamentPage() {
                 }
             });
 
-            // 2. 전체 참가자 추출 (중복 제거 및 무결성 확보)
+            // 2. 전체 참가자 풀 구성
             const uniqueParticipants = new Map<number, Participant>();
             const rawParticipants = data.participants || data.participantList || [];
             
-            // 데이터 최상단 participants 배열에서 추출
             rawParticipants.forEach((p: any) => {
                 const id = p.participantId ?? p.id ?? p.memberId;
                 if (id !== undefined && id !== null) {
                     uniqueParticipants.set(Number(id), {
                         participantId: Number(id),
                         name: p.name,
-                        gender: (p.gender === 'FEMALE' || p.gender === '여') ? 'FEMALE' : 'MALE', // null 대응
+                        gender: (p.gender === 'FEMALE' || p.gender === '여') ? 'FEMALE' : 'MALE',
                         participantType: p.participantType || 'MEMBER'
                     });
                 }
             });
 
-            // 대진표(allMatches) 내부에 있는 사람들도 강제로 긁어모아 누락자 방지
             let tempId = -1000;
             allMatches.forEach((match: any) => {
                 const teams = [...(Array.isArray(match.team1) ? match.team1 : []), ...(Array.isArray(match.team2) ? match.team2 : [])];
@@ -168,7 +161,7 @@ export default function TournamentPage() {
                                 participantId: Number(newId),
                                 name: t.name,
                                 gender: (t.gender === 'FEMALE' || t.gender === '여') ? 'FEMALE' : 'MALE',
-                                participantType: t.participantType || 'MEMBER'
+                                participantType: p.participantType || 'MEMBER'
                             });
                         }
                     }
@@ -178,7 +171,7 @@ export default function TournamentPage() {
             const finalParticipants = Array.from(uniqueParticipants.values());
             setParticipants(finalParticipants);
 
-            // 3. 대진표 및 로스터 화면 반영
+            // 3. 대진표 및 코트별 배정 명단 매핑
             const newRosters: Record<number, number[]> = { 1: [], 2: [], 3: [], 4: [] };
             const newBrackets: Record<number, BracketRow[]> = { 1: [], 2: [], 3: [], 4: [] };
 
@@ -209,14 +202,12 @@ export default function TournamentPage() {
                 row[2] = resolveId(t2[0]);
                 row[3] = resolveId(t2[1]);
 
-                // 매치 번호(matchNumber)를 기준으로 배열 인덱스 맞추기
                 const targetIdx = match.matchNumber ? match.matchNumber - 1 : newBrackets[cNum].length;
                 while (newBrackets[cNum].length <= targetIdx) {
                     newBrackets[cNum].push(createEmptyRow());
                 }
                 newBrackets[cNum][targetIdx] = row;
 
-                // 로스터(명단)에 추가 (중복 방지)
                 row.forEach(id => {
                     if (id !== null && !newRosters[cNum].includes(id)) {
                         newRosters[cNum].push(id);
@@ -224,7 +215,6 @@ export default function TournamentPage() {
                 });
             });
 
-            // 빈 코트라도 화면이 깨지지 않게 최소 2칸 생성
             [1, 2, 3, 4].forEach(cNum => {
                 if (!newBrackets[cNum] || newBrackets[cNum].length === 0) {
                     newBrackets[cNum] = [createEmptyRow(), createEmptyRow()];
@@ -234,7 +224,6 @@ export default function TournamentPage() {
             setRosters(newRosters);
             setBrackets(newBrackets);
             
-            // 데이터가 존재하는 가장 첫 번째 코트로 이동
             const firstActive = Object.keys(newRosters).find(k => newRosters[Number(k)].length > 0);
             setActiveCourt(firstActive ? Number(firstActive) : 1);
             
@@ -242,7 +231,7 @@ export default function TournamentPage() {
             setSelectedId(null);
         } catch (error) {
             console.error(error);
-            showToast('대진표를 열 수 없습니다. 콘솔의 에러를 확인하세요.', 'error');
+            showToast('대진표를 열 수 없습니다.', 'error');
         } finally {
             setLoading(false);
         }
@@ -270,16 +259,22 @@ export default function TournamentPage() {
         });
     };
 
+    // 💡 [수정됨] 대진표 칸 터치 배치 제어 함수
     const handleCellClick = (matchIndex: number, slotIndex: number, currentOccupantId: number | null) => {
         if (selectedId) {
             setBrackets(prev => {
                 const newB = [...prev[activeCourt].map(r => [...r])];
-                for (let r = 0; r < newB.length; r++) {
-                    for (let c = 0; c < 4; c++) {
-                        if (newB[r][c] === selectedId) newB[r][c] = null;
+                const currentRow = newB[matchIndex];
+
+                // 조건 1 적용: 선택한 인원이 '동일한 게임' 내의 다른 자리에 이미 있다면 기존 자리 비움 (게임 내 자리이동 가능)
+                for (let c = 0; c < 4; c++) {
+                    if (currentRow[c] === selectedId) {
+                        currentRow[c] = null;
                     }
                 }
-                newB[matchIndex][slotIndex] = selectedId;
+
+                // 조건 2 적용: 타 게임(다른 Row)의 배치 정보는 건드리지 않고 유지 (다른 경기 중복 배정 전면 허용)
+                currentRow[slotIndex] = selectedId;
                 return { ...prev, [activeCourt]: newB };
             });
             setSelectedId(null); 
@@ -363,9 +358,6 @@ export default function TournamentPage() {
 
     const getParticipant = (id: number | null) => participants.find(p => p.participantId === id);
 
-    // ============================================================================
-    // 렌더링 영역
-    // ============================================================================
     return (
         <div className="min-h-screen bg-[#F8FAF3] pb-24 sm:pb-12 text-gray-800">
             {loading && (
@@ -422,7 +414,6 @@ export default function TournamentPage() {
             {/* --- 뷰 2: 에디터 --- */}
             {view === 'EDITOR' && (
                 <div className="max-w-6xl mx-auto flex flex-col h-[100dvh] sm:h-auto sm:p-8">
-                    {/* 상단 헤더 바 */}
                     <div className="bg-white px-4 py-4 sm:rounded-t-3xl border-b border-gray-100 flex items-center justify-between sticky top-0 z-30">
                         <div className="flex items-center gap-3">
                             <button onClick={() => setView('LIST')} className="p-2 text-gray-400 hover:text-gray-900 transition-colors">
@@ -438,7 +429,6 @@ export default function TournamentPage() {
                         </button>
                     </div>
 
-                    {/* 코트 탭 */}
                     <div className="bg-white px-4 py-3 flex gap-2 border-b border-gray-100 overflow-x-auto hide-scrollbar shrink-0">
                         {[1, 2, 3, 4].map(cNum => (
                             <button
@@ -455,7 +445,6 @@ export default function TournamentPage() {
                         ))}
                     </div>
 
-                    {/* 콘텐츠 영역 (스크롤 가능) */}
                     <div className="flex-1 overflow-y-auto bg-gray-50/50 p-4 sm:bg-white sm:rounded-b-3xl sm:border sm:border-t-0 sm:border-gray-100 space-y-6">
                         
                         {/* 1. 미배치 풀 */}
