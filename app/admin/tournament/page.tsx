@@ -17,13 +17,25 @@ interface Participant {
 
 interface AdminActivity {
     voteId: number;
-    matchId?: number; // 💡 리스트에서 넘겨받은 matchId
+    matchId?: number; // 리스트에서 넘겨받은 matchId
     title: string;
     activityDay: string;
     activityDate: string;
     location: string;
     matchRegistered: boolean;
     attendance: { currentAttendees: number; currentGuests: number; totalParticipants: number };
+}
+
+// 💡 수정됨: 백엔드 명세에 맞게 team1, team2는 숫자(ID) 배열만 받습니다.
+interface ServerMatch {
+    matchNumber: number;
+    team1: number[];
+    team2: number[];
+}
+
+interface CourtMatchGroup {
+    courtNumber: number;
+    courtMatches: ServerMatch[];
 }
 
 type BracketRow = (number | null)[];
@@ -85,11 +97,10 @@ export default function TournamentPage() {
 
     useEffect(() => { fetchActivities(); }, [fetchActivities]);
 
-    // 💡 대진 조회 및 에디터 진입 (수정 모드 vs 새 작성 모드 자동 판별)
+    // 대진 조회 및 에디터 진입
     const handleOpenEditor = async (activity: AdminActivity) => {
         setLoading(true);
         try {
-            // 💡 백엔드에서 matchId를 내려준 경우 [GET 대진 조회] API 호출, 없으면 [GET 새 대진 생성용 명단] 조회
             const endpoint = activity.matchId 
                 ? `/admin/matches/${activity.matchId}` 
                 : `/admin/votes/${activity.voteId}/matches`;
@@ -103,10 +114,9 @@ export default function TournamentPage() {
 
             setActiveVoteId(activity.voteId);
             setActivityTitle(activity.title);
-            // 💡 matchId가 존재하면 완벽한 "수정 모드"로 동작합니다.
             setActiveMatchId(data.matchId || data.id || activity.matchId || null);
 
-            // 1. 응답 데이터 형태 정규화 (1차원 평탄화 구조 vs 2차원 중첩 구조 완벽 대응)
+            // 1. 응답 데이터 형태 정규화
             const rawMatchGroups = data.matches || data.matchGroups || data.courtMatches || [];
             const allMatches: any[] = [];
 
@@ -136,7 +146,7 @@ export default function TournamentPage() {
                 }
             });
 
-            // 2. 전체 참가자 추출 (중복 제거 및 무결성 확보)
+            // 2. 전체 참가자 추출
             const uniqueParticipants = new Map<number, Participant>();
             const rawParticipants = data.participants || data.participantList || [];
             
@@ -146,13 +156,12 @@ export default function TournamentPage() {
                     uniqueParticipants.set(Number(id), {
                         participantId: Number(id),
                         name: p.name,
-                        gender: (p.gender === 'FEMALE' || p.gender === '여') ? 'FEMALE' : 'MALE', 
+                        gender: (p.gender === 'FEMALE' || p.gender === '여') ? 'FEMALE' : 'MALE',
                         participantType: p.participantType || 'MEMBER'
                     });
                 }
             });
 
-            // 대진표(allMatches) 내부에 있는 사람들도 강제로 긁어모아 누락자 방지
             let tempId = -1000;
             allMatches.forEach((match: any) => {
                 const teams = [...(Array.isArray(match.team1) ? match.team1 : []), ...(Array.isArray(match.team2) ? match.team2 : [])];
@@ -181,11 +190,17 @@ export default function TournamentPage() {
 
             const resolveId = (member: any) => {
                 if (!member) return null;
-                if (member.participantId !== undefined && member.participantId !== null) return Number(member.participantId);
-                if (member.id !== undefined && member.id !== null) return Number(member.id);
-                if (member.name) {
-                    const found = finalParticipants.find(p => p.name === member.name);
-                    if (found) return found.participantId;
+                // 백엔드가 객체를 줬을 경우
+                if (typeof member === 'object') {
+                    if (member.participantId !== undefined && member.participantId !== null) return Number(member.participantId);
+                    if (member.id !== undefined && member.id !== null) return Number(member.id);
+                    if (member.name) {
+                        const found = finalParticipants.find(p => p.name === member.name);
+                        if (found) return found.participantId;
+                    }
+                } else {
+                    // 백엔드가 그냥 숫자 ID를 줬을 경우
+                    return Number(member);
                 }
                 return null;
             };
@@ -270,7 +285,9 @@ export default function TournamentPage() {
                 const currentRow = newB[matchIndex];
 
                 for (let c = 0; c < 4; c++) {
-                    if (currentRow[c] === selectedId) currentRow[c] = null;
+                    if (currentRow[c] === selectedId) {
+                        currentRow[c] = null;
+                    }
                 }
 
                 currentRow[slotIndex] = selectedId;
@@ -313,38 +330,34 @@ export default function TournamentPage() {
         setSelectedId(null);
     };
 
-    // 💡 [핵심] PATCH(대진 수정) / POST(대진 저장) 분기 처리
+    // 💡 [핵심] 500 에러를 해결한 깔끔한 숫자 배열 Payload 생성 로직
     const handleSave = async () => {
         setLoading(true);
         try {
-            const payload: any[] = [];
+            const payload: CourtMatchGroup[] = [];
             
             Object.entries(brackets).forEach(([courtStr, rows]) => {
                 const courtNumber = Number(courtStr);
                 if (!rows.some(r => r.some(id => id !== null))) return;
 
-                const courtMatches = rows.map((row, idx) => {
-                    const getP = (id: number | null) => {
-                        if (!id) return null;
-                        const p = participants.find(x => x.participantId === id);
-                        return p ? { participantType: p.participantType, participantId: p.participantId } : null;
-                    };
-                    
+                const courtMatches: ServerMatch[] = rows.map((row, idx) => {
                     return { 
                         matchNumber: idx + 1, 
-                        team1: [getP(row[0]), getP(row[1])].filter(Boolean), 
-                        team2: [getP(row[2]), getP(row[3])].filter(Boolean) 
+                        // 배열 안의 널(null) 값을 쏙 빼고, 남은 순수 ID 숫자만 전송합니다.
+                        team1: [row[0], row[1]].filter((id): id is number => id !== null), 
+                        team2: [row[2], row[3]].filter((id): id is number => id !== null) 
                     };
                 });
+                
                 payload.push({ courtNumber, courtMatches });
             });
 
+            console.log("📤 [API 전송 데이터]:", payload);
+
             if (activeMatchId) {
-                // 💡 첨부해주신 명세서 사진(image_10bdbf.png)과 동일한 경로 (PATCH /admin/matches/{matchId})
                 await api.patch(`/admin/matches/${activeMatchId}`, payload);
                 showToast('대진표가 성공적으로 수정되었습니다.', 'success');
             } else {
-                // 신규 저장일 경우
                 await api.post(`/admin/votes/${activeVoteId}/matches`, payload);
                 showToast('대진표가 성공적으로 저장되었습니다.', 'success');
             }
@@ -352,7 +365,8 @@ export default function TournamentPage() {
             await fetchActivities();
             setView('LIST');
         } catch (error) {
-            showToast('저장/수정 중 오류가 발생했습니다.', 'error');
+            console.error(error);
+            showToast('저장 중 오류가 발생했습니다. 콘솔을 확인하세요.', 'error');
         } finally {
             setLoading(false);
         }
@@ -368,7 +382,7 @@ export default function TournamentPage() {
             {loading && (
                 <div className="fixed inset-0 bg-white/70 backdrop-blur-sm z-[999] flex flex-col items-center justify-center">
                     <RefreshCw className="w-8 h-8 animate-spin text-[#93C54B] mb-4" />
-                    <span className="font-bold text-gray-600">데이터 동기화 중...</span>
+                    <span className="font-bold text-gray-600">데이터 처리 중...</span>
                 </div>
             )}
 
@@ -428,7 +442,6 @@ export default function TournamentPage() {
                             <div>
                                 <div className="flex items-center gap-2">
                                     <h2 className="text-lg font-black text-gray-900">{activityTitle}</h2>
-                                    {/* 💡 [UI 추가] 수정 모드일 경우 시각적 뱃지 표시 */}
                                     {activeMatchId && (
                                         <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-[6px] text-[10px] font-black tracking-wide">
                                             수정 모드
@@ -439,7 +452,6 @@ export default function TournamentPage() {
                             </div>
                         </div>
                         
-                        {/* 💡 [로직 수정] matchId 유무에 따라 버튼 텍스트가 '수정' 또는 '저장'으로 바뀜 */}
                         <button onClick={handleSave} className={`flex items-center gap-1.5 text-white px-5 py-2.5 sm:px-6 rounded-xl text-sm font-bold active:scale-95 shadow-md transition-colors ${activeMatchId ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-900 hover:bg-gray-800'}`}>
                             {activeMatchId ? <Edit3 className="w-4 h-4" /> : <Save className="w-4 h-4" />} 
                             {activeMatchId ? '수정하기' : '저장하기'}
