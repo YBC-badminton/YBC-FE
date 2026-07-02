@@ -151,6 +151,10 @@ export default function YBCMainPage() {
           data = response.data.data;
         }
 
+        // 활동 날짜순 내림차순 정렬 (ISO 문자열이라 문자열 비교로 충분)
+        data.sort((a: VoteData, b: VoteData) =>
+          (b.activityDate ?? "").localeCompare(a.activityDate ?? ""),
+        );
         setRecentVotes(data.slice(0, 3));
       } catch (error) {
         console.warn("진행 중인 투표를 불러오지 못했습니다.", error);
@@ -528,6 +532,20 @@ export default function YBCMainPage() {
   );
 }
 
+/* 활동일까지 남은 일수를 D-day 배지 문구로 변환 (D-0 → "오늘", 지난 날짜 → "종료") */
+function getDDayLabel(activityDate?: string): string {
+  if (!activityDate) return "";
+  const [y, m, d] = activityDate.split("-").map(Number);
+  if (!y || !m || !d) return "";
+  const target = new Date(y, m - 1, d);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffDays = Math.round((target.getTime() - today.getTime()) / 86_400_000);
+  if (diffDays === 0) return "오늘";
+  if (diffDays > 0) return `D-${diffDays}`;
+  return "종료";
+}
+
 /* ── 정기모임 카드 ──────────────────────────────────────── */
 function MeetingCard({
   vote,
@@ -551,6 +569,7 @@ function MeetingCard({
     ? Math.min(Math.round((currentCount / maxCount) * 100), 100)
     : 0;
   const full = hasCapacity && currentCount >= maxCount;
+  const dDayLabel = getDDayLabel(vote.activityDate);
 
   return (
     <Link
@@ -574,9 +593,11 @@ function MeetingCard({
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="bg-[#ededed] text-subtle text-sm font-normal px-3 py-1 rounded-full">
-            오늘
-          </span>
+          {dDayLabel && (
+            <span className="bg-[#ededed] text-subtle text-sm font-normal px-3 py-1 rounded-full">
+              {dDayLabel}
+            </span>
+          )}
           {full ? (
             <span className="bg-brand-dark text-white text-sm font-normal px-3 py-1 rounded-full">
               모집완료
