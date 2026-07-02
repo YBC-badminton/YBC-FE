@@ -133,6 +133,8 @@ export default function YBCMainPage() {
   const [recentVotes, setRecentVotes] = useState<VoteData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [recruiting, setRecruiting] = useState<boolean | null>(null);
+  // 셔틀콕 데코가 따라갈 카드 인덱스 (마우스 오버 카드, 없으면 첫 카드)
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -170,7 +172,7 @@ export default function YBCMainPage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col font-sans select-none bg-white">
+    <div className="min-h-screen flex flex-col font-sans select-none bg-white overflow-x-hidden">
       {/* ── 히어로 ───────────────────────────────────────── */}
       <section className="relative w-full overflow-hidden -mt-[100px] pt-[120px] pb-16 sm:pb-24 min-h-[500px] sm:min-h-[650px] lg:min-h-[800px] bg-gradient-to-b from-brand-soft via-brand-wash to-white">
         {/* 1. 배경 및 캐릭터 이미지 영역 (z-0) */}
@@ -357,6 +359,12 @@ export default function YBCMainPage() {
                 vote={vote}
                 active={idx === 0}
                 isLoggedIn={!!user}
+                showShuttlecock={
+                  hoveredIdx === null ? idx === 0 : hoveredIdx === idx
+                }
+                onHoverChange={(hovering) =>
+                  setHoveredIdx(hovering ? idx : null)
+                }
               />
             ))
           ) : (
@@ -395,7 +403,7 @@ export default function YBCMainPage() {
           <img
             src="/images/court-bg.svg"
             alt="배드민턴 코트 배경"
-            className="w-full md:w-[60%] object-cover object-right-top opacity-30 md:opacity-90"
+            className="w-full md:w-[60%] object-contain object-right-top opacity-30 md:opacity-90"
           />
         </div>
 
@@ -521,7 +529,19 @@ export default function YBCMainPage() {
 }
 
 /* ── 정기모임 카드 ──────────────────────────────────────── */
-function MeetingCard({ vote, active, isLoggedIn }: { vote: VoteData; active: boolean; isLoggedIn: boolean }) {
+function MeetingCard({
+  vote,
+  active,
+  isLoggedIn,
+  showShuttlecock,
+  onHoverChange,
+}: {
+  vote: VoteData;
+  active: boolean;
+  isLoggedIn: boolean;
+  showShuttlecock: boolean;
+  onHoverChange: (hovering: boolean) => void;
+}) {
   const title = vote.name || vote.title || "정기 운동";
   const currentCount =
     vote.currentParticipantCount ?? vote.attendance?.currentAttendees ?? 0;
@@ -535,18 +555,20 @@ function MeetingCard({ vote, active, isLoggedIn }: { vote: VoteData; active: boo
   return (
     <Link
       href="/activities"
+      onMouseEnter={() => onHoverChange(true)}
+      onMouseLeave={() => onHoverChange(false)}
       className={`group relative rounded-[28px] p-6 sm:p-7 flex flex-col gap-5 transition-all hover:-translate-y-1 ${
         active
           ? "bg-white border-2 border-brand shadow-[var(--shadow-card)]"
           : "bg-brand-wash border border-line/70 hover:shadow-[var(--shadow-card)]"
       }`}
     >
-      {active && (
+      {showShuttlecock && (
         <img
           src="/images/shuttlecock.svg"
           alt=""
           style={{ transform: "rotate(103.35deg)" }}
-          className="absolute -top-12 -right-6 w-[75.713px] h-[73.41px] pointer-events-none drop-shadow-sm"
+          className="absolute -top-12 -right-6 w-[75.713px] h-[73.41px] pointer-events-none drop-shadow-sm transition-opacity duration-300"
         />
       )}
 
