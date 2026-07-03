@@ -367,9 +367,10 @@ export default function YBCMainPage() {
               <MeetingCard
                 key={vote.voteId ?? idx}
                 vote={vote}
-                active={idx === 0}
+                themeIndex={idx}
                 isLoggedIn={!!user}
-                showShuttlecock={
+                // 포커스(=마우스 오버, 미오버 시 첫 카드)된 카드가 테두리+셔틀콕을 함께 가져간다
+                focused={
                   hoveredIdx === null ? idx === 0 : hoveredIdx === idx
                 }
                 onHoverChange={(hovering) =>
@@ -552,20 +553,49 @@ function getDDayLabel(activityDate?: string): string {
   return "종료";
 }
 
+/* 카드별 컬러 테마 (Figma: 22:743 초록 / 19:428 올리브 / 93:3793 골드) — 인덱스순으로 적용 */
+const CARD_THEMES = [
+  {
+    bg: "bg-[#eef7ec]",
+    border: "border-[3px] border-[#74bf63]",
+    pill: "bg-[#74c063]",
+    bar: "bg-[#74c063]",
+    track: "bg-[#dfecdc]",
+    accent: "text-[#74bf63]",
+  },
+  {
+    bg: "bg-[#f5f7ec]",
+    border: "border-[3px] border-[#a1c852]",
+    pill: "bg-[#a1c852]",
+    bar: "bg-[#a1c852]",
+    track: "bg-[#e5e8d7]",
+    accent: "text-[#8fae44]",
+  },
+  {
+    bg: "bg-[#f7f5ec]",
+    border: "border-[3px] border-[#e9c523]",
+    pill: "bg-[#e9c523]",
+    bar: "bg-[#e9c523]",
+    track: "bg-[#ece9db]",
+    accent: "text-[#c7a41d]",
+  },
+];
+
 /* ── 정기모임 카드 ──────────────────────────────────────── */
 function MeetingCard({
   vote,
-  active,
+  themeIndex,
   isLoggedIn,
-  showShuttlecock,
+  focused,
   onHoverChange,
 }: {
   vote: VoteData;
-  active: boolean;
+  themeIndex: number;
   isLoggedIn: boolean;
-  showShuttlecock: boolean;
+  focused: boolean;
   onHoverChange: (hovering: boolean) => void;
 }) {
+  const theme = CARD_THEMES[Math.min(themeIndex, CARD_THEMES.length - 1)];
   const title = vote.name || vote.title || "정기 운동";
   const currentCount =
     vote.currentParticipantCount ?? vote.attendance?.currentAttendees ?? 0;
@@ -582,13 +612,13 @@ function MeetingCard({
       href="/activities"
       onMouseEnter={() => onHoverChange(true)}
       onMouseLeave={() => onHoverChange(false)}
-      className={`group relative rounded-[28px] p-6 sm:p-7 flex flex-col gap-5 transition-all hover:-translate-y-1 ${
-        active
-          ? "bg-white border-2 border-brand shadow-[var(--shadow-card)]"
-          : "bg-brand-wash border border-line/70 hover:shadow-[var(--shadow-card)]"
+      className={`group relative rounded-[28px] p-6 sm:p-7 flex flex-col gap-5 transition-all hover:-translate-y-1 ${theme.bg} ${
+        focused
+          ? `${theme.border} shadow-[var(--shadow-card)]`
+          : "border-[3px] border-transparent hover:shadow-[var(--shadow-card)]"
       }`}
     >
-      {showShuttlecock && (
+      {focused && (
         <img
           src="/images/shuttlecock.svg"
           alt=""
@@ -600,7 +630,7 @@ function MeetingCard({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           {dDayLabel && (
-            <span className="bg-[#ededed] text-subtle text-sm font-normal px-3 py-1 rounded-full">
+            <span className="bg-white border border-[#dcdcdc] text-[#1a1a1a] text-sm font-normal px-3 py-1 rounded-full">
               {dDayLabel}
             </span>
           )}
@@ -609,13 +639,13 @@ function MeetingCard({
               모집완료
             </span>
           ) : (
-            <span className="bg-brand text-white text-sm font-normal px-3 py-1 rounded-full flex items-center gap-1.5">
+            <span className={`${theme.pill} text-white text-sm font-normal px-3 py-1 rounded-full flex items-center gap-1.5`}>
               <span className="w-1.5 h-1.5 bg-white/90 rounded-full animate-pulse" />
               모집중
             </span>
           )}
         </div>
-        <ArrowUpRight className="w-5 h-5 text-subtle group-hover:text-brand-dark transition-colors" />
+        <ArrowUpRight className={`w-5 h-5 ${theme.accent} transition-colors`} />
       </div>
 
       <h3 className="text-base sm:text-[20px] font-semibold text-ink leading-snug break-keep">
@@ -624,11 +654,11 @@ function MeetingCard({
 
       <div className="space-y-2 text-base font-normal text-[#52525c]">
         <p className="flex items-center gap-1.5">
-          <PinIcon className="w-4 h-4 text-brand-dark shrink-0" />
+          <PinIcon className={`w-4 h-4 ${theme.accent} shrink-0`} />
           {vote.location}
         </p>
         <p className="flex items-center gap-1.5">
-          <CalendarIcon className="w-4 h-4 text-brand-dark shrink-0" />
+          <CalendarIcon className={`w-4 h-4 ${theme.accent} shrink-0`} />
           {vote.activityDate} {vote.activityTime && `· ${vote.activityTime}`}
         </p>
       </div>
@@ -638,23 +668,23 @@ function MeetingCard({
           <>
             <div className="flex items-center justify-between mb-1.5">
               <span className="flex items-center gap-1.5 text-base font-normal text-[#71717b]">
-                <PeopleIcon className="w-4 h-4 text-brand-dark" />
+                <PeopleIcon className={`w-4 h-4 ${theme.accent}`} />
                 {isLoggedIn ? `${currentCount} / ${maxCount}명` : "?? / ??명"}
               </span>
-              <span className="text-sm font-bold text-brand-dark">
+              <span className="text-sm font-bold text-[#1a1a1a]">
                 {isLoggedIn ? `${ratio}%` : "??%"}
               </span>
             </div>
-            <div className="w-full h-2.5 bg-line/70 rounded-full overflow-hidden">
+            <div className={`w-full h-2.5 ${theme.track} rounded-full overflow-hidden`}>
               <div
-                className={`h-full rounded-full transition-all duration-1000 ease-out ${full ? "bg-brand-dark" : "bg-brand"}`}
+                className={`h-full rounded-full transition-all duration-1000 ease-out ${full ? "bg-brand-dark" : theme.bar}`}
                 style={{ width: `${isLoggedIn ? ratio : 0}%` }}
               />
             </div>
           </>
         ) : (
           <span className="flex items-center gap-1.5 text-base font-normal text-[#71717b]">
-            <PeopleIcon className="w-4 h-4 text-brand-dark" />
+            <PeopleIcon className={`w-4 h-4 ${theme.accent}`} />
             {isLoggedIn ? `${currentCount}명 참가` : "??명 참가"}
           </span>
         )}
