@@ -345,7 +345,7 @@ export default function YBCMainPage() {
           <img
             src="/images/mascot-peek.svg"
             alt=""
-            className="hidden lg:block pointer-events-none select-none absolute -top-[150px] right-[72px] w-[246px] h-[282px]"
+            className="hidden lg:block pointer-events-none select-none absolute -top-[200px] right-[72px] w-[246px] h-[282px]"
           />
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
