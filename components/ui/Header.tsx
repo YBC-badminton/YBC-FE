@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 
 const NAV_LINKS: { href: string; label: string; authOnly?: boolean }[] = [
-  { href: "/activities", label: "정기 모임" },
+  { href: "/activities", label: "정기 모임", authOnly: true },
   { href: "/reviews", label: "장비 후기" },
   { href: "/past-activities", label: "지난 활동" },
   { href: "/faq", label: "문의하기" },
