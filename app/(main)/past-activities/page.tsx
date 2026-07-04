@@ -455,7 +455,7 @@ export default function PastActivitiesPage() {
                 </div>
 
                 {/* 5. 우측 하단 플로팅 지원하기 버튼 (FAB, 스크롤 시 화면 고정) */}
-                <div className="fixed bottom-8 right-8 z-50 hidden md:block">
+                <div className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-50 block">
                 <Link
                     href="/apply"
                     className="relative group flex flex-col items-center"
