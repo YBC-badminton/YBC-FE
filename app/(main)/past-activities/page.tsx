@@ -357,7 +357,7 @@ export default function PastActivitiesPage() {
                 <img
                     src="/images/court-bg.svg"
                     alt="배드민턴 코트 배경"
-                    className="w-full md:w-[60%] object-cover object-right-top opacity-30 md:opacity-90"
+                    className="w-full md:w-[60%] object-contain object-right-top opacity-30 md:opacity-90"
                 />
                 </div>
 
