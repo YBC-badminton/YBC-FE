@@ -238,8 +238,6 @@ function ActivityCard({ data, isPast }: { data: VoteItem; isPast: boolean }) {
                 onClick={() => router.push(`/activities/${data.voteId}`)}
                 className={`bg-white p-5 sm:p-6 rounded-[24px] shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 hover:shadow-md transition-all relative cursor-pointer hover:-translate-y-0.5`}
             >
-                <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl flex-shrink-0 ${isPast ? 'bg-slate-300' : 'bg-[#3D6B2C]'}`} />
-
                 <div className="flex-grow space-y-2 min-w-0">
                     <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                         <span className={`text-[10px] px-2 py-0.5 rounded font-black uppercase ${TYPE_BADGE[data.type] || 'bg-slate-100 text-slate-500'}`}>
