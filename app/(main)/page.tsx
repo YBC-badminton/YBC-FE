@@ -176,7 +176,7 @@ export default function YBCMainPage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col font-sans select-none bg-white overflow-x-hidden">
+    <div className="min-h-screen flex flex-col font-sans select-none bg-white overflow-x-clip">
       {/* ── 히어로 ───────────────────────────────────────── */}
       <section className="relative w-full overflow-hidden -mt-[100px] pt-[120px] pb-10 sm:pb-14 min-h-[500px] sm:min-h-[650px] lg:min-h-[800px] flex flex-col bg-gradient-to-b from-brand-soft via-brand-wash to-white">
         {/* 1. 배경 및 캐릭터 이미지 영역 (z-0) */}
