@@ -151,9 +151,9 @@ export default function YBCMainPage() {
           data = response.data.data;
         }
 
-        // 활동 날짜순 내림차순 정렬 (ISO 문자열이라 문자열 비교로 충분)
+        // 활동 날짜순 오름차순 정렬 (가까운 날짜부터, ISO 문자열이라 문자열 비교로 충분)
         data.sort((a: VoteData, b: VoteData) =>
-          (b.activityDate ?? "").localeCompare(a.activityDate ?? ""),
+          (a.activityDate ?? "").localeCompare(b.activityDate ?? ""),
         );
         setRecentVotes(data.slice(0, 3));
       } catch (error) {
