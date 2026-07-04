@@ -178,7 +178,7 @@ export default function YBCMainPage() {
   return (
     <div className="min-h-screen flex flex-col font-sans select-none bg-white overflow-x-hidden">
       {/* ── 히어로 ───────────────────────────────────────── */}
-      <section className="relative w-full overflow-hidden -mt-[100px] pt-[120px] pb-16 sm:pb-24 min-h-[500px] sm:min-h-[650px] lg:min-h-[800px] bg-gradient-to-b from-brand-soft via-brand-wash to-white">
+      <section className="relative w-full overflow-hidden -mt-[100px] pt-[120px] pb-10 sm:pb-14 min-h-[500px] sm:min-h-[650px] lg:min-h-[800px] flex flex-col bg-gradient-to-b from-brand-soft via-brand-wash to-white">
         {/* 1. 배경 및 캐릭터 이미지 영역 (z-0) */}
         <div className="absolute inset-0 z-0 flex items-end justify-center pointer-events-none">
           <img
@@ -190,7 +190,7 @@ export default function YBCMainPage() {
         </div>
 
         {/* 2. 콘텐츠 및 버튼 영역 (z-10으로 이미지 위로 띄움) */}
-        <div className="relative z-10 max-w-5xl mx-auto px-4 flex flex-col items-center text-center mt-10 sm:mt-16">
+        <div className="relative z-10 w-full max-w-5xl mx-auto px-4 flex flex-col items-center text-center mt-10 sm:mt-16">
           <div className="mb-8 sm:mb-10">
             <img
               src="/images/text-title.svg"
@@ -221,12 +221,12 @@ export default function YBCMainPage() {
           </div>
         </div>
 
-        {/* 2. 캐릭터 개별 배치 영역 (z-5) */}
-        {/* max-w-screen-xl 기준 컨테이너 안에서 absolute 기준점을 잡아 화면 해상도가 커져도 캐릭터 위치가 유지됩니다. */}
-        <div className="absolute inset-x-0 bottom-0 top-0 z-5 max-w-screen-2xl mx-auto w-full pointer-events-none">
+        {/* 2. 캐릭터 하단 배치 영역 (z-5) */}
+        {/* mt-auto로 콘텐츠(버튼) 아래 하단 밴드에 정상 흐름으로 배치 → 어떤 화면비에서도 버튼과 겹치지 않음.
+            flex justify-between + clamp() 너비로 마이너스 오프셋 없이 화면 안쪽에 균등 배치 → 잘림도 없음. */}
+        <div className="relative z-[5] mt-auto w-full max-w-screen-2xl mx-auto px-3 sm:px-8 lg:px-12 flex items-end justify-between gap-2 sm:gap-3 pointer-events-none">
           {/* [왼쪽 캐릭터] 서서 라켓 들고 손 흔드는 양배추 */}
-          {/* 💡 마이너스 값을 지우고 화면 안쪽(left-2% ~ 8%)으로 들어오게 배치했습니다. */}
-          <div className="absolute left-[-2%] sm:left-[2%] md:left-[5%] lg:left-[8%] bottom-[4%] sm:bottom-[2%] w-[130px] sm:w-[160px] md:w-[200px] lg:w-[250px] transition-all duration-300">
+          <div className="shrink-0 w-[clamp(84px,24vw,250px)] transition-all duration-300">
             <img
               src="/images/character-left.svg"
               alt="손 흔드는 양배추 캐릭터"
@@ -235,8 +235,7 @@ export default function YBCMainPage() {
           </div>
 
           {/* [가운데 캐릭터] 코트에 슬라이딩하며 리시브하는 양배추 */}
-          {/* 💡 화면 크기가 줄어들 때 좌우 캐릭터와 겹치지 않도록 적당한 간격과 비율로 맞췄습니다. */}
-          <div className="absolute left-[35%] sm:left-[35%] md:left-[35%] bottom-[2%] sm:bottom-[6%] w-[140px] sm:w-[180px] md:w-[220px] lg:w-[280px] transition-all duration-300">
+          <div className="shrink-0 w-[clamp(84px,23vw,280px)] transition-all duration-300">
             <img
               src="/images/character-center.svg"
               alt="슬라이딩하는 양배추 캐릭터"
@@ -245,8 +244,7 @@ export default function YBCMainPage() {
           </div>
 
           {/* [오른쪽 캐릭터 + 셔틀콕] 점프하며 스매싱 시도하는 양배추 */}
-          {/* 💡 500px처럼 지나치게 큰 사이즈를 줄여 창이 작아져도 오른쪽 화면 밖으로 튀어나가지 않게 잡았습니다. */}
-          <div className="absolute right-[-2%] sm:right-[2%] md:right-[5%] lg:right-[8%] bottom-[2%] sm:bottom-[2%] w-[160px] sm:w-[200px] md:w-[250px] lg:w-[320px] transition-all duration-300">
+          <div className="shrink-0 w-[clamp(88px,25vw,320px)] transition-all duration-300">
             <img
               src="/images/character-right.svg"
               alt="스매싱하는 양배추 캐릭터"
