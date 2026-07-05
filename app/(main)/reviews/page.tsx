@@ -230,9 +230,9 @@ export default function ReviewPage() {
                         </div>
                     )}
                 </div>
-
+                <div className="bg-[#e5e7eb] h-[1px]"></div>
                 {/* 모바일 전용 푸터 섹션 (sm:hidden 속성으로 데스크탑에서는 숨김 처리) */}
-                <div className="sm:hidden mt-8 pb-4">
+                <div className="sm:hidden mt-8 pb-4 bg-white">
                     {/* 로고 이미지 경로는 실제 프로젝트 환경에 맞게 수정해 주세요 */}
                     <img 
                         src="/images/logo.png"
