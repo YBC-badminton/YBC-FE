@@ -171,7 +171,7 @@ export default function ReviewPage() {
                                 <div 
                                     key={review.reviewId} 
                                     onClick={() => setSelectedReview(review)} 
-                                    className={`bg-white ${CATEGORY_BG_STYLES[review.category] || ''} p-6 sm:p-7 rounded-[20px] border border-gray-100 flex flex-col justify-between shadow-sm cursor-pointer hover:border-[#5b6b0f] hover:shadow-md transition-all h-full`}
+                                    className={`bg-white ${CATEGORY_BG_STYLES[review.category] || ''} p-6 sm:p-7 rounded-[20px] border border-gray-100 flex flex-col justify-between shadow-sm cursor-pointer hover:shadow-md transition-all h-full`}
                                 >
                                     <div>
                                         {/* 사진 매칭: 뱃지와 별점 좌측 정렬 */}
