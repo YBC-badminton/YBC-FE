@@ -145,7 +145,7 @@ export default function ReviewPage() {
                         ))}
                     </div>
                     <button
-                        className="bg-[#A1C852] text-white px-4 sm:px-6 py-2.5 rounded-[16px] sm:rounded-xl font-bold hover:bg-[#8eb344] transition-all text-sm shrink-0 whitespace-nowrap shadow-sm"
+                        className="bg-[#A1C852] text-white px-4.5 sm:px-6 py-3.5 rounded-[16px] sm:rounded-xl font-bold hover:bg-[#8eb344] transition-all text-sm shrink-0 whitespace-nowrap shadow-sm"
                         onClick={() => user ? setIsModalOpen(true) : setShowLoginModal(true)}
                     >
                         <span className="sm:hidden">+ 작성</span>
