@@ -34,12 +34,31 @@ const REVERSE_CATEGORY_MAP: Record<string, string> = {
     'RACKET': '라켓', 'CLOTHES': '의류', 'SHOES': '신발', 'BAG': '가방', 'SHUTTLECOCK': '셔틀콕', 'ACCESSORY': '악세서리'
 };
 
+const CATEGORY_STYLES: Record<string, string> = {
+    'RACKET': 'bg-green-50 text-green-600',
+    'CLOTHES': 'bg-blue-50 text-blue-500',
+    'SHOES': 'bg-purple-50 text-purple-500',
+    'BAG': 'bg-orange-50 text-orange-500',
+    'SHUTTLECOCK': 'bg-teal-50 text-teal-500',
+    'ACCESSORY': 'bg-pink-50 text-pink-500',
+};
+
 function formatDate(dateStr: string): string {
     if (!dateStr) return '';
     try {
         const d = new Date(dateStr);
         return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
     } catch { return dateStr; }
+}
+
+function formatUsageMonth(months: number): string {
+    if (!months) return '0개월';
+    if (months === 12) return '1년';
+    if (months > 12 && months % 12 === 0) return `${months / 12}년`;
+    if (months < 12) return `${months}개월`;
+    const y = Math.floor(months / 12);
+    const m = months % 12;
+    return `${y}년 ${m}개월`;
 }
 
 // 작성자 이름 가운데를 *로 마스킹 (첫·끝 글자 유지). 예: 양은서 → 양*서, 김철수2 → 김**2
@@ -89,21 +108,21 @@ export default function ReviewPage() {
 
     return (
         <div className="min-h-screen bg-white py-8 sm:py-12 px-4 sm:px-6 lg:px-24 font-sans text-left">
-            <div className="max-w-screen-xl mx-auto space-y-8">
+            <div className="max-w-screen-xl mx-auto">
                 {/* 헤더 섹션 */}
-                <div className="space-y-2">
+                <div className="space-y-2 mb-6 sm:mb-8">
                     <h1 className="text-3xl sm:text-4xl font-black text-slate-800">장비 후기</h1>
                     <p className="text-xs sm:text-sm text-slate-400 font-bold">클럽원들의 배드민턴 장비 사용 후기를 확인하고 공유해보세요</p>
                 </div>
 
                 {/* 필터 및 작성 버튼 */}
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                    <div className="flex bg-white p-1 rounded-xl shadow-sm border border-gray-100 overflow-x-auto gap-1 scrollbar-hide">
+                <div className="flex justify-between items-center gap-2 mb-6 sm:mb-8">
+                    <div className="flex bg-white p-1 rounded-xl shadow-sm border border-gray-100 overflow-x-auto gap-1 scrollbar-hide flex-grow sm:flex-grow-0">
                         {categories.map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
-                                className={`px-6 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${
+                                className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${
                                     activeTab === tab
                                         ? 'bg-[#5b6b0f] text-white shadow-md'
                                         : 'text-slate-400 hover:text-slate-600'
@@ -114,54 +133,74 @@ export default function ReviewPage() {
                         ))}
                     </div>
                     <button
-                        className="bg-[#5b6b0f] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#46530c] transition-all text-sm w-full sm:w-auto"
+                        className="bg-[#5b6b0f] text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-bold hover:bg-[#46530c] transition-all text-sm shrink-0 whitespace-nowrap h-[36px] sm:h-auto"
                         onClick={() => user ? setIsModalOpen(true) : setShowLoginModal(true)}
                     >
-                        + 후기 작성하기
+                        <span className="sm:hidden">+ 작성</span>
+                        <span className="hidden sm:inline">+ 후기 작성하기</span>
                     </button>
                 </div>
 
+                {/* 모바일 탭 제목 */}
+                <h2 className="text-xl font-bold text-slate-800 sm:hidden mb-4">{activeTab} 후기</h2>
+
                 {/* 에러 메시지 */}
                 {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-600 text-sm font-bold px-5 py-4 rounded-xl">
+                    <div className="bg-red-50 border border-red-200 text-red-600 text-sm font-bold px-5 py-4 rounded-xl mb-6">
                         {error}
                     </div>
                 )}
 
-                {/* 후기 리스트 */}
+                {/* 후기 리스트 (그리드 레이아웃 적용) */}
                 {loading ? (
                     <div className="py-24 text-center text-slate-400 font-bold">불러오는 중...</div>
                 ) : (
-                    <div className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                         {reviews.length > 0 ? (
                             reviews.map((review) => (
                                 <div 
                                     key={review.reviewId} 
                                     onClick={() => setSelectedReview(review)} 
-                                    className="bg-white p-5 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm cursor-pointer hover:border-[#5b6b0f] transition"
+                                    className="bg-white p-5 sm:p-6 rounded-2xl border border-gray-100 flex flex-col justify-between shadow-sm cursor-pointer hover:border-[#5b6b0f] hover:shadow-md transition-all h-full"
                                 >
-                                    <div className="flex items-center gap-4 min-w-0">
-                                        <div className="min-w-0 truncate">
-                                            <p className="text-[10px] font-bold text-slate-400">
-                                                {REVERSE_CATEGORY_MAP[review.category]}
-                                            </p>
-                                            <h3 className="font-black text-slate-800 truncate">
-                                                {review.brandName} - {review.productName}
-                                            </h3>
+                                    <div>
+                                        <div className="flex justify-between items-center mb-4">
+                                            <div className="flex items-center gap-2">
+                                                <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${CATEGORY_STYLES[review.category] || 'bg-gray-50 text-gray-500'}`}>
+                                                    {REVERSE_CATEGORY_MAP[review.category]}
+                                                </span>
+                                                {/* 데스크톱: 뱃지 옆에 별점 표시 */}
+                                                <div className="hidden sm:flex text-amber-400 text-xs tracking-widest">
+                                                    {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+                                                </div>
+                                            </div>
+                                            {/* 모바일: 우측 끝에 별점 표시 */}
+                                            <div className="flex sm:hidden text-amber-400 text-xs tracking-widest">
+                                                {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="text-right shrink-0 ml-4">
-                                        <div className="flex text-amber-400 text-xs justify-end">
-                                            {'★'.repeat(review.rating)}
-                                        </div>
-                                        <p className="text-[10px] font-bold text-slate-400">
-                                            {maskName(review.memberNickname)}
+                                        
+                                        <h3 className="font-bold text-[17px] sm:text-[18px] text-slate-800 mb-2 line-clamp-1">
+                                            {review.brandName} - {review.productName}
+                                        </h3>
+                                        
+                                        <p className="text-[12px] sm:text-[13px] text-slate-400 mb-4 font-medium">
+                                            사용 기간: {formatUsageMonth(review.usageMonth)}
                                         </p>
+                                        
+                                        <p className="text-[13px] sm:text-[14px] text-slate-600 leading-relaxed mb-6 line-clamp-3">
+                                            {review.content}
+                                        </p>
+                                    </div>
+                                    
+                                    <div className="flex justify-between items-center mt-auto text-[12px] sm:text-[13px] text-slate-400 font-medium">
+                                        <span>{maskName(review.memberNickname)}</span>
+                                        <span>{formatDate(review.createdAt)}</span>
                                     </div>
                                 </div>
                             ))
                         ) : (
-                            <div className="py-24 text-center bg-white rounded-2xl text-slate-400 font-bold">
+                            <div className="col-span-1 sm:col-span-2 py-24 text-center bg-white rounded-2xl text-slate-400 font-bold border border-gray-100">
                                 등록된 후기가 없습니다.
                             </div>
                         )}
@@ -298,7 +337,7 @@ function ReviewDetailModal({ review, onClose, isAuthor, onChanged, showToast }: 
                     )}
                 </div>
 
-                {/* 💡 복구된 수정/삭제 버튼 */}
+                {/* 수정/삭제 버튼 */}
                 {isAuthor && (
                     <div className="flex gap-4 justify-end pt-8">
                         {isEditing ? (
