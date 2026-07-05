@@ -338,6 +338,15 @@ export default function ApplyPage() {
                 <li>* 표시 항목은 모두 필수 입력 항목입니다.</li>
               </ul>
             </div>
+            {/* 우측 캐릭터 이미지 영역 */}
+                        <div className="shrink-0 mb-auto sm:mb-0">
+                            {/* 파일 확장자는 실제 프로젝트 환경에 맞게 사용해 주세요 (요청하신 대로 .svg로 표기) */}
+                            <img 
+                                src="/images/character-apply.svg" 
+                                alt="궁금해하는 양배추 마스코트" 
+                                className="w-[100px] sm:w-[130px] h-auto object-contain transition-transform duration-300 animate-in fade-in zoom-in duration-500" 
+                            />
+                        </div>
           </div>
         </div>
 

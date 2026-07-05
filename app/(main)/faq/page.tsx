@@ -48,7 +48,7 @@ export default function InquiryPage() {
     return (
         /* 모바일 배경색: #f7f9f5 / 데스크탑 배경색: white */
         <div className="min-h-screen bg-[#f7f9f5] sm:bg-white py-6 sm:py-12 px-4 sm:px-6 lg:px-24 font-sans select-none text-left flex flex-col">
-            <div className="max-w-[760px] mx-auto w-full flex flex-col flex-grow">
+            <div className="max-w-[760px] mx-auto w-full h-full flex flex-col flex-grow">
 
                 {/* 헤더 안내 카드 (YBC 디자인 시스템 적용) */}
                 <div className="bg-white rounded-[24px] sm:rounded-[40px] border border-gray-100 shadow-sm p-6 sm:p-12 mb-6 sm:mb-8 overflow-hidden">
@@ -75,7 +75,7 @@ export default function InquiryPage() {
                             <img 
                                 src="/images/character-faq.svg" 
                                 alt="궁금해하는 양배추 마스코트" 
-                                className="w-[100px] sm:w-[130px] h-auto object-contain drop-shadow-sm hover:scale-105 transition-transform duration-300 animate-in fade-in zoom-in duration-500" 
+                                className="w-[100px] sm:w-[130px] h-auto object-contain transition-transform duration-300 animate-in fade-in zoom-in duration-500" 
                             />
                         </div>
                     </div>
@@ -138,10 +138,10 @@ export default function InquiryPage() {
                 </div>
 
                 {/* 모바일 전용 푸터 섹션 (sm:hidden 속성으로 데스크탑에서는 숨김 처리) */}
-                <div className="sm:hidden mt-auto pb-4 pt-8">
+                <div className="sm:hidden p-4">
                     {/* 로고 이미지 경로는 실제 프로젝트 환경에 맞게 수정해 주세요 */}
                     <img 
-                        src="/images/logo.png" 
+                        src="/images/logo.png"
                         alt="YBC BADMINTON CLUB" 
                         className="h-10 mb-4 object-contain" 
                     />
@@ -149,7 +149,6 @@ export default function InquiryPage() {
                         © 2026 YBC Badminton Club. All rights reserved.
                     </p>
                 </div>
-
             </div>
         </div>
     );
