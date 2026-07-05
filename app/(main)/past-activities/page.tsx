@@ -357,7 +357,7 @@ export default function PastActivitiesPage() {
                 <img
                     src="/images/court-bg.svg"
                     alt="배드민턴 코트 배경"
-                    className="w-full md:w-[60%] object-cover object-right-top opacity-30 md:opacity-90"
+                    className="w-full md:w-[60%] object-contain object-right-top opacity-30 md:opacity-90"
                 />
                 </div>
 
@@ -455,7 +455,7 @@ export default function PastActivitiesPage() {
                 </div>
 
                 {/* 5. 우측 하단 플로팅 지원하기 버튼 (FAB, 스크롤 시 화면 고정) */}
-                <div className="fixed bottom-8 right-8 z-50 hidden md:block">
+                <div className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-50 block">
                 <Link
                     href="/apply"
                     className="relative group flex flex-col items-center"

@@ -133,6 +133,8 @@ export default function YBCMainPage() {
   const [recentVotes, setRecentVotes] = useState<VoteData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [recruiting, setRecruiting] = useState<boolean | null>(null);
+  // 셔틀콕 데코가 따라갈 카드 인덱스 (마우스 오버 카드, 없으면 첫 카드)
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -149,6 +151,10 @@ export default function YBCMainPage() {
           data = response.data.data;
         }
 
+        // 활동 날짜순 오름차순 정렬 (가까운 날짜부터, ISO 문자열이라 문자열 비교로 충분)
+        data.sort((a: VoteData, b: VoteData) =>
+          (a.activityDate ?? "").localeCompare(b.activityDate ?? ""),
+        );
         setRecentVotes(data.slice(0, 3));
       } catch (error) {
         console.warn("진행 중인 투표를 불러오지 못했습니다.", error);
@@ -170,9 +176,9 @@ export default function YBCMainPage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col font-sans select-none bg-white">
+    <div className="min-h-screen flex flex-col font-sans select-none bg-white overflow-x-clip">
       {/* ── 히어로 ───────────────────────────────────────── */}
-      <section className="relative w-full overflow-hidden -mt-[100px] pt-[120px] pb-16 sm:pb-24 min-h-[500px] sm:min-h-[650px] lg:min-h-[800px] bg-gradient-to-b from-brand-soft via-brand-wash to-white">
+      <section className="relative w-full overflow-hidden -mt-[100px] pt-[120px] pb-10 sm:pb-14 min-h-[500px] sm:min-h-[650px] lg:min-h-[800px] flex flex-col bg-gradient-to-b from-brand-soft via-brand-wash to-white">
         {/* 1. 배경 및 캐릭터 이미지 영역 (z-0) */}
         <div className="absolute inset-0 z-0 flex items-end justify-center pointer-events-none">
           <img
@@ -184,7 +190,7 @@ export default function YBCMainPage() {
         </div>
 
         {/* 2. 콘텐츠 및 버튼 영역 (z-10으로 이미지 위로 띄움) */}
-        <div className="relative z-10 max-w-5xl mx-auto px-4 flex flex-col items-center text-center mt-10 sm:mt-16">
+        <div className="relative z-10 w-full max-w-5xl mx-auto px-4 flex flex-col items-center text-center mt-10 sm:mt-16">
           <div className="mb-8 sm:mb-10">
             <img
               src="/images/text-title.svg"
@@ -199,7 +205,7 @@ export default function YBCMainPage() {
             {recruiting === true && (
               <Link
                 href="/apply"
-                className="flex-1 flex items-center justify-center gap-1.5 bg-[#93C54B] text-white py-3 sm:py-3.5 rounded-full font-black text-sm sm:text-base shadow-sm hover:bg-[#81b23c] active:scale-95 transition-all duration-200"
+                className="flex-1 flex items-center justify-center gap-1.5 bg-[#93C54B] text-white py-3 sm:py-3.5 rounded-full font-body font-semibold text-[17px] shadow-sm hover:bg-[#81b23c] active:scale-95 transition-all duration-200"
               >
                 지원하기 <span className="ml-5 font-bold">↗</span>
               </Link>
@@ -208,19 +214,19 @@ export default function YBCMainPage() {
             {/* 정기모임 보기 버튼 (흰 바탕 + 초록 테두리) */}
             <Link
               href="/activities"
-              className="flex-1 flex items-center justify-center gap-1.5 bg-white border-2 border-[#93C54B] text-[#769e37] py-3 sm:py-3.5 rounded-full font-black text-sm sm:text-base shadow-sm hover:bg-[#f6fbf0] active:scale-95 transition-all duration-200"
+              className="flex-1 flex items-center justify-center gap-1.5 bg-white border-2 border-[#93C54B] text-[#5b6b0f] py-3 sm:py-3.5 rounded-full font-body font-semibold text-[17px] shadow-sm hover:bg-[#f6fbf0] active:scale-95 transition-all duration-200"
             >
               정기모임 보기 <span className="font-bold">↗</span>
             </Link>
           </div>
         </div>
 
-        {/* 2. 캐릭터 개별 배치 영역 (z-5) */}
-        {/* max-w-screen-xl 기준 컨테이너 안에서 absolute 기준점을 잡아 화면 해상도가 커져도 캐릭터 위치가 유지됩니다. */}
-        <div className="absolute inset-x-0 bottom-0 top-0 z-5 max-w-screen-2xl mx-auto w-full pointer-events-none">
+        {/* 2. 캐릭터 하단 배치 영역 (z-5) */}
+        {/* mt-auto로 콘텐츠(버튼) 아래 하단 밴드에 정상 흐름으로 배치 → 어떤 화면비에서도 버튼과 겹치지 않음.
+            flex justify-between + clamp() 너비로 마이너스 오프셋 없이 화면 안쪽에 균등 배치 → 잘림도 없음. */}
+        <div className="relative z-[5] mt-auto w-full max-w-screen-2xl mx-auto px-3 sm:px-8 lg:px-12 flex items-end justify-between gap-2 sm:gap-3 pointer-events-none">
           {/* [왼쪽 캐릭터] 서서 라켓 들고 손 흔드는 양배추 */}
-          {/* 💡 마이너스 값을 지우고 화면 안쪽(left-2% ~ 8%)으로 들어오게 배치했습니다. */}
-          <div className="absolute left-[-2%] sm:left-[2%] md:left-[5%] lg:left-[8%] bottom-[4%] sm:bottom-[2%] w-[130px] sm:w-[160px] md:w-[200px] lg:w-[250px] transition-all duration-300">
+          <div className="shrink-0 w-[clamp(84px,24vw,250px)] transition-all duration-300">
             <img
               src="/images/character-left.svg"
               alt="손 흔드는 양배추 캐릭터"
@@ -229,8 +235,7 @@ export default function YBCMainPage() {
           </div>
 
           {/* [가운데 캐릭터] 코트에 슬라이딩하며 리시브하는 양배추 */}
-          {/* 💡 화면 크기가 줄어들 때 좌우 캐릭터와 겹치지 않도록 적당한 간격과 비율로 맞췄습니다. */}
-          <div className="absolute left-[35%] sm:left-[35%] md:left-[35%] bottom-[2%] sm:bottom-[6%] w-[140px] sm:w-[180px] md:w-[220px] lg:w-[280px] transition-all duration-300">
+          <div className="shrink-0 w-[clamp(84px,23vw,280px)] transition-all duration-300">
             <img
               src="/images/character-center.svg"
               alt="슬라이딩하는 양배추 캐릭터"
@@ -239,8 +244,7 @@ export default function YBCMainPage() {
           </div>
 
           {/* [오른쪽 캐릭터 + 셔틀콕] 점프하며 스매싱 시도하는 양배추 */}
-          {/* 💡 500px처럼 지나치게 큰 사이즈를 줄여 창이 작아져도 오른쪽 화면 밖으로 튀어나가지 않게 잡았습니다. */}
-          <div className="absolute right-[-2%] sm:right-[2%] md:right-[5%] lg:right-[8%] bottom-[2%] sm:bottom-[2%] w-[160px] sm:w-[200px] md:w-[250px] lg:w-[320px] transition-all duration-300">
+          <div className="shrink-0 w-[clamp(88px,25vw,320px)] transition-all duration-300">
             <img
               src="/images/character-right.svg"
               alt="스매싱하는 양배추 캐릭터"
@@ -254,12 +258,12 @@ export default function YBCMainPage() {
       <section className="w-full bg-gradient-to-b from-[#fefff4] to-[#ffffff] pt-6 pb-16 sm:pt-36 sm:pb-24">
         <div className="max-w-screen-lg mx-auto px-6 flex flex-col items-center text-center gap-6">
           {/* 타이틀 명 (Figma 전용 폰트 스타일 및 시그니처 컬러 반영) */}
-          <h2 className="text-[26px] sm:text-5xl font-display text-[#5b6b0f] tracking-wide break-keep">
+          <h2 className="text-[26px] sm:text-[50px] font-display text-[#5b6b0f] break-keep">
             YBC badminton club
           </h2>
 
           {/* 소개 텍스트 본문 */}
-          <div className="text-base sm:text-lg font-medium text-[#666] leading-relaxed max-w-2xl space-y-1.5">
+          <div className="text-base sm:text-[18px] font-normal text-[#484848] leading-[1.5] max-w-2xl space-y-1.5">
             <p>
               양질의 배드민턴을 추구하는 사람들이 모인 동아리, 양배추입니다.
             </p>
@@ -286,14 +290,14 @@ export default function YBCMainPage() {
               className="w-full sm:flex-1 max-w-[240px] sm:max-w-none min-h-[180px] sm:min-h-[220px] bg-[#E8F5E9] flex flex-col items-center justify-center gap-2 px-6 text-center shadow-sm transition-transform hover:scale-[1.02]"
               style={{ borderRadius: "62% 38% 43% 57% / 46% 54% 46% 54%" }}
             >
-              <p className="text-sm font-bold text-[#769e37] tracking-tight">
+              <p className="text-sm sm:text-base font-normal text-[#80917d]">
                 정기 활동
               </p>
               <p className="flex items-baseline gap-1">
-                <span className="text-xl font-bold text-[#5b6b0f] mr-1">
+                <span className="text-2xl sm:text-[40px] font-normal text-[#74bf63] mr-1">
                   주
                 </span>
-                <span className="text-4xl sm:text-5xl font-black text-[#5b6b0f]">
+                <span className="text-5xl sm:text-[66px] font-bold text-[#74bf63] leading-none">
                   2회
                 </span>
               </p>
@@ -304,14 +308,14 @@ export default function YBCMainPage() {
               className="w-full sm:flex-1 max-w-[240px] sm:max-w-none min-h-[180px] sm:min-h-[220px] bg-[#EDF1EC] flex flex-col items-center justify-center gap-2 px-6 text-center shadow-sm transition-transform hover:scale-[1.02]"
               style={{ borderRadius: "44% 56% 42% 58% / 55% 45% 55% 45%" }}
             >
-              <p className="text-sm font-bold text-slate-500 tracking-tight">
+              <p className="text-sm sm:text-base font-normal text-[#80917d]">
                 부원 수
               </p>
               <p className="flex items-baseline gap-1">
-                <span className="text-4xl sm:text-5xl font-black text-[#5b6b0f]">
+                <span className="text-5xl sm:text-[66px] font-bold text-[#5b6b0f] leading-none">
                   50+
                 </span>
-                <span className="text-xl font-bold text-[#5b6b0f] ml-1">
+                <span className="text-2xl sm:text-[40px] font-normal text-[#5b6b0f] ml-1">
                   명
                 </span>
               </p>
@@ -323,7 +327,7 @@ export default function YBCMainPage() {
       {/* ── 정기모임 ─────────────────────────────────────── */}
       <section className="w-full bg-white py-12 sm:py-16 px-6 max-w-screen-xl mx-auto">
         <div className="flex items-end justify-between mb-8 sm:mb-10">
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-ink tracking-tight">
+          <h2 className="text-2xl sm:text-[40px] font-bold text-ink">
             정기모임
           </h2>
           <Link
@@ -334,7 +338,13 @@ export default function YBCMainPage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+        <div className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          {/* 3번째 카드 뒤에서 빼꼼 나오는 마스코트 (모바일 숨김) */}
+          <img
+            src="/images/mascot-peek.svg"
+            alt=""
+            className="hidden lg:block pointer-events-none select-none absolute -top-[200px] right-[72px] w-[246px] h-[282px]"
+          />
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
               <div
@@ -355,8 +365,15 @@ export default function YBCMainPage() {
               <MeetingCard
                 key={vote.voteId ?? idx}
                 vote={vote}
-                active={idx === 0}
+                themeIndex={idx}
                 isLoggedIn={!!user}
+                // 포커스(=마우스 오버, 미오버 시 첫 카드)된 카드가 테두리+셔틀콕을 함께 가져간다
+                focused={
+                  hoveredIdx === null ? idx === 0 : hoveredIdx === idx
+                }
+                onHoverChange={(hovering) =>
+                  setHoveredIdx(hovering ? idx : null)
+                }
               />
             ))
           ) : (
@@ -395,21 +412,21 @@ export default function YBCMainPage() {
           <img
             src="/images/court-bg.svg"
             alt="배드민턴 코트 배경"
-            className="w-full md:w-[60%] object-cover object-right-top opacity-30 md:opacity-90"
+            className="w-full md:w-[60%] object-contain object-right-top opacity-30 md:opacity-90"
           />
         </div>
 
         {/* 2. 지원하기 좌측 텍스트 콘텐츠 */}
         <div className="relative z-10 max-w-screen-xl mx-auto px-6 sm:px-16 flex flex-col justify-start min-h-[200px] md:min-h-[300px] mt-4">
-          <h2 className="text-[28px] sm:text-[34px] font-black text-gray-900 tracking-tight mb-4 sm:mb-5">
+          <h2 className="text-[28px] sm:text-[40px] font-bold text-ink mb-4 sm:mb-5">
             지원하기
           </h2>
-          <p className="text-[14px] sm:text-[15px] font-bold text-gray-600 leading-relaxed mb-6 sm:mb-8">
+          <p className="text-[14px] sm:text-[18px] font-normal text-[#494949] leading-[1.5] mb-6 sm:mb-8">
             YBC 배드민턴 클럽은 실력보다 열정을 가진 <br />
             새로운 가족을 언제나 기다리고 있습니다.
           </p>
           <Link href="/apply" className="w-fit">
-            <button className="flex items-center justify-center gap-2 bg-[#A3C668] text-white text-[15px] font-bold px-8 py-3.5 sm:py-3 rounded-full shadow-sm hover:bg-[#93C54B] active:scale-95 transition-all duration-200">
+            <button className="flex items-center justify-center gap-2 bg-[#A3C668] text-white text-[16px] font-semibold px-8 py-3.5 sm:py-3 rounded-full shadow-sm hover:bg-[#93C54B] active:scale-95 transition-all duration-200">
               지원하기 <ArrowUpRight className="w-4 h-4" />
             </button>
           </Link>
@@ -441,7 +458,7 @@ export default function YBCMainPage() {
               </div>
 
               {/* 연락처 정보 */}
-              <div className="flex flex-col gap-2.5 text-[14px] font-bold text-gray-500">
+              <div className="flex flex-col gap-2.5 text-[16px] font-medium text-[#626262]">
                 <a
                   href="mailto:ybc.since240120@gmail.com"
                   className="flex items-center gap-2.5 hover:text-gray-700 transition-colors"
@@ -473,7 +490,7 @@ export default function YBCMainPage() {
                 >
                   개인정보 처리방침
                 </a>
-                <p className="text-left md:text-right leading-relaxed">
+                <p className="text-left md:text-right leading-relaxed text-[15px] font-normal text-[#191919]/60">
                   Copyright c 2026 YBC Badminton Club.{" "}
                   <br className="block md:hidden" />
                   All Rights Reserved
@@ -493,7 +510,7 @@ export default function YBCMainPage() {
         </div>
 
         {/* 5. 우측 하단 플로팅 지원하기 버튼 (FAB, 스크롤 시 화면 고정) */}
-        <div className="fixed bottom-8 right-8 z-50 hidden md:block">
+        <div className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-50 block">
           <Link
             href="/apply"
             className="relative group flex flex-col items-center"
@@ -520,8 +537,63 @@ export default function YBCMainPage() {
   );
 }
 
+/* 활동일까지 남은 일수를 D-day 배지 문구로 변환 (D-0 → "오늘", 지난 날짜 → "종료") */
+function getDDayLabel(activityDate?: string): string {
+  if (!activityDate) return "";
+  const [y, m, d] = activityDate.split("-").map(Number);
+  if (!y || !m || !d) return "";
+  const target = new Date(y, m - 1, d);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffDays = Math.round((target.getTime() - today.getTime()) / 86_400_000);
+  if (diffDays === 0) return "오늘";
+  if (diffDays > 0) return `D-${diffDays}`;
+  return "종료";
+}
+
+/* 카드별 컬러 테마 (Figma: 22:743 초록 / 19:428 올리브 / 93:3793 골드) — 인덱스순으로 적용 */
+const CARD_THEMES = [
+  {
+    bg: "bg-[#eef7ec]",
+    border: "border-[3px] border-[#74bf63]",
+    pill: "bg-[#74c063]",
+    bar: "bg-[#74c063]",
+    track: "bg-[#dfecdc]",
+    accent: "text-[#74bf63]",
+  },
+  {
+    bg: "bg-[#f5f7ec]",
+    border: "border-[3px] border-[#a1c852]",
+    pill: "bg-[#a1c852]",
+    bar: "bg-[#a1c852]",
+    track: "bg-[#e5e8d7]",
+    accent: "text-[#8fae44]",
+  },
+  {
+    bg: "bg-[#f7f5ec]",
+    border: "border-[3px] border-[#e9c523]",
+    pill: "bg-[#e9c523]",
+    bar: "bg-[#e9c523]",
+    track: "bg-[#ece9db]",
+    accent: "text-[#c7a41d]",
+  },
+];
+
 /* ── 정기모임 카드 ──────────────────────────────────────── */
-function MeetingCard({ vote, active, isLoggedIn }: { vote: VoteData; active: boolean; isLoggedIn: boolean }) {
+function MeetingCard({
+  vote,
+  themeIndex,
+  isLoggedIn,
+  focused,
+  onHoverChange,
+}: {
+  vote: VoteData;
+  themeIndex: number;
+  isLoggedIn: boolean;
+  focused: boolean;
+  onHoverChange: (hovering: boolean) => void;
+}) {
+  const theme = CARD_THEMES[Math.min(themeIndex, CARD_THEMES.length - 1)];
   const title = vote.name || vote.title || "정기 운동";
   const currentCount =
     vote.currentParticipantCount ?? vote.attendance?.currentAttendees ?? 0;
@@ -531,55 +603,60 @@ function MeetingCard({ vote, active, isLoggedIn }: { vote: VoteData; active: boo
     ? Math.min(Math.round((currentCount / maxCount) * 100), 100)
     : 0;
   const full = hasCapacity && currentCount >= maxCount;
+  const dDayLabel = getDDayLabel(vote.activityDate);
 
   return (
     <Link
       href="/activities"
-      className={`group relative rounded-[28px] p-6 sm:p-7 flex flex-col gap-5 transition-all hover:-translate-y-1 ${
-        active
-          ? "bg-white border-2 border-brand shadow-[var(--shadow-card)]"
-          : "bg-brand-wash border border-line/70 hover:shadow-[var(--shadow-card)]"
+      onMouseEnter={() => onHoverChange(true)}
+      onMouseLeave={() => onHoverChange(false)}
+      className={`group relative rounded-[28px] p-6 sm:p-7 flex flex-col gap-5 transition-all hover:-translate-y-1 ${theme.bg} ${
+        focused
+          ? `${theme.border} shadow-[var(--shadow-card)]`
+          : "border-[3px] border-transparent hover:shadow-[var(--shadow-card)]"
       }`}
     >
-      {active && (
+      {focused && (
         <img
           src="/images/shuttlecock.svg"
           alt=""
           style={{ transform: "rotate(103.35deg)" }}
-          className="absolute -top-12 -right-6 w-[75.713px] h-[73.41px] pointer-events-none drop-shadow-sm"
+          className="absolute -top-12 -right-6 w-[75.713px] h-[73.41px] pointer-events-none drop-shadow-sm transition-opacity duration-300"
         />
       )}
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="bg-[#ededed] text-subtle text-xs font-bold px-3 py-1 rounded-full">
-            오늘
-          </span>
+          {dDayLabel && (
+            <span className="bg-white border border-[#dcdcdc] text-[#1a1a1a] text-sm font-normal px-3 py-1 rounded-full">
+              {dDayLabel}
+            </span>
+          )}
           {full ? (
-            <span className="bg-brand-dark text-white text-xs font-bold px-3 py-1 rounded-full">
+            <span className="bg-brand-dark text-white text-sm font-normal px-3 py-1 rounded-full">
               모집완료
             </span>
           ) : (
-            <span className="bg-brand text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5">
+            <span className={`${theme.pill} text-white text-sm font-normal px-3 py-1 rounded-full flex items-center gap-1.5`}>
               <span className="w-1.5 h-1.5 bg-white/90 rounded-full animate-pulse" />
               모집중
             </span>
           )}
         </div>
-        <ArrowUpRight className="w-5 h-5 text-subtle group-hover:text-brand-dark transition-colors" />
+        <ArrowUpRight className={`w-5 h-5 ${theme.accent} transition-colors`} />
       </div>
 
-      <h3 className="text-base sm:text-lg font-bold text-ink leading-snug break-keep">
+      <h3 className="text-base sm:text-[20px] font-semibold text-ink leading-snug break-keep">
         {title}
       </h3>
 
-      <div className="space-y-2 text-sm font-medium text-muted">
+      <div className="space-y-2 text-base font-normal text-[#52525c]">
         <p className="flex items-center gap-1.5">
-          <PinIcon className="w-4 h-4 text-brand-dark shrink-0" />
+          <PinIcon className={`w-4 h-4 ${theme.accent} shrink-0`} />
           {vote.location}
         </p>
         <p className="flex items-center gap-1.5">
-          <CalendarIcon className="w-4 h-4 text-brand-dark shrink-0" />
+          <CalendarIcon className={`w-4 h-4 ${theme.accent} shrink-0`} />
           {vote.activityDate} {vote.activityTime && `· ${vote.activityTime}`}
         </p>
       </div>
@@ -588,24 +665,24 @@ function MeetingCard({ vote, active, isLoggedIn }: { vote: VoteData; active: boo
         {hasCapacity ? (
           <>
             <div className="flex items-center justify-between mb-1.5">
-              <span className="flex items-center gap-1.5 text-sm font-semibold text-muted">
-                <PeopleIcon className="w-4 h-4 text-brand-dark" />
+              <span className="flex items-center gap-1.5 text-base font-normal text-[#71717b]">
+                <PeopleIcon className={`w-4 h-4 ${theme.accent}`} />
                 {isLoggedIn ? `${currentCount} / ${maxCount}명` : "?? / ??명"}
               </span>
-              <span className="text-sm font-bold text-brand-dark">
+              <span className="text-sm font-bold text-[#1a1a1a]">
                 {isLoggedIn ? `${ratio}%` : "??%"}
               </span>
             </div>
-            <div className="w-full h-2.5 bg-line/70 rounded-full overflow-hidden">
+            <div className={`w-full h-2.5 ${theme.track} rounded-full overflow-hidden`}>
               <div
-                className={`h-full rounded-full transition-all duration-1000 ease-out ${full ? "bg-brand-dark" : "bg-brand"}`}
+                className={`h-full rounded-full transition-all duration-1000 ease-out ${full ? "bg-brand-dark" : theme.bar}`}
                 style={{ width: `${isLoggedIn ? ratio : 0}%` }}
               />
             </div>
           </>
         ) : (
-          <span className="flex items-center gap-1.5 text-sm font-semibold text-muted">
-            <PeopleIcon className="w-4 h-4 text-brand-dark" />
+          <span className="flex items-center gap-1.5 text-base font-normal text-[#71717b]">
+            <PeopleIcon className={`w-4 h-4 ${theme.accent}`} />
             {isLoggedIn ? `${currentCount}명 참가` : "??명 참가"}
           </span>
         )}
@@ -726,10 +803,10 @@ function MapAppButton({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={`h-[42px] px-3 sm:px-4 rounded-md flex items-center justify-center gap-1 text-[13px] font-bold transition-all ${
+      className={`h-[42px] px-3 sm:px-4 rounded-md flex items-center justify-center gap-1 text-[15px] font-medium transition-all ${
         primary
           ? "bg-white border border-[#93C54B] text-[#5b6b0f] hover:bg-[#F1F6EC]"
-          : "bg-white border border-gray-200 text-gray-400 hover:text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+          : "bg-white border border-gray-200 text-[#5b6b0f] hover:border-[#93C54B] hover:bg-[#F1F6EC]"
       }`}
     >
       {label}
@@ -778,10 +855,10 @@ function GymLocationSection() {
 
       {/* 상단 헤더 영역 */}
       <div className="text-center space-y-3 mb-12 sm:mb-16">
-        <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
+        <h2 className="text-2xl sm:text-[40px] font-bold text-ink">
           체육관 위치
         </h2>
-        <p className="text-sm sm:text-base font-bold text-gray-400">
+        <p className="text-sm sm:text-[18px] font-normal text-[#494949]">
           매주 화요일, 토요일에 만나요!
         </p>
       </div>
@@ -795,7 +872,7 @@ function GymLocationSection() {
               <button
                 key={g.key}
                 onClick={() => setActiveKey(g.key)}
-                className={`w-[100px] sm:w-[120px] py-2.5 rounded-full text-[15px] font-bold transition-colors ${
+                className={`w-[100px] sm:w-[120px] py-2.5 rounded-full text-[15px] sm:text-[18px] font-semibold transition-colors ${
                   activeKey === g.key
                     ? "bg-[#A3C668] text-white shadow-sm"
                     : "text-gray-400 hover:text-gray-700"
@@ -808,11 +885,11 @@ function GymLocationSection() {
 
           {/* 체육관 상세 정보 */}
           <div className="flex-1 flex flex-col gap-6">
-            <h3 className="text-[22px] sm:text-[26px] font-black text-gray-900 tracking-tight">
+            <h3 className="text-[22px] sm:text-[24px] font-bold text-black">
               {gym.name}
             </h3>
 
-            <div className="flex flex-col gap-3.5 text-[15px] font-bold text-gray-600">
+            <div className="flex flex-col gap-3.5 text-[15px] sm:text-[18px] font-normal text-black">
               <p className="flex items-center gap-2">
                 <PinIcon className="w-5 h-5 text-[#93C54B] shrink-0" />
                 {gym.address}

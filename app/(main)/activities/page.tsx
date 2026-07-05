@@ -62,7 +62,21 @@ export default function ActivitiesPage() {
     const [activeTab, setActiveTab] = useState('전체');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [showLoginModal, setShowLoginModal] = useState(false);
+    const [isVerifying, setIsVerifying] = useState(true);
     const { user } = useAuth();
+    const router = useRouter();
+
+    // 정기 모임 페이지는 로그인 필수 — 비로그인 사용자는 로그인 페이지로 유도.
+    // localStorage 토큰을 직접 확인해 마운트 시 하이드레이션 깜빡임을 방지.
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            router.replace('/login?redirect=/activities');
+            return;
+        }
+        setIsVerifying(false);
+    }, [router]);
 
     const handleCreateLightning = () => {
         if (!user) {
@@ -100,8 +114,9 @@ export default function ActivitiesPage() {
     }, []);
 
     useEffect(() => {
+        if (isVerifying) return;
         fetchVotes();
-    }, [fetchVotes]);
+    }, [isVerifying, fetchVotes]);
 
     const filterByTab = (items: VoteItem[]) => {
         if (activeTab === '전체') return items;
@@ -110,6 +125,15 @@ export default function ActivitiesPage() {
 
     const filteredAvailable = filterByTab(availableActivities);
     const filteredPast = filterByTab(pastActivities);
+
+    // 로그인 확인 전(또는 비로그인 리다이렉트 중)에는 콘텐츠를 감춘다.
+    if (isVerifying) {
+        return (
+            <div className="min-h-screen bg-white flex items-center justify-center text-slate-400 text-sm font-bold">
+                확인 중...
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-white py-12 px-6 lg:px-24 font-sans select-none">
@@ -214,8 +238,6 @@ function ActivityCard({ data, isPast }: { data: VoteItem; isPast: boolean }) {
                 onClick={() => router.push(`/activities/${data.voteId}`)}
                 className={`bg-white p-5 sm:p-6 rounded-[24px] shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 hover:shadow-md transition-all relative cursor-pointer hover:-translate-y-0.5`}
             >
-                <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl flex-shrink-0 ${isPast ? 'bg-slate-300' : 'bg-[#3D6B2C]'}`} />
-
                 <div className="flex-grow space-y-2 min-w-0">
                     <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                         <span className={`text-[10px] px-2 py-0.5 rounded font-black uppercase ${TYPE_BADGE[data.type] || 'bg-slate-100 text-slate-500'}`}>
