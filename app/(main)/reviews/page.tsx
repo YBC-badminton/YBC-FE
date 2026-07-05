@@ -43,6 +43,16 @@ const CATEGORY_STYLES: Record<string, string> = {
     'ACCESSORY': 'bg-pink-50 text-pink-500',
 };
 
+// 💡 데스크탑 모드 전용 배경색 매핑 추가
+const CATEGORY_BG_STYLES: Record<string, string> = {
+    'RACKET': 'sm:bg-[#f8faf7]',
+    'CLOTHES': 'sm:bg-[#faf7fe]',
+    'SHOES': 'sm:bg-[#faf7fe]',
+    'BAG': 'sm:bg-[#fcf9f6]',
+    'SHUTTLECOCK': 'sm:bg-[#f6fbfc]',
+    'ACCESSORY': 'sm:bg-[#fdf6f9]',
+};
+
 function formatDate(dateStr: string): string {
     if (!dateStr) return '';
     try {
@@ -124,7 +134,7 @@ export default function ReviewPage() {
                                 onClick={() => setActiveTab(tab)}
                                 className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${
                                     activeTab === tab
-                                        ? 'bg-[#5b6b0f] text-white shadow-md'
+                                        ? 'bg-[#A1C852] text-white shadow-md'
                                         : 'text-slate-400 hover:text-slate-600'
                                 }`}
                             >
@@ -133,7 +143,7 @@ export default function ReviewPage() {
                         ))}
                     </div>
                     <button
-                        className="bg-[#5b6b0f] text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-bold hover:bg-[#46530c] transition-all text-sm shrink-0 whitespace-nowrap h-[36px] sm:h-auto"
+                        className="bg-[#A1C852] text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-bold hover:bg-[#46530c] transition-all text-sm shrink-0 whitespace-nowrap h-[36px] sm:h-auto"
                         onClick={() => user ? setIsModalOpen(true) : setShowLoginModal(true)}
                     >
                         <span className="sm:hidden">+ 작성</span>
@@ -161,7 +171,8 @@ export default function ReviewPage() {
                                 <div 
                                     key={review.reviewId} 
                                     onClick={() => setSelectedReview(review)} 
-                                    className="bg-white p-5 sm:p-6 rounded-2xl border border-gray-100 flex flex-col justify-between shadow-sm cursor-pointer hover:border-[#5b6b0f] hover:shadow-md transition-all h-full"
+                                    /* 💡 모바일은 기본 bg-white, 데스크탑(sm) 이상에서만 카테고리별 배경색 적용 */
+                                    className={`bg-white ${CATEGORY_BG_STYLES[review.category] || ''} p-5 sm:p-6 rounded-2xl border border-gray-100 flex flex-col justify-between shadow-sm cursor-pointer hover:border-[#5b6b0f] hover:shadow-md transition-all h-full`}
                                 >
                                     <div>
                                         <div className="flex justify-between items-center mb-4">
