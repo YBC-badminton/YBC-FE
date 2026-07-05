@@ -46,28 +46,45 @@ export default function InquiryPage() {
     );
 
     return (
-        <div className="min-h-screen bg-white py-12 px-5 sm:px-6 lg:px-24 font-sans select-none text-left">
-            <div className="max-w-[760px] mx-auto">
+        /* 모바일 배경색: #f7f9f5 / 데스크탑 배경색: white */
+        <div className="min-h-screen bg-[#f7f9f5] sm:bg-white py-6 sm:py-12 px-4 sm:px-6 lg:px-24 font-sans select-none text-left flex flex-col">
+            <div className="max-w-[760px] mx-auto w-full flex flex-col flex-grow">
 
-                {/* 헤더 안내 카드 (사진과 동일한 곡률, 여백, 폰트 적용) */}
-                <div className="bg-white rounded-[32px] sm:rounded-[40px] border border-gray-200 p-8 sm:p-12 mb-6">
-                    <span className="text-[13px] font-bold text-slate-400 uppercase tracking-wider">
-                        FAQ
-                    </span>
-                    <h1 className="text-[24px] sm:text-[28px] font-black text-slate-800 mt-2 mb-4 tracking-tight break-keep">
-                        양배추 지원 시 자주 묻는 질문
-                    </h1>
-                    <p className="text-[14px] sm:text-[15px] text-slate-500 font-medium leading-[1.6] break-keep mb-8 sm:mb-10">
-                        양배추에 지원하시는 분들이 자주 묻는 질문을 모아보았습니다.<br className="hidden sm:block" />
-                        그래도 궁금하신 사항이 있으시면 공식 소통창구로 문의해주세요!
-                    </p>
+                {/* 헤더 안내 카드 (YBC 디자인 시스템 적용) */}
+                <div className="bg-white rounded-[24px] sm:rounded-[40px] border border-gray-100 shadow-sm p-6 sm:p-12 mb-6 sm:mb-8 overflow-hidden">
+                    
+                    {/* 💡 텍스트와 캐릭터 이미지를 양옆으로 배치하는 Flex 컨테이너 */}
+                    <div className="flex justify-between items-center sm:items-end gap-4 sm:gap-8 mb-8 sm:mb-10">
+                        {/* 좌측 텍스트 영역 */}
+                        <div className="flex-1 min-w-0">
+                            <span className="inline-block bg-[#f7f9f5] text-[#A1C852] px-3 py-1.5 rounded-lg text-[12px] sm:text-[13px] font-extrabold uppercase tracking-wider mb-2">
+                                FAQ
+                            </span>
+                            <h1 className="text-[22px] sm:text-[28px] font-black text-[#1a1a1a] sm:text-slate-800 mt-2 mb-3 sm:mb-4 tracking-tight break-keep">
+                                양배추 지원 시 자주 묻는 질문
+                            </h1>
+                            <p className="text-[14px] sm:text-[15px] text-[#8b95a1] sm:text-slate-500 font-medium leading-[1.6] break-keep">
+                                양배추에 지원하시는 분들이 자주 묻는 질문을 모아보았습니다.<br className="hidden sm:block" />
+                                그래도 궁금하신 사항이 있으시면 공식 소통창구로 문의해주세요!
+                            </p>
+                        </div>
+                        
+                        {/* 우측 캐릭터 이미지 영역 */}
+                        <div className="shrink-0 mb-auto sm:mb-0">
+                            {/* 파일 확장자는 실제 프로젝트 환경에 맞게 사용해 주세요 (요청하신 대로 .svg로 표기) */}
+                            <img 
+                                src="/images/character-faq.svg" 
+                                alt="궁금해하는 양배추 마스코트" 
+                                className="w-[100px] sm:w-[130px] h-auto object-contain drop-shadow-sm hover:scale-105 transition-transform duration-300 animate-in fade-in zoom-in duration-500" 
+                            />
+                        </div>
+                    </div>
 
                     {/* 카카오 채널 문의하기 버튼 */}
                     <button
                         onClick={() => window.open(KAKAO_CHANNEL_URL, '_blank')}
-                        className="w-full flex items-center justify-center gap-2.5 bg-[#FEE500] text-[#191919] font-bold text-[15px] py-4 rounded-[16px] hover:bg-[#F4DC00] active:scale-[0.98] transition-all duration-200 disabled:opacity-50"
+                        className="w-full flex items-center justify-center gap-2.5 bg-[#FEE500] text-[#191919] font-bold text-[14px] sm:text-[15px] py-4 rounded-[16px] hover:bg-[#F4DC00] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 shadow-sm"
                     >
-                        {/* 사진과 일치하는 꽉 찬 카카오톡 말풍선 아이콘 */}
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12 3c-5.523 0-10 3.51-10 7.84 0 2.81 1.84 5.26 4.67 6.64-.16.55-.95 3.32-.98 3.53-.02.13.06.2.14.15.11-.06 3.63-2.43 4.22-2.84.63.09 1.28.14 1.95.14 5.523 0 10-3.51 10-7.84S17.523 3 12 3z" />
                         </svg>
@@ -76,7 +93,7 @@ export default function InquiryPage() {
                 </div>
 
                 {/* FAQ 아코디언 리스트 */}
-                <div className="space-y-3 sm:space-y-4">
+                <div className="space-y-3 sm:space-y-4 pb-12">
                     {filteredFAQ.length > 0 ? (
                         filteredFAQ.map((faq, index) => {
                             const originalIndex = FAQ_DATA.indexOf(faq);
@@ -85,16 +102,15 @@ export default function InquiryPage() {
                             return (
                                 <div
                                     key={originalIndex}
-                                    className="bg-white rounded-[20px] sm:rounded-[24px] border border-gray-200 overflow-hidden transition-all"
+                                    className="bg-white rounded-[16px] sm:rounded-[24px] border border-gray-100 shadow-sm overflow-hidden transition-all"
                                 >
                                     <button
                                         onClick={() => toggleFAQ(originalIndex)}
-                                        className="w-full flex items-center justify-between px-6 sm:px-8 py-5 sm:py-6 text-left gap-4"
+                                        className="w-full flex items-center justify-between px-5 sm:px-8 py-5 sm:py-6 text-left gap-4 hover:bg-gray-50/50 transition-colors"
                                     >
-                                        <span className="text-[15px] sm:text-[16px] font-bold text-[#333D4B] leading-snug break-keep">
+                                        <span className="text-[15px] sm:text-[16px] font-bold text-[#1a1a1a] sm:text-[#333D4B] leading-snug break-keep">
                                             {faq.question}
                                         </span>
-                                        {/* 사진과 일치하는 얇고 둥근 V 모양 아이콘 */}
                                         <span className={`text-slate-300 transition-transform duration-300 shrink-0 ${isOpen ? 'rotate-180' : ''}`}>
                                             <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
@@ -104,8 +120,8 @@ export default function InquiryPage() {
 
                                     {/* 펼쳐지는 답변 내용 */}
                                     {isOpen && (
-                                        <div className="px-6 sm:px-8 pb-6 animate-in fade-in slide-in-from-top-1 duration-200">
-                                            <p className="text-[14px] sm:text-[15px] text-[#6B7684] font-medium leading-[1.6] break-keep">
+                                        <div className="px-5 sm:px-8 pb-5 sm:pb-6 animate-in fade-in slide-in-from-top-1 duration-200">
+                                            <p className="text-[14px] sm:text-[15px] text-[#4e5968] sm:text-[#6B7684] font-medium leading-[1.6] break-keep">
                                                 {faq.answer}
                                             </p>
                                         </div>
@@ -114,11 +130,24 @@ export default function InquiryPage() {
                             );
                         })
                     ) : (
-                        <div className="py-16 text-center bg-white rounded-[24px] border border-dashed border-gray-200">
-                            <p className="text-slate-400 font-bold">검색 결과가 없습니다.</p>
-                            <p className="text-sm text-slate-300 mt-2">다른 키워드로 검색하거나 직접 문의해 주세요.</p>
+                        <div className="py-16 text-center bg-white rounded-[16px] sm:rounded-[24px] border border-dashed border-gray-200 shadow-sm">
+                            <p className="text-[#8b95a1] sm:text-slate-400 font-bold">검색 결과가 없습니다.</p>
+                            <p className="text-[13px] sm:text-sm text-[#8b95a1] sm:text-slate-300 mt-2">다른 키워드로 검색하거나 직접 문의해 주세요.</p>
                         </div>
                     )}
+                </div>
+
+                {/* 모바일 전용 푸터 섹션 (sm:hidden 속성으로 데스크탑에서는 숨김 처리) */}
+                <div className="sm:hidden mt-auto pb-4 pt-8">
+                    {/* 로고 이미지 경로는 실제 프로젝트 환경에 맞게 수정해 주세요 */}
+                    <img 
+                        src="/images/logo.png" 
+                        alt="YBC BADMINTON CLUB" 
+                        className="h-10 mb-4 object-contain" 
+                    />
+                    <p className="text-[13px] text-[#8b95a1] font-medium">
+                        © 2026 YBC Badminton Club. All rights reserved.
+                    </p>
                 </div>
 
             </div>
