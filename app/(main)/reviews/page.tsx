@@ -34,6 +34,7 @@ const REVERSE_CATEGORY_MAP: Record<string, string> = {
     'RACKET': '라켓', 'CLOTHES': '의류', 'SHOES': '신발', 'BAG': '가방', 'SHUTTLECOCK': '셔틀콕', 'ACCESSORY': '악세서리'
 };
 
+// 공통 카테고리 태그 색상
 const CATEGORY_STYLES: Record<string, string> = {
     'RACKET': 'bg-green-50 text-green-600',
     'CLOTHES': 'bg-blue-50 text-blue-500',
@@ -303,10 +304,11 @@ function ReviewDetailModal({ review, onClose, isAuthor, onChanged, showToast }: 
                 </button>
 
                 <div className="mb-8 sm:mb-10 space-y-2">
-                    <p className="text-sm font-black text-slate-400 bg-slate-100 w-fit px-3 py-1 rounded-lg uppercase tracking-wider">
+                    {/* 💡 모달 카테고리 태그 색상 연동 */}
+                    <span className={`inline-block px-3 py-1.5 rounded-lg text-sm font-black uppercase tracking-wider ${CATEGORY_STYLES[review.category] || 'bg-gray-50 text-gray-500'}`}>
                         {REVERSE_CATEGORY_MAP[review.category]}
-                    </p>
-                    <h2 className="text-xl sm:text-4xl font-black text-slate-800 break-keep pr-8">
+                    </span>
+                    <h2 className="text-xl sm:text-4xl font-black text-slate-800 break-keep pr-8 mt-3">
                         {review.brandName} - {review.productName}
                     </h2>
                     <div className="flex justify-between items-center text-sm font-bold text-slate-400 pt-2">
