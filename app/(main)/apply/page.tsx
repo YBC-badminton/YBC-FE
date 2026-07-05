@@ -283,7 +283,7 @@ export default function ApplyPage() {
               <img 
                 src="/images/character-apply.svg" 
                 alt="지원 안내 양배추 마스코트" 
-                className="w-[100px] sm:w-[140px] mt-4 h-auto object-contain hover:scale-105 transition-transform duration-300 animate-in fade-in zoom-in duration-500" 
+                className="w-[100px] sm:w-[140px] mt-6 h-auto object-contain hover:scale-105 transition-transform duration-300 animate-in fade-in zoom-in duration-500" 
               />
             </div>
           </div>
