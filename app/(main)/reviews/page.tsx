@@ -37,13 +37,13 @@ const REVERSE_CATEGORY_MAP: Record<string, string> = {
 const CATEGORY_STYLES: Record<string, string> = {
     'RACKET': 'bg-green-50 text-green-600',
     'CLOTHES': 'bg-blue-50 text-blue-500',
-    'SHOES': 'bg-purple-50 text-purple-500',
+    'SHOES': 'bg-[#eee8fa] text-[#8b5cf6]', // 신발 뱃지 색상 (사진 매칭)
     'BAG': 'bg-orange-50 text-orange-500',
     'SHUTTLECOCK': 'bg-teal-50 text-teal-500',
     'ACCESSORY': 'bg-pink-50 text-pink-500',
 };
 
-// 💡 데스크탑 모드 전용 배경색 매핑 추가
+// 데스크탑 모드 전용 배경색 매핑
 const CATEGORY_BG_STYLES: Record<string, string> = {
     'RACKET': 'sm:bg-[#f8faf7]',
     'CLOTHES': 'sm:bg-[#faf7fe]',
@@ -171,40 +171,47 @@ export default function ReviewPage() {
                                 <div 
                                     key={review.reviewId} 
                                     onClick={() => setSelectedReview(review)} 
-                                    /* 💡 모바일은 기본 bg-white, 데스크탑(sm) 이상에서만 카테고리별 배경색 적용 */
-                                    className={`bg-white ${CATEGORY_BG_STYLES[review.category] || ''} p-5 sm:p-6 rounded-2xl border border-gray-100 flex flex-col justify-between shadow-sm cursor-pointer hover:border-[#5b6b0f] hover:shadow-md transition-all h-full`}
+                                    className={`bg-white ${CATEGORY_BG_STYLES[review.category] || ''} p-6 sm:p-7 rounded-[20px] border border-gray-100 flex flex-col justify-between shadow-sm cursor-pointer hover:border-[#5b6b0f] hover:shadow-md transition-all h-full`}
                                 >
                                     <div>
-                                        <div className="flex justify-between items-center mb-4">
-                                            <div className="flex items-center gap-2">
-                                                <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${CATEGORY_STYLES[review.category] || 'bg-gray-50 text-gray-500'}`}>
-                                                    {REVERSE_CATEGORY_MAP[review.category]}
-                                                </span>
-                                                {/* 데스크톱: 뱃지 옆에 별점 표시 */}
-                                                <div className="hidden sm:flex text-amber-400 text-xs tracking-widest">
-                                                    {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
-                                                </div>
-                                            </div>
-                                            {/* 모바일: 우측 끝에 별점 표시 */}
-                                            <div className="flex sm:hidden text-amber-400 text-xs tracking-widest">
-                                                {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+                                        {/* 사진 매칭: 뱃지와 별점 좌측 정렬 */}
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <span className={`px-3 py-1.5 rounded-lg text-[13px] font-bold ${CATEGORY_STYLES[review.category] || 'bg-gray-50 text-gray-500'}`}>
+                                                {REVERSE_CATEGORY_MAP[review.category]}
+                                            </span>
+                                            <div className="flex gap-0.5 text-[20px]">
+                                                {[...Array(5)].map((_, index) => (
+                                                    <span 
+                                                        key={index} 
+                                                        className={index < review.rating ? "text-amber-400" : "text-gray-200"}
+                                                    >
+                                                        ★
+                                                    </span>
+                                                ))}
                                             </div>
                                         </div>
                                         
-                                        <h3 className="font-bold text-[17px] sm:text-[18px] text-slate-800 mb-2 line-clamp-1">
+                                        {/* 사진 매칭: 제품명 (크고 진하게) */}
+                                        <h3 className="font-extrabold text-[22px] sm:text-[24px] text-slate-800 mb-2 line-clamp-1">
                                             {review.brandName} - {review.productName}
                                         </h3>
                                         
-                                        <p className="text-[12px] sm:text-[13px] text-slate-400 mb-4 font-medium">
+                                        {/* 사진 매칭: 사용 기간 */}
+                                        <p className="text-[15px] text-slate-500 mb-6 font-medium">
                                             사용 기간: {formatUsageMonth(review.usageMonth)}
                                         </p>
+
+                                        {/* 사진 매칭: 얇은 구분선 */}
+                                        <div className="w-full h-[1px] bg-gray-200/70 mb-6" />
                                         
-                                        <p className="text-[13px] sm:text-[14px] text-slate-600 leading-relaxed mb-6 line-clamp-3">
+                                        {/* 사진 매칭: 내용 텍스트 */}
+                                        <p className="text-[16px] text-[#475569] leading-[1.7] mb-8 line-clamp-3 break-keep">
                                             {review.content}
                                         </p>
                                     </div>
                                     
-                                    <div className="flex justify-between items-center mt-auto text-[12px] sm:text-[13px] text-slate-400 font-medium">
+                                    {/* 사진 매칭: 푸터 정보 */}
+                                    <div className="flex justify-between items-center mt-auto text-[15px] text-slate-500 font-medium">
                                         <span>{maskName(review.memberNickname)}</span>
                                         <span>{formatDate(review.createdAt)}</span>
                                     </div>
@@ -327,7 +334,9 @@ function ReviewDetailModal({ review, onClose, isAuthor, onChanged, showToast }: 
                 ) : (
                     <div className="flex items-center gap-3 mb-8">
                         <div className="flex text-amber-400 text-2xl">
-                            {'★'.repeat(review.rating) + '☆'.repeat(5 - review.rating)}
+                            {[...Array(5)].map((_, index) => (
+                                <span key={index} className={index < review.rating ? "text-amber-400" : "text-gray-200"}>★</span>
+                            ))}
                         </div>
                         <span className="text-sm font-bold text-slate-400">· 사용 {review.usageMonth}개월</span>
                     </div>
