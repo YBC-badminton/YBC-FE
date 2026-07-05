@@ -37,7 +37,7 @@ const REVERSE_CATEGORY_MAP: Record<string, string> = {
 const CATEGORY_STYLES: Record<string, string> = {
     'RACKET': 'bg-green-50 text-green-600',
     'CLOTHES': 'bg-blue-50 text-blue-500',
-    'SHOES': 'bg-[#eee8fa] text-[#8b5cf6]', // 신발 뱃지 색상 (사진 매칭)
+    'SHOES': 'bg-[#eee8fa] text-[#8b5cf6]', // 신발 뱃지 색상
     'BAG': 'bg-orange-50 text-orange-500',
     'SHUTTLECOCK': 'bg-teal-50 text-teal-500',
     'ACCESSORY': 'bg-pink-50 text-pink-500',
@@ -71,7 +71,7 @@ function formatUsageMonth(months: number): string {
     return `${y}년 ${m}개월`;
 }
 
-// 작성자 이름 가운데를 *로 마스킹 (첫·끝 글자 유지). 예: 양은서 → 양*서, 김철수2 → 김**2
+// 작성자 이름 가운데를 *로 마스킹
 function maskName(name: string): string {
     if (!name) return '';
     if (name.length <= 1) return name;
@@ -117,25 +117,27 @@ export default function ReviewPage() {
     }, [fetchReviews]);
 
     return (
-        <div className="min-h-screen bg-white py-8 sm:py-12 px-4 sm:px-6 lg:px-24 font-sans text-left">
+        /* 모바일 배경색: #f7f9f5 / 데스크탑 배경색: white */
+        <div className="min-h-screen bg-[#f7f9f5] sm:bg-white py-6 sm:py-12 px-4 sm:px-6 lg:px-24 font-sans text-left">
             <div className="max-w-screen-xl mx-auto">
-                {/* 헤더 섹션 */}
-                <div className="space-y-2 mb-6 sm:mb-8">
-                    <h1 className="text-3xl sm:text-4xl font-black text-slate-800">장비 후기</h1>
-                    <p className="text-xs sm:text-sm text-slate-400 font-bold">클럽원들의 배드민턴 장비 사용 후기를 확인하고 공유해보세요</p>
+                
+                {/* 데스크탑에서만 보이는 헤더 섹션 */}
+                <div className="hidden sm:block space-y-2 mb-8">
+                    <h1 className="text-4xl font-black text-slate-800">장비 후기</h1>
+                    <p className="text-sm text-slate-400 font-bold">클럽원들의 배드민턴 장비 사용 후기를 확인하고 공유해보세요</p>
                 </div>
 
                 {/* 필터 및 작성 버튼 */}
-                <div className="flex justify-between items-center gap-2 mb-6 sm:mb-8">
-                    <div className="flex bg-white p-1 rounded-xl shadow-sm border border-gray-100 overflow-x-auto gap-1 scrollbar-hide flex-grow sm:flex-grow-0">
+                <div className="flex justify-between items-center gap-2 sm:mb-8">
+                    <div className="flex bg-white p-1.5 sm:p-1 rounded-[16px] sm:rounded-xl shadow-sm border border-gray-100 overflow-x-auto gap-1 scrollbar-hide flex-grow sm:flex-grow-0">
                         {categories.map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
-                                className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${
+                                className={`px-4 sm:px-6 py-2 rounded-[12px] sm:rounded-lg text-[14px] sm:text-sm font-bold whitespace-nowrap transition-all ${
                                     activeTab === tab
                                         ? 'bg-[#A1C852] text-white shadow-md'
-                                        : 'text-slate-400 hover:text-slate-600'
+                                        : 'text-[#8b95a1] hover:text-slate-600'
                                 }`}
                             >
                                 {tab}
@@ -143,7 +145,7 @@ export default function ReviewPage() {
                         ))}
                     </div>
                     <button
-                        className="bg-[#A1C852] text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-bold hover:bg-[#46530c] transition-all text-sm shrink-0 whitespace-nowrap h-[36px] sm:h-auto"
+                        className="bg-[#A1C852] text-white px-4 sm:px-6 py-2.5 rounded-[16px] sm:rounded-xl font-bold hover:bg-[#8eb344] transition-all text-sm shrink-0 whitespace-nowrap shadow-sm"
                         onClick={() => user ? setIsModalOpen(true) : setShowLoginModal(true)}
                     >
                         <span className="sm:hidden">+ 작성</span>
@@ -151,8 +153,10 @@ export default function ReviewPage() {
                     </button>
                 </div>
 
-                {/* 모바일 탭 제목 */}
-                <h2 className="text-xl font-bold text-slate-800 sm:hidden mb-4">{activeTab} 후기</h2>
+                {/* 모바일 전용 카테고리별 유동 타이틀 */}
+                <h2 className="text-[20px] font-extrabold text-[#1a1a1a] sm:hidden mt-6 mb-4 tracking-tight">
+                    {activeTab} 후기
+                </h2>
 
                 {/* 에러 메시지 */}
                 {error && (
@@ -161,7 +165,7 @@ export default function ReviewPage() {
                     </div>
                 )}
 
-                {/* 후기 리스트 (그리드 레이아웃 적용) */}
+                {/* 후기 리스트 */}
                 {loading ? (
                     <div className="py-24 text-center text-slate-400 font-bold">불러오는 중...</div>
                 ) : (
@@ -171,15 +175,15 @@ export default function ReviewPage() {
                                 <div 
                                     key={review.reviewId} 
                                     onClick={() => setSelectedReview(review)} 
-                                    className={`bg-white ${CATEGORY_BG_STYLES[review.category] || ''} p-6 sm:p-7 rounded-[20px] border border-gray-100 flex flex-col justify-between shadow-sm cursor-pointer hover:shadow-md transition-all h-full`}
+                                    className={`bg-white ${CATEGORY_BG_STYLES[review.category] || ''} p-5 sm:p-7 rounded-[20px] border border-gray-100 flex flex-col justify-between shadow-sm cursor-pointer hover:shadow-md transition-all h-full`}
                                 >
                                     <div>
-                                        {/* 사진 매칭: 뱃지와 별점 좌측 정렬 */}
-                                        <div className="flex items-center gap-3 mb-4">
-                                            <span className={`px-3 py-1.5 rounded-lg text-[13px] font-bold ${CATEGORY_STYLES[review.category] || 'bg-gray-50 text-gray-500'}`}>
+                                        {/* 모바일: 양끝 정렬 / 데스크탑: 좌측 정렬 */}
+                                        <div className="flex justify-between sm:justify-start items-center gap-3 mb-3 sm:mb-4">
+                                            <span className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-md sm:rounded-lg text-[12px] sm:text-[13px] font-bold ${CATEGORY_STYLES[review.category] || 'bg-gray-50 text-gray-500'}`}>
                                                 {REVERSE_CATEGORY_MAP[review.category]}
                                             </span>
-                                            <div className="flex gap-0.5 text-[20px]">
+                                            <div className="flex gap-0.5 text-[16px] sm:text-[20px]">
                                                 {[...Array(5)].map((_, index) => (
                                                     <span 
                                                         key={index} 
@@ -191,34 +195,34 @@ export default function ReviewPage() {
                                             </div>
                                         </div>
                                         
-                                        {/* 사진 매칭: 제품명 (크고 진하게) */}
-                                        <h3 className="font-extrabold text-[22px] sm:text-[24px] text-slate-800 mb-2 line-clamp-1">
+                                        {/* 제품명 */}
+                                        <h3 className="font-extrabold text-[18px] sm:text-[24px] text-[#1a1a1a] sm:text-slate-800 mb-1.5 sm:mb-2 line-clamp-1">
                                             {review.brandName} - {review.productName}
                                         </h3>
                                         
-                                        {/* 사진 매칭: 사용 기간 */}
-                                        <p className="text-[15px] text-slate-500 mb-6 font-medium">
+                                        {/* 사용 기간 */}
+                                        <p className="text-[13px] sm:text-[15px] text-[#8b95a1] sm:text-slate-500 mb-4 sm:mb-6 font-medium">
                                             사용 기간: {formatUsageMonth(review.usageMonth)}
                                         </p>
 
-                                        {/* 사진 매칭: 얇은 구분선 */}
-                                        <div className="w-full h-[1px] bg-gray-200/70 mb-6" />
+                                        {/* 데스크탑 전용 구분선 */}
+                                        <div className="hidden sm:block w-full h-[1px] bg-gray-200/70 mb-6" />
                                         
-                                        {/* 사진 매칭: 내용 텍스트 */}
-                                        <p className="text-[16px] text-[#475569] leading-[1.7] mb-8 line-clamp-3 break-keep">
+                                        {/* 내용 */}
+                                        <p className="text-[14px] sm:text-[16px] text-[#4e5968] sm:text-[#475569] leading-[1.6] sm:leading-[1.7] mb-6 sm:mb-8 line-clamp-3 break-keep">
                                             {review.content}
                                         </p>
                                     </div>
                                     
-                                    {/* 사진 매칭: 푸터 정보 */}
-                                    <div className="flex justify-between items-center mt-auto text-[15px] text-slate-500 font-medium">
+                                    {/* 푸터 정보 (작성자 & 날짜) */}
+                                    <div className="flex justify-between items-center mt-auto text-[13px] sm:text-[15px] text-[#8b95a1] sm:text-slate-500 font-medium">
                                         <span>{maskName(review.memberNickname)}</span>
                                         <span>{formatDate(review.createdAt)}</span>
                                     </div>
                                 </div>
                             ))
                         ) : (
-                            <div className="col-span-1 sm:col-span-2 py-24 text-center bg-white rounded-2xl text-slate-400 font-bold border border-gray-100">
+                            <div className="col-span-1 sm:col-span-2 py-24 text-center bg-white rounded-[20px] text-[#8b95a1] font-bold border border-gray-100 shadow-sm">
                                 등록된 후기가 없습니다.
                             </div>
                         )}
