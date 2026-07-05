@@ -119,7 +119,7 @@ export default function ReviewPage() {
     return (
         /* 모바일 배경색: #f7f9f5 / 데스크탑 배경색: white */
         <div className="min-h-screen bg-[#f7f9f5] sm:bg-white py-6 sm:py-12 px-4 sm:px-6 lg:px-24 font-sans text-left">
-            <div className="max-w-screen-xl mx-auto">
+            <div className="max-w-screen-xl mx-auto flex flex-col min-h-[calc(100vh-3rem)]">
                 
                 {/* 데스크탑에서만 보이는 헤더 섹션 */}
                 <div className="hidden sm:block space-y-2 mb-8">
@@ -166,68 +166,84 @@ export default function ReviewPage() {
                 )}
 
                 {/* 후기 리스트 */}
-                {loading ? (
-                    <div className="py-24 text-center text-slate-400 font-bold">불러오는 중...</div>
-                ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                        {reviews.length > 0 ? (
-                            reviews.map((review) => (
-                                <div 
-                                    key={review.reviewId} 
-                                    onClick={() => setSelectedReview(review)} 
-                                    className={`bg-white ${CATEGORY_BG_STYLES[review.category] || ''} p-5 sm:p-7 rounded-[20px] border border-gray-100 flex flex-col justify-between shadow-sm cursor-pointer hover:shadow-md transition-all h-full`}
-                                >
-                                    <div>
-                                        {/* 모바일: 양끝 정렬 / 데스크탑: 좌측 정렬 */}
-                                        <div className="flex justify-between sm:justify-start items-center gap-3 mb-3 sm:mb-4">
-                                            <span className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-md sm:rounded-lg text-[12px] sm:text-[13px] font-bold ${CATEGORY_STYLES[review.category] || 'bg-gray-50 text-gray-500'}`}>
-                                                {REVERSE_CATEGORY_MAP[review.category]}
-                                            </span>
-                                            <div className="flex gap-0.5 text-[16px] sm:text-[20px]">
-                                                {[...Array(5)].map((_, index) => (
-                                                    <span 
-                                                        key={index} 
-                                                        className={index < review.rating ? "text-amber-400" : "text-gray-200"}
-                                                    >
-                                                        ★
-                                                    </span>
-                                                ))}
+                <div className="flex-grow">
+                    {loading ? (
+                        <div className="py-24 text-center text-slate-400 font-bold">불러오는 중...</div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pb-6 sm:pb-12">
+                            {reviews.length > 0 ? (
+                                reviews.map((review) => (
+                                    <div 
+                                        key={review.reviewId} 
+                                        onClick={() => setSelectedReview(review)} 
+                                        className={`bg-white ${CATEGORY_BG_STYLES[review.category] || ''} p-5 sm:p-7 rounded-[20px] border border-gray-100 flex flex-col justify-between shadow-sm cursor-pointer hover:shadow-md transition-all h-full`}
+                                    >
+                                        <div>
+                                            {/* 모바일: 양끝 정렬 / 데스크탑: 좌측 정렬 */}
+                                            <div className="flex justify-between sm:justify-start items-center gap-3 mb-3 sm:mb-4">
+                                                <span className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-md sm:rounded-lg text-[12px] sm:text-[13px] font-bold ${CATEGORY_STYLES[review.category] || 'bg-gray-50 text-gray-500'}`}>
+                                                    {REVERSE_CATEGORY_MAP[review.category]}
+                                                </span>
+                                                <div className="flex gap-0.5 text-[16px] sm:text-[20px]">
+                                                    {[...Array(5)].map((_, index) => (
+                                                        <span 
+                                                            key={index} 
+                                                            className={index < review.rating ? "text-amber-400" : "text-gray-200"}
+                                                        >
+                                                            ★
+                                                        </span>
+                                                    ))}
+                                                </div>
                                             </div>
+                                            
+                                            {/* 제품명 */}
+                                            <h3 className="font-extrabold text-[18px] sm:text-[24px] text-[#1a1a1a] sm:text-slate-800 mb-1.5 sm:mb-2 line-clamp-1">
+                                                {review.brandName} - {review.productName}
+                                            </h3>
+                                            
+                                            {/* 사용 기간 */}
+                                            <p className="text-[13px] sm:text-[15px] text-[#8b95a1] sm:text-slate-500 mb-4 sm:mb-6 font-medium">
+                                                사용 기간: {formatUsageMonth(review.usageMonth)}
+                                            </p>
+
+                                            {/* 데스크탑 전용 구분선 */}
+                                            <div className="hidden sm:block w-full h-[1px] bg-gray-200/70 mb-6" />
+                                            
+                                            {/* 내용 */}
+                                            <p className="text-[14px] sm:text-[16px] text-[#4e5968] sm:text-[#475569] leading-[1.6] sm:leading-[1.7] mb-6 sm:mb-8 line-clamp-3 break-keep">
+                                                {review.content}
+                                            </p>
                                         </div>
                                         
-                                        {/* 제품명 */}
-                                        <h3 className="font-extrabold text-[18px] sm:text-[24px] text-[#1a1a1a] sm:text-slate-800 mb-1.5 sm:mb-2 line-clamp-1">
-                                            {review.brandName} - {review.productName}
-                                        </h3>
-                                        
-                                        {/* 사용 기간 */}
-                                        <p className="text-[13px] sm:text-[15px] text-[#8b95a1] sm:text-slate-500 mb-4 sm:mb-6 font-medium">
-                                            사용 기간: {formatUsageMonth(review.usageMonth)}
-                                        </p>
-
-                                        {/* 데스크탑 전용 구분선 */}
-                                        <div className="hidden sm:block w-full h-[1px] bg-gray-200/70 mb-6" />
-                                        
-                                        {/* 내용 */}
-                                        <p className="text-[14px] sm:text-[16px] text-[#4e5968] sm:text-[#475569] leading-[1.6] sm:leading-[1.7] mb-6 sm:mb-8 line-clamp-3 break-keep">
-                                            {review.content}
-                                        </p>
+                                        {/* 푸터 정보 (작성자 & 날짜) */}
+                                        <div className="flex justify-between items-center mt-auto text-[13px] sm:text-[15px] text-[#8b95a1] sm:text-slate-500 font-medium">
+                                            <span>{maskName(review.memberNickname)}</span>
+                                            <span>{formatDate(review.createdAt)}</span>
+                                        </div>
                                     </div>
-                                    
-                                    {/* 푸터 정보 (작성자 & 날짜) */}
-                                    <div className="flex justify-between items-center mt-auto text-[13px] sm:text-[15px] text-[#8b95a1] sm:text-slate-500 font-medium">
-                                        <span>{maskName(review.memberNickname)}</span>
-                                        <span>{formatDate(review.createdAt)}</span>
-                                    </div>
+                                ))
+                            ) : (
+                                <div className="col-span-1 sm:col-span-2 py-24 text-center bg-white rounded-[20px] text-[#8b95a1] font-bold border border-gray-100 shadow-sm">
+                                    등록된 후기가 없습니다.
                                 </div>
-                            ))
-                        ) : (
-                            <div className="col-span-1 sm:col-span-2 py-24 text-center bg-white rounded-[20px] text-[#8b95a1] font-bold border border-gray-100 shadow-sm">
-                                등록된 후기가 없습니다.
-                            </div>
-                        )}
-                    </div>
-                )}
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {/* 모바일 전용 푸터 섹션 (sm:hidden 속성으로 데스크탑에서는 숨김 처리) */}
+                <div className="sm:hidden mt-8 pb-4">
+                    {/* 로고 이미지 경로는 실제 프로젝트 환경에 맞게 수정해 주세요 */}
+                    <img 
+                        src="/logo.png" 
+                        alt="YBC BADMINTON CLUB" 
+                        className="h-10 mb-4 object-contain" 
+                    />
+                    <p className="text-[13px] text-[#8b95a1] font-medium">
+                        © 2026 YBC Badminton Club. All rights reserved.
+                    </p>
+                </div>
+
             </div>
 
             {/* 상세보기 모달 */}
