@@ -235,7 +235,7 @@ export default function ReviewPage() {
                 <div className="sm:hidden mt-8 pb-4">
                     {/* 로고 이미지 경로는 실제 프로젝트 환경에 맞게 수정해 주세요 */}
                     <img 
-                        src="images/logo.png" 
+                        src="/images/logo.png"
                         alt="YBC BADMINTON CLUB" 
                         className="h-10 mb-4 object-contain" 
                     />
