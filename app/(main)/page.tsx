@@ -803,10 +803,10 @@ function MapAppButton({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={`h-[42px] px-3 sm:px-4 rounded-md flex items-center justify-center gap-1 text-[15px] font-medium transition-all ${
+      className={`h-[46px] px-3 sm:px-4 rounded-md flex items-center justify-center gap-1.5 text-[14px] sm:text-[15px] font-medium transition-all ${
         primary
           ? "bg-white border border-[#93C54B] text-[#5b6b0f] hover:bg-[#F1F6EC]"
-          : "bg-white border border-gray-200 text-[#5b6b0f] hover:border-[#93C54B] hover:bg-[#F1F6EC]"
+          : "bg-white border border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50"
       }`}
     >
       {label}
@@ -854,7 +854,7 @@ function GymLocationSection() {
       )}
 
       {/* 상단 헤더 영역 */}
-      <div className="text-center space-y-3 mb-12 sm:mb-16">
+      <div className="text-center space-y-3 mb-10 sm:mb-16">
         <h2 className="text-2xl sm:text-[40px] font-bold text-ink">
           체육관 위치
         </h2>
@@ -863,72 +863,75 @@ function GymLocationSection() {
         </p>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-center justify-between">
-        {/* 좌측: 탭 메뉴 및 상세 정보 */}
-        <div className="w-full lg:w-[45%] flex flex-col font-body">
-          {/* 탭 메뉴 (소프트 쉐도우 및 둥근 형태 반영) */}
-          <div className="self-start bg-white rounded-full shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-1.5 flex gap-1 mb-10">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-y-10 lg:gap-x-20 items-start">
+        {/* 1. 탭 메뉴 (모바일: 중앙 정렬, 상단 배치 / 데스크탑: 좌측 정렬) */}
+        <div className="order-1 lg:order-1 flex justify-center lg:justify-start w-full">
+          <div className="bg-white rounded-full shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-1.5 flex w-[90%] max-w-[320px] sm:max-w-none sm:w-auto border border-gray-100/50">
             {GYMS.map((g) => (
               <button
                 key={g.key}
                 onClick={() => setActiveKey(g.key)}
-                className={`w-[100px] sm:w-[120px] py-2.5 rounded-full text-[15px] sm:text-[18px] font-semibold transition-colors ${
+                className={`flex-1 sm:w-[140px] py-2.5 rounded-full text-[15px] sm:text-[18px] font-semibold transition-colors ${
                   activeKey === g.key
-                    ? "bg-[#A3C668] text-white shadow-sm"
-                    : "text-gray-400 hover:text-gray-700"
+                    ? "bg-[#93C54B] text-white shadow-sm"
+                    : "text-gray-500 hover:text-gray-800"
                 }`}
               >
                 {g.tab}
               </button>
             ))}
           </div>
-
-          {/* 체육관 상세 정보 */}
-          <div className="flex-1 flex flex-col gap-6">
-            <h3 className="text-[22px] sm:text-[24px] font-bold text-black">
-              {gym.name}
-            </h3>
-
-            <div className="flex flex-col gap-3.5 text-[15px] sm:text-[18px] font-normal text-black">
-              <p className="flex items-center gap-2">
-                <PinIcon className="w-5 h-5 text-[#93C54B] shrink-0" />
-                {gym.address}
-              </p>
-              <p className="flex items-center gap-2">
-                <PinIcon className="w-5 h-5 text-[#93C54B] shrink-0" />
-                {gym.parking}
-              </p>
-            </div>
-
-            {/* 구분선 */}
-            <div className="h-px w-full bg-gray-100 my-2" />
-
-            {/* 지도 앱 바로가기 버튼 그룹 */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              {mapApps.map((m) => (
-                <MapAppButton key={m.label} {...m} />
-              ))}
-            </div>
-          </div>
         </div>
 
-        {/* 우측: 유기적인 조약돌 형태의 카카오 맵 & 데코레이션 캐릭터 */}
-        <div className="w-full lg:w-[50%] relative mt-10 lg:mt-0 flex justify-center">
-          {/* 지도 컨테이너 (시안과 일치하는 유기적 Blob 테두리 곡선 적용) */}
+        {/* 2. 지도 영역 (모바일: 탭과 상세 정보 사이 / 데스크탑: 우측) */}
+        <div className="order-2 lg:order-2 lg:col-start-2 lg:row-span-2 w-full relative flex justify-center">
+          {/* 지도 컨테이너 (유기적 Blob 테두리 곡선 적용) */}
           <div
-            className="w-[95%] sm:w-full h-[320px] sm:h-[400px] relative overflow-hidden shadow-sm"
+            className="w-full sm:w-[90%] lg:w-full h-[320px] sm:h-[400px] relative overflow-hidden shadow-sm"
             style={{ borderRadius: "82% 18% 56% 44% / 29% 20% 80% 71%" }}
           >
             <GymMap gym={gym} sdkReady={sdkReady} />
           </div>
 
-          {/* 💡 피그마 시안 우측 하단 라켓 든 양배추 캐릭터 주입 */}
-          <div className="absolute -bottom-8 -right-2 sm:-bottom-12 sm:-right-8 lg:-right-14 w-[160px] sm:w-[240px] lg:w-[280px] z-10 pointer-events-none drop-shadow-md transition-all">
+          {/* 데코레이션 캐릭터 */}
+          <div className="hidden lg:block absolute -bottom-8 -right-2 sm:-bottom-12 sm:-right-8 lg:-right-14 w-[160px] sm:w-[240px] lg:w-[280px] z-10 pointer-events-none drop-shadow-md transition-all">
             <img
               src="/images/character-map.svg"
               alt="양배추 캐릭터"
               className="w-full h-auto object-contain"
             />
+          </div>
+        </div>
+
+        {/* 3. 상세 정보 및 버튼 영역 (모바일: 지도 아래 / 데스크탑: 좌측 탭 아래) */}
+        <div className="order-3 lg:order-3 lg:col-start-1 w-full flex flex-col gap-6 lg:mt-0 font-body">
+          <h3 className="text-[20px] sm:text-[24px] font-bold text-black">
+            {gym.name}
+          </h3>
+
+          <div className="flex flex-col gap-3.5 text-[14px] sm:text-[18px] font-medium text-[#111111]">
+            <p className="flex items-center gap-2.5">
+              <span className="w-5 h-5 rounded-full bg-[#5b6b0f] text-white flex items-center justify-center shrink-0">
+                <PinIcon className="w-3.5 h-3.5" />
+              </span>
+              {gym.address}
+            </p>
+            <p className="flex items-center gap-2.5">
+              <span className="w-5 h-5 rounded-full bg-[#5b6b0f] text-white flex items-center justify-center shrink-0 text-[11px] font-bold pb-px">
+                P
+              </span>
+              {gym.parking}
+            </p>
+          </div>
+
+          {/* 구분선 */}
+          <div className="h-px w-full bg-gray-100 my-1" />
+
+          {/* 지도 앱 바로가기 버튼 그룹 (모바일 환경 2x2 반응형 적용) */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+            {mapApps.map((m) => (
+              <MapAppButton key={m.label} {...m} />
+            ))}
           </div>
         </div>
       </div>
