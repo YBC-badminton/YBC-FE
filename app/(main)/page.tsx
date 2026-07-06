@@ -273,11 +273,11 @@ export default function YBCMainPage() {
             </p>
           </div>
 
-          {/* 하단 카드 레이아웃 영역 */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-5 sm:gap-6 mt-10 w-full max-w-4xl">
+          {/* 하단 카드 레이아웃 영역 (모바일 그리드, 데스크탑 플렉스) */}
+          <div className="grid grid-cols-2 sm:flex sm:flex-row items-center justify-center gap-4 sm:gap-6 mt-10 w-full max-w-4xl">
             {/* 1. 동아리 실제 활동 사진 블롭 카드 (초록 배경) */}
             <div
-              className="w-full sm:flex-[1.3] max-w-[380px] sm:max-w-none min-h-[180px] sm:min-h-[220px] bg-[#93C54B] flex items-center justify-center text-white/90 font-bold text-sm sm:text-base px-8 text-center shadow-md overflow-hidden transition-transform hover:scale-[1.02]"
+              className="col-span-2 place-self-center w-full sm:flex-[1.3] max-w-[380px] sm:max-w-none min-h-[180px] sm:min-h-[220px] bg-[#93C54B] flex items-center justify-center text-white/90 font-bold text-sm sm:text-base px-8 text-center shadow-md overflow-hidden transition-transform hover:scale-[1.02]"
               style={{ borderRadius: "28% 72% 38% 62% / 45% 36% 64% 55%" }}
             >
               {/* 💡 추후 실제 이미지 삽입 시 아래 주석 해제 후 사용하세요 */}
@@ -287,17 +287,17 @@ export default function YBCMainPage() {
 
             {/* 2. 정기 활동 블롭 카드 (연두빛 틴트 배경) */}
             <div
-              className="w-full sm:flex-1 max-w-[240px] sm:max-w-none min-h-[180px] sm:min-h-[220px] bg-[#E8F5E9] flex flex-col items-center justify-center gap-2 px-6 text-center shadow-sm transition-transform hover:scale-[1.02]"
+              className="col-span-1 w-full sm:flex-1 min-h-[160px] sm:min-h-[220px] bg-[#E8F5E9] flex flex-col items-center justify-center gap-2 px-2 sm:px-6 text-center shadow-sm transition-transform hover:scale-[1.02]"
               style={{ borderRadius: "62% 38% 43% 57% / 46% 54% 46% 54%" }}
             >
               <p className="text-sm sm:text-base font-normal text-[#80917d]">
                 정기 활동
               </p>
               <p className="flex items-baseline gap-1">
-                <span className="text-2xl sm:text-[40px] font-normal text-[#74bf63] mr-1">
+                <span className="text-xl sm:text-[40px] font-normal text-[#74bf63] mr-1">
                   주
                 </span>
-                <span className="text-5xl sm:text-[66px] font-bold text-[#74bf63] leading-none">
+                <span className="text-4xl sm:text-[66px] font-bold text-[#74bf63] leading-none">
                   2회
                 </span>
               </p>
@@ -305,17 +305,17 @@ export default function YBCMainPage() {
 
             {/* 3. 부원 수 블롭 카드 (연한 그레이시 그린 배경) */}
             <div
-              className="w-full sm:flex-1 max-w-[240px] sm:max-w-none min-h-[180px] sm:min-h-[220px] bg-[#EDF1EC] flex flex-col items-center justify-center gap-2 px-6 text-center shadow-sm transition-transform hover:scale-[1.02]"
+              className="col-span-1 w-full sm:flex-1 min-h-[160px] sm:min-h-[220px] bg-[#EDF1EC] flex flex-col items-center justify-center gap-2 px-2 sm:px-6 text-center shadow-sm transition-transform hover:scale-[1.02]"
               style={{ borderRadius: "44% 56% 42% 58% / 55% 45% 55% 45%" }}
             >
               <p className="text-sm sm:text-base font-normal text-[#80917d]">
                 부원 수
               </p>
               <p className="flex items-baseline gap-1">
-                <span className="text-5xl sm:text-[66px] font-bold text-[#5b6b0f] leading-none">
+                <span className="text-4xl sm:text-[66px] font-bold text-[#5b6b0f] leading-none">
                   50+
                 </span>
-                <span className="text-2xl sm:text-[40px] font-normal text-[#5b6b0f] ml-1">
+                <span className="text-xl sm:text-[40px] font-normal text-[#5b6b0f] ml-1">
                   명
                 </span>
               </p>
