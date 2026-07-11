@@ -3,10 +3,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/axios';
 import { useToast } from '@/components/ui/Toast';
+import { ApplicationDetail, type ApplicantDetail, type ApplicationStatus } from '@/components/admin/ApplicationDetail';
 
 // API 응답 타입 (spec 기준)
-type ApplicationStatus = 'NONE' | 'FIRST_PASS' | 'FINAL_PASS' | 'FAIL' | 'HOLD';
-
 interface ApplicantListItem {
     applicationId: number;
     name: string;
@@ -19,28 +18,6 @@ interface ApplicantListItem {
     phone: string;
     createdAt: string;
     status: ApplicationStatus;
-}
-
-interface ApplicantDetail {
-    applicationId: number;
-    name: string;
-    address: string;
-    gender: string;
-    age: number;
-    phone: string;
-    university: string;
-    major: string;
-    introduction: string;
-    motivation: string;
-    equipment: string;
-    interviewAvailableTimes: string[];
-    discoverySource: string;
-    discoveryEtc: string;
-    wantsStaff: boolean;
-    finalComment: string;
-    createdAt: string;
-    status: ApplicationStatus;
-    email: string;
 }
 
 interface ApplicantsResponse {
@@ -268,7 +245,7 @@ export default function ApplicantsPage() {
                                             {detailLoading ? (
                                                 <p className="text-center text-slate-400 font-bold py-4">상세 정보 불러오는 중...</p>
                                             ) : detail ? (
-                                                <DetailContent detail={detail} />
+                                                <ApplicationDetail detail={detail} />
                                             ) : (
                                                 <p className="text-center text-red-400 font-bold py-4">상세 정보를 불러올 수 없습니다.</p>
                                             )}
@@ -318,7 +295,7 @@ export default function ApplicantsPage() {
                                 {detailLoading ? (
                                     <p className="text-center text-slate-400 font-bold py-4">상세 정보 불러오는 중...</p>
                                 ) : detail ? (
-                                    <DetailContent detail={detail} isMobile />
+                                    <ApplicationDetail detail={detail} isMobile />
                                 ) : (
                                     <p className="text-center text-red-400 font-bold py-4">상세 정보를 불러올 수 없습니다.</p>
                                 )}
@@ -327,52 +304,6 @@ export default function ApplicantsPage() {
                     </div>
                 ))}
             </div>
-        </div>
-    );
-}
-
-function DetailContent({ detail, isMobile = false }: { detail: ApplicantDetail; isMobile?: boolean }) {
-    return (
-        <div className={`space-y-3 text-slate-700 ${isMobile ? 'max-w-full' : 'max-w-4xl'}`}>
-            <h4 className="text-base font-bold text-slate-900 mb-6">지원서 상세 정보</h4>
-
-            <div className={`grid ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-3 gap-8'}`}>
-                <InfoItem label="지원일" value={detail.createdAt?.slice(0, 16).replace('T', ' ')} />
-                <InfoItem label="거주지" value={detail.address} />
-                <InfoItem label="면접 가능 시간" value={detail.interviewAvailableTimes?.join(', ') || '-'} />
-            </div>
-
-            <div className={`grid ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-2 gap-8'} border-t border-gray-200/60 pt-6`}>
-                <InfoItem label="이메일" value={detail.email || '-'} />
-                <InfoItem label="연락처" value={detail.phone} />
-            </div>
-
-            <div className="border-t border-gray-200/60 pt-6 space-y-2">
-                <InfoItem label="자기소개" value={detail.introduction} full />
-                <InfoItem label="지원 동기" value={detail.motivation} full />
-            </div>
-
-            <div className={`grid ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-2 gap-8'} border-t border-gray-200/60 pt-6`}>
-                <InfoItem label="보유 장비" value={detail.equipment} />
-                <InfoItem label="알게 된 경로" value={`${detail.discoverySource}${detail.discoveryEtc ? ` - ${detail.discoveryEtc}` : ''}`} />
-            </div>
-
-            <div className="border-t border-gray-200/60 pt-6">
-                <InfoItem label="운영진 지원 여부" value={detail.wantsStaff ? '예' : '아니오'} />
-            </div>
-
-            <div className="border-t border-gray-200/60 pt-6">
-                <InfoItem label="마지막으로 하고 싶은 말" value={detail.finalComment} full />
-            </div>
-        </div>
-    );
-}
-
-function InfoItem({ label, value, full = false }: { label: string; value: string; full?: boolean }) {
-    return (
-        <div className={`${full ? 'col-span-full' : ''}`}>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">{label}</p>
-            <p className="text-[14px] font-medium text-slate-700 leading-relaxed whitespace-pre-wrap">{value || '-'}</p>
         </div>
     );
 }

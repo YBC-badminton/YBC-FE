@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/axios';
 import { useToast } from '@/components/ui/Toast';
+import { ApplicationDetail, type ApplicantDetail } from '@/components/admin/ApplicationDetail';
 
 type InterviewStatus = 'FIRST_PASS' | 'FINAL_PASS' | 'FAIL' | 'HOLD';
 type SessionType = 'FIRST_SESSION' | 'SECOND_SESSION';
@@ -50,6 +51,10 @@ export default function InterviewsPage() {
     const [savingId, setSavingId] = useState<number | null>(null);
     const [sessionFilter, setSessionFilter] = useState<'all' | SessionType>('all');
     const [resultFilter, setResultFilter] = useState<'all' | 'PASS' | 'FAIL' | 'HOLD'>('all');
+    // 지원서 상세 조회 (면접자별로 지원서 내용을 펼쳐볼 수 있도록)
+    const [appOpenId, setAppOpenId] = useState<number | null>(null);
+    const [appDetail, setAppDetail] = useState<ApplicantDetail | null>(null);
+    const [appLoading, setAppLoading] = useState(false);
 
     // GET /admin/interviews
     const fetchInterviews = useCallback(async () => {
@@ -71,6 +76,26 @@ export default function InterviewsPage() {
     useEffect(() => {
         fetchInterviews();
     }, [fetchInterviews]);
+
+    // GET /admin/applications/{applicationId} — 면접 관리에서도 지원서 내용 조회
+    const toggleApplication = async (applicationId: number) => {
+        if (appOpenId === applicationId) {
+            setAppOpenId(null);
+            setAppDetail(null);
+            return;
+        }
+        setAppOpenId(applicationId);
+        setAppDetail(null);
+        setAppLoading(true);
+        try {
+            const res = await api.get<ApplicantDetail>(`/admin/applications/${applicationId}`);
+            setAppDetail(res.data);
+        } catch {
+            setAppDetail(null);
+        } finally {
+            setAppLoading(false);
+        }
+    };
 
     const updateLocalField = (applicationId: number, field: string, value: string | null) => {
         setInterviewees(prev =>
@@ -220,17 +245,19 @@ export default function InterviewsPage() {
                             <th className="p-4 font-medium text-center">배정 시간</th>
                             <th className="p-4 font-medium text-center">결과</th>
                             <th className="p-4 font-medium text-center">비고</th>
+                            <th className="p-4 font-medium text-center">지원서</th>
                             <th className="p-4 font-medium text-center">저장</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 text-gray-700 font-bold">
                         {filteredInterviewees.length === 0 && (
                             <tr>
-                                <td colSpan={6} className="p-10 text-center text-gray-400 text-sm font-medium">조건에 해당하는 면접자가 없습니다.</td>
+                                <td colSpan={7} className="p-10 text-center text-gray-400 text-sm font-medium">조건에 해당하는 면접자가 없습니다.</td>
                             </tr>
                         )}
                         {filteredInterviewees.map((person) => (
-                            <tr key={person.applicationId} className="hover:bg-gray-50 transition">
+                            <React.Fragment key={person.applicationId}>
+                            <tr className="hover:bg-gray-50 transition">
                                 <td className="p-4 font-bold text-gray-900">{person.name}</td>
                                 <td className="p-4">
                                     <div className="flex flex-col gap-1">
@@ -275,6 +302,18 @@ export default function InterviewsPage() {
                                 </td>
                                 <td className="p-4 text-center">
                                     <button
+                                        onClick={() => toggleApplication(person.applicationId)}
+                                        className={`px-3 py-2 text-xs font-bold rounded-lg border transition ${
+                                            appOpenId === person.applicationId
+                                                ? 'bg-[#93C54B] text-white border-[#93C54B]'
+                                                : 'bg-white text-[#5b6b0f] border-[#cfe39a] hover:bg-[#f6fbf0]'
+                                        }`}
+                                    >
+                                        {appOpenId === person.applicationId ? '닫기' : '지원서'}
+                                    </button>
+                                </td>
+                                <td className="p-4 text-center">
+                                    <button
                                         onClick={() => handleSave(person)}
                                         disabled={savingId === person.applicationId}
                                         className="px-3 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition"
@@ -283,6 +322,20 @@ export default function InterviewsPage() {
                                     </button>
                                 </td>
                             </tr>
+                            {appOpenId === person.applicationId && (
+                                <tr>
+                                    <td colSpan={7} className="bg-gray-50 p-8 border-t border-b border-gray-200/50">
+                                        {appLoading ? (
+                                            <p className="text-center text-slate-400 font-bold py-4">지원서 불러오는 중...</p>
+                                        ) : appDetail ? (
+                                            <ApplicationDetail detail={appDetail} />
+                                        ) : (
+                                            <p className="text-center text-red-400 font-bold py-4">지원서를 불러올 수 없습니다.</p>
+                                        )}
+                                    </td>
+                                </tr>
+                            )}
+                            </React.Fragment>
                         ))}
                     </tbody>
                 </table>
@@ -372,8 +425,31 @@ export default function InterviewsPage() {
                                 >
                                     {savingId === person.applicationId ? '저장 중...' : '저장하기'}
                                 </button>
+
+                                <button
+                                    onClick={() => toggleApplication(person.applicationId)}
+                                    className={`w-full py-3 font-bold text-sm rounded-xl border transition ${
+                                        appOpenId === person.applicationId
+                                            ? 'bg-[#93C54B] text-white border-[#93C54B]'
+                                            : 'bg-white text-[#5b6b0f] border-[#cfe39a]'
+                                    }`}
+                                >
+                                    {appOpenId === person.applicationId ? '지원서 닫기' : '지원서 보기'}
+                                </button>
                             </div>
                         </div>
+
+                        {appOpenId === person.applicationId && (
+                            <div className="border-t border-gray-100 p-5 bg-gray-50/50">
+                                {appLoading ? (
+                                    <p className="text-center text-slate-400 font-bold py-4">지원서 불러오는 중...</p>
+                                ) : appDetail ? (
+                                    <ApplicationDetail detail={appDetail} isMobile />
+                                ) : (
+                                    <p className="text-center text-red-400 font-bold py-4">지원서를 불러올 수 없습니다.</p>
+                                )}
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>
