@@ -259,10 +259,8 @@ export default function ApplyPage() {
   return (
     <div className="min-h-screen bg-[#f7f9f5] sm:bg-white py-6 sm:py-12 px-4 sm:px-6 lg:px-24 font-sans select-none text-left flex flex-col">
       <div className="max-w-[760px] mx-auto w-full flex flex-col flex-grow">
-        
         {/* 헤더 안내 카드 (YBC 디자인 시스템 적용 & 이미지 우측 배치) */}
         <div className="bg-white rounded-[24px] sm:rounded-[40px] border border-gray-100 shadow-sm p-6 sm:p-12 mb-6 sm:mb-8 overflow-hidden">
-          
           {/* 💡 텍스트와 캐릭터 이미지를 양옆으로 배치하는 Flex 컨테이너 */}
           <div className="flex justify-between items-center sm:items-end gap-4 sm:gap-8 mb-8 sm:mb-10 border-b border-gray-100 pb-8">
             {/* 좌측 텍스트 영역 */}
@@ -271,19 +269,21 @@ export default function ApplyPage() {
                 신규 모집 안내
               </span>
               <h1 className="text-[22px] sm:text-[28px] font-black text-[#1a1a1a] sm:text-slate-800 mt-2 mb-3 sm:mb-4 tracking-tight break-keep">
-                양배추(YBC) 배드민턴 동아리<br className="hidden sm:block" /> {recruitmentInfo?.term} 모집 안내
+                양배추(YBC) 배드민턴 동아리
+                <br className="hidden sm:block" /> {recruitmentInfo?.term} 모집
+                안내
               </h1>
               <p className="text-[14px] sm:text-[15px] text-[#8b95a1] sm:text-slate-500 font-medium leading-[1.6] break-keep">
                 지원서를 작성하기 전, 아래 안내를 꼭 읽어주세요.
               </p>
             </div>
-            
+
             {/* 우측 캐릭터 이미지 영역 */}
             <div className="shrink-0 mb-auto sm:mb-0">
-              <img 
-                src="/images/character-apply.svg" 
-                alt="지원 안내 양배추 마스코트" 
-                className="w-[100px] sm:w-[140px] mt-6 h-auto object-contain hover:scale-105 transition-transform duration-300 animate-in fade-in zoom-in duration-500" 
+              <img
+                src="/images/character-apply.svg"
+                alt="지원 안내 양배추 마스코트"
+                className="w-[100px] sm:w-[140px] mt-6 h-auto object-contain hover:scale-105 transition-transform duration-300 animate-in fade-in zoom-in duration-500"
               />
             </div>
           </div>
@@ -301,37 +301,56 @@ export default function ApplyPage() {
             <div className="pt-2">
               <div className="flex items-center gap-2 mb-2 sm:mb-3">
                 <Calendar className="w-4.5 h-4.5 text-[#A1C852]" />
-                <p className="font-bold text-[#1a1a1a] sm:text-slate-800">정기 활동 안내</p>
+                <p className="font-bold text-[#1a1a1a] sm:text-slate-800">
+                  정기 활동 안내
+                </p>
               </div>
               <ul className="list-disc pl-6 space-y-1.5 text-[#4e5968] sm:text-[#6B7684]">
                 <li>화요일 · 마곡실내배드민턴장 (16:00 - 19:00)</li>
-                <li>토요일 · 망원나들목체육관 (13:30 - 15:30 / 16:00 - 18:00)</li>
-                <li>정기 운동 외에도 번개 모임 및 다양한 이벤트가 진행됩니다.</li>
+                <li>
+                  토요일 · 망원나들목체육관 (13:30 - 15:30 / 16:00 - 18:00)
+                </li>
+                <li>
+                  정기 운동 외에도 번개 모임 및 다양한 이벤트가 진행됩니다.
+                </li>
               </ul>
             </div>
 
             <div>
               <div className="flex items-center gap-2 mb-2 sm:mb-3">
                 <FileText className="w-4.5 h-4.5 text-[#A1C852]" />
-                <p className="font-bold text-[#1a1a1a] sm:text-slate-800">모집 및 면접 절차</p>
+                <p className="font-bold text-[#1a1a1a] sm:text-slate-800">
+                  모집 및 면접 절차
+                </p>
               </div>
               <ul className="list-disc pl-6 space-y-1.5 text-[#4e5968] sm:text-[#6B7684]">
                 <li>아래 지원서를 작성해 제출해 주세요.</li>
                 <li>제출해 주신 내용을 바탕으로 대면 면접을 진행합니다.</li>
-                <li>가능한 면접 시간에 모두 체크해 주시면 일정 조율에 도움이 됩니다.</li>
-                <li>합격 및 면접 일정은 입력하신 전화번호로 개별 안내드립니다.</li>
+                <li>
+                  가능한 면접 시간에 모두 체크해 주시면 일정 조율에 도움이
+                  됩니다.
+                </li>
+                <li>
+                  합격 및 면접 일정은 입력하신 전화번호로 개별 안내드립니다.
+                </li>
               </ul>
             </div>
 
             <div>
               <div className="flex items-center gap-2 mb-2 sm:mb-3">
                 <CheckCircle className="w-4.5 h-4.5 text-[#A1C852]" />
-                <p className="font-bold text-[#1a1a1a] sm:text-slate-800">유의 사항</p>
+                <p className="font-bold text-[#1a1a1a] sm:text-slate-800">
+                  유의 사항
+                </p>
               </div>
               <ul className="list-disc pl-6 space-y-1.5 text-[#4e5968] sm:text-[#6B7684]">
                 <li>배드민턴화는 필수이며, 라켓은 없으셔도 지원 가능합니다.</li>
-                <li>제출 후에는 내용 수정이 불가하오니 꼼꼼히 확인해 주세요.</li>
-                <li className="text-[#A1C852] font-semibold">* 표시 항목은 모두 필수 입력 항목입니다.</li>
+                <li>
+                  제출 후에는 내용 수정이 불가하오니 꼼꼼히 확인해 주세요.
+                </li>
+                <li className="text-[#A1C852] font-semibold">
+                  * 표시 항목은 모두 필수 입력 항목입니다.
+                </li>
               </ul>
             </div>
           </div>
@@ -339,7 +358,6 @@ export default function ApplyPage() {
 
         {/* 폼 영역 */}
         <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
-          
           {/* 기본 정보 */}
           <FormSection
             title="기본 정보"
@@ -511,8 +529,10 @@ export default function ApplyPage() {
                   <span className="text-[14px] sm:text-[15px] font-bold text-[#1a1a1a] sm:text-slate-700 group-hover:text-[#A1C852] transition">
                     운영진 지원을 희망합니다
                   </span>
-                  <p className="text-[13px] text-[#8b95a1] sm:text-slate-400 mt-1">
-                    동아리 운영에 관심이 있으시다면 체크해 주세요. (선택)
+                  <p className="text-[13px] text-[#8b95a1] sm:text-slate-400 mt-1 break-keep">
+                    동아리 운영에 관심이 있으시다면 체크해 주세요.
+                    <br />
+                    (선택)
                   </p>
                 </div>
               </label>
@@ -544,17 +564,17 @@ export default function ApplyPage() {
           </div>
         </form>
         {/* 모바일 전용 푸터 섹션 (sm:hidden 속성으로 데스크탑에서는 숨김 처리) */}
-                <div className="sm:hidden p-4">
-                    {/* 로고 이미지 경로는 실제 프로젝트 환경에 맞게 수정해 주세요 */}
-                    <img 
-                        src="/images/logo.png"
-                        alt="YBC BADMINTON CLUB" 
-                        className="h-10 mb-4 object-contain" 
-                    />
-                    <p className="text-[13px] text-[#8b95a1] font-medium">
-                        © 2026 YBC Badminton Club. All rights reserved.
-                    </p>
-                </div>
+        <div className="sm:hidden p-4">
+          {/* 로고 이미지 경로는 실제 프로젝트 환경에 맞게 수정해 주세요 */}
+          <img
+            src="/images/logo.png"
+            alt="YBC BADMINTON CLUB"
+            className="h-10 mb-4 object-contain"
+          />
+          <p className="text-[13px] text-[#8b95a1] font-medium">
+            © 2026 YBC Badminton Club. All rights reserved.
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -578,7 +598,9 @@ function FormSection({
           {title}
         </h2>
         {description && (
-          <p className="text-[13px] sm:text-sm text-[#8b95a1] sm:text-slate-400 font-medium mt-1">{description}</p>
+          <p className="text-[13px] sm:text-sm text-[#8b95a1] sm:text-slate-400 font-medium mt-1">
+            {description}
+          </p>
         )}
       </div>
       <div className="bg-white rounded-[20px] sm:rounded-[32px] border border-gray-100 shadow-sm p-6 sm:p-8 space-y-6">
@@ -611,7 +633,11 @@ function FormInput({
         {label}
         {required && <span className="text-red-400 ml-1">*</span>}
       </label>
-      {description && <p className="text-[12px] sm:text-xs text-[#8b95a1] sm:text-slate-400">{description}</p>}
+      {description && (
+        <p className="text-[12px] sm:text-xs text-[#8b95a1] sm:text-slate-400">
+          {description}
+        </p>
+      )}
       <input
         type={type}
         value={value}
