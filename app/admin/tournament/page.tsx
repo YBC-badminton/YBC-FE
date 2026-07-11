@@ -58,7 +58,8 @@ export default function TournamentPage() {
 
     // --- 에디터 전용 상태 ---
     const [activeVoteId, setActiveVoteId] = useState<number | null>(null);
-    const [activeMatchId, setActiveMatchId] = useState<number | null>(null); // 수정 모드 판별용
+    const [activeMatchId, setActiveMatchId] = useState<number | null>(null); // PATCH 대상 matchId
+    const [isEditMode, setIsEditMode] = useState(false); // 편성 완료 활동 수정 여부 (matchRegistered 기준)
     const [activityTitle, setActivityTitle] = useState('');
     const [activeCourt, setActiveCourt] = useState<number>(1);
     
@@ -114,10 +115,19 @@ export default function TournamentPage() {
 
             setActiveVoteId(activity.voteId);
             setActivityTitle(activity.title);
-            setActiveMatchId(data.matchId || data.id || activity.matchId || null);
+            // 편성 완료 활동을 여는 것은 곧 "수정"이다 → 목록의 matchRegistered를 신뢰
+            setIsEditMode(!!activity.matchRegistered);
 
             // 1. 응답 데이터 형태 정규화
             const rawMatchGroups = data.matches || data.matchGroups || data.courtMatches || [];
+
+            // PATCH 대상 matchId를 응답의 여러 위치에서 최대한 찾아본다
+            const firstGroup = Array.isArray(rawMatchGroups) ? rawMatchGroups[0] : undefined;
+            const resolvedMatchId =
+                data.matchId ?? data.id ?? data.match?.matchId ?? data.match?.id ??
+                firstGroup?.matchId ?? firstGroup?.id ?? activity.matchId ?? null;
+            setActiveMatchId(resolvedMatchId !== null ? Number(resolvedMatchId) : null);
+
             const allMatches: any[] = [];
 
             rawMatchGroups.forEach((item: any, index: number) => {
@@ -354,10 +364,16 @@ export default function TournamentPage() {
 
             console.log("📤 [API 전송 데이터]:", payload);
 
-            if (activeMatchId) {
+            if (isEditMode && activeMatchId) {
+                // 수정: matchId가 확보된 경우 PATCH
                 await api.patch(`/admin/matches/${activeMatchId}`, payload);
                 showToast('대진표가 성공적으로 수정되었습니다.', 'success');
+            } else if (isEditMode) {
+                // 편성 완료 활동이지만 matchId를 못 찾은 경우 → voteId 기준 재편성(업서트)로 저장
+                await api.post(`/admin/votes/${activeVoteId}/matches`, payload);
+                showToast('대진표가 저장되었습니다.', 'success');
             } else {
+                // 신규 편성
                 await api.post(`/admin/votes/${activeVoteId}/matches`, payload);
                 showToast('대진표가 성공적으로 저장되었습니다.', 'success');
             }
@@ -442,7 +458,7 @@ export default function TournamentPage() {
                             <div>
                                 <div className="flex items-center gap-2">
                                     <h2 className="text-lg font-black text-gray-900">{activityTitle}</h2>
-                                    {activeMatchId && (
+                                    {isEditMode && (
                                         <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-[6px] text-[10px] font-black tracking-wide">
                                             수정 모드
                                         </span>
@@ -452,9 +468,9 @@ export default function TournamentPage() {
                             </div>
                         </div>
                         
-                        <button onClick={handleSave} className={`flex items-center gap-1.5 text-white px-5 py-2.5 sm:px-6 rounded-xl text-sm font-bold active:scale-95 shadow-md transition-colors ${activeMatchId ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-900 hover:bg-gray-800'}`}>
-                            {activeMatchId ? <Edit3 className="w-4 h-4" /> : <Save className="w-4 h-4" />} 
-                            {activeMatchId ? '수정하기' : '저장하기'}
+                        <button onClick={handleSave} className={`flex items-center gap-1.5 text-white px-5 py-2.5 sm:px-6 rounded-xl text-sm font-bold active:scale-95 shadow-md transition-colors ${isEditMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-900 hover:bg-gray-800'}`}>
+                            {isEditMode ? <Edit3 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+                            {isEditMode ? '수정하기' : '저장하기'}
                         </button>
                     </div>
 
