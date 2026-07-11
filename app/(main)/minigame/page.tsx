@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import api from "@/lib/axios";
 
 // --- 인터페이스 정의 ---
 interface GameResult {
   id: string;
+  gameId?: number; // 서버 게임 ID (POST /games 응답). 있으면 수정 시 서버에도 반영
   title: string;
   teamA: { names: string[]; score: number };
   teamB: { names: string[]; score: number };
@@ -14,8 +16,20 @@ interface GameResult {
 }
 
 // 브라우저 localStorage 저장 키 & 자동 삭제 기간(1주일)
+// 서버에 /games 목록 조회(GET) 엔드포인트가 없어, 화면에 보여줄 "최근 기록"은 이 기기 캐시로 유지한다.
 const STORAGE_KEY = "ybc-minigame-records";
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+// 날짜/시간 포맷 헬퍼 (서버 요청용)
+const pad2 = (n: number) => String(n).padStart(2, "0");
+const todayStr = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+};
+const timeStr = () => {
+  const d = new Date();
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+};
 
 // 승자 판별: "A" | "B" | "DRAW"
 function getWinner(g: GameResult): "A" | "B" | "DRAW" {
@@ -34,6 +48,8 @@ export default function BadmintonGameManager() {
   const [games, setGames] = useState<GameResult[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [activeGame, setActiveGame] = useState<{
+    gameId?: number; // 서버 게임 ID (생성 성공 시)
+    startedAt: string; // 경기 시작 시각 (종료 API startTime용)
     title: string;
     teamA: string[];
     teamB: string[];
@@ -152,11 +168,29 @@ export default function BadmintonGameManager() {
     setHistory(history.slice(0, -1));
   };
 
-  const finalizeGame = (finalA: number, finalB: number) => {
+  const finalizeGame = async (finalA: number, finalB: number) => {
     if (!activeGame) return;
     const winnerNames = (finalA > finalB ? activeGame.teamA : activeGame.teamB).join(" & ");
+
+    // 서버에 경기 종료 반영 (PATCH /games/{gameId}/end). gameId가 있을 때만.
+    if (activeGame.gameId) {
+      try {
+        await api.patch(`/games/${activeGame.gameId}/end`, {
+          gameDate: todayStr(),
+          startTime: activeGame.startedAt,
+          endTime: timeStr(),
+          team1Score: finalA,
+          team2Score: finalB,
+          winnerTeam: finalA > finalB ? "TEAM1" : "TEAM2",
+        });
+      } catch {
+        console.warn("경기 종료 API 실패 — 기록은 로컬에만 저장됩니다.");
+      }
+    }
+
     const newResult: GameResult = {
       id: Date.now().toString(),
+      gameId: activeGame.gameId,
       title: activeGame.title,
       teamA: { names: activeGame.teamA, score: finalA },
       teamB: { names: activeGame.teamB, score: finalB },
@@ -183,13 +217,33 @@ export default function BadmintonGameManager() {
     setEditScoreB("");
   };
 
-  const saveEdit = (id: string) => {
+  const saveEdit = async (id: string) => {
     const a = Number(editScoreA);
     const b = Number(editScoreB);
     if (Number.isNaN(a) || Number.isNaN(b) || a < 0 || b < 0) {
       alert("점수를 올바르게 입력해주세요.");
       return;
     }
+
+    const target = games.find((g) => g.id === id);
+
+    // 서버에 완료 경기 수정 반영 (PATCH /games/{gameId}). gameId가 있을 때만.
+    if (target?.gameId) {
+      try {
+        await api.patch(`/games/${target.gameId}`, {
+          title: target.title,
+          team1Member1: target.teamA.names[0],
+          team1Member2: target.teamA.names[1],
+          team2Member1: target.teamB.names[0],
+          team2Member2: target.teamB.names[1],
+          team1Score: a,
+          team2Score: b,
+        });
+      } catch {
+        console.warn("경기 수정 API 실패 — 로컬에만 반영됩니다.");
+      }
+    }
+
     setGames(
       games.map((g) =>
         g.id === id
@@ -206,12 +260,32 @@ export default function BadmintonGameManager() {
     if (editingId === id) cancelEdit();
   };
 
-  const handleCreateGame = () => {
+  const handleCreateGame = async () => {
     if (!newGameTitle || playerNames.some(n => !n)) {
       alert("정보를 모두 입력해주세요.");
       return;
     }
+
+    // 서버에 경기 생성 (POST /games). 실패해도 로컬로 진행 가능하도록 방어.
+    let gameId: number | undefined;
+    try {
+      const res = await api.post("/games", {
+        title: newGameTitle,
+        team1Member1: playerNames[0],
+        team1Member2: playerNames[1],
+        team2Member1: playerNames[2],
+        team2Member2: playerNames[3],
+        targetScore,
+      });
+      gameId = res.data?.gameId;
+    } catch {
+      // 서버 연결 실패 시에도 점수판은 사용 가능 (기록은 로컬에만 저장)
+      console.warn("경기 생성 API 실패 — 로컬 모드로 진행합니다.");
+    }
+
     setActiveGame({
+      gameId,
+      startedAt: timeStr(),
       title: newGameTitle,
       teamA: [playerNames[0], playerNames[1]],
       teamB: [playerNames[2], playerNames[3]],
@@ -232,7 +306,7 @@ export default function BadmintonGameManager() {
           <h1 className="text-2xl font-black text-gray-900 tracking-tighter">양배추 미니게임</h1>
         </div>
         {!activeGame && !isCreating && (
-          <button onClick={() => setIsCreating(true)} className="bg-[#93C54B] text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md hover:bg-[#81b23c] active:scale-95 transition">새 경기</button>
+          <button onClick={() => setIsCreating(true)} className="bg-[#A1C852] text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md hover:bg-[#93bd41] active:scale-95 transition">새 경기</button>
         )}
       </header>
 
@@ -259,7 +333,7 @@ export default function BadmintonGameManager() {
             <select className="w-full p-4 bg-gray-50 rounded-xl font-bold outline-none" value={targetScore} onChange={e => setTargetScore(Number(e.target.value))}>
               <option value={11}>11점</option><option value={21}>21점</option><option value={25}>25점</option>
             </select>
-            <button onClick={handleCreateGame} className="w-full py-4 bg-[#93C54B] text-white rounded-xl font-bold shadow-lg shadow-green-50 hover:bg-[#81b23c] active:scale-95 transition">시작하기</button>
+            <button onClick={handleCreateGame} className="w-full py-4 bg-[#A1C852] text-white rounded-xl font-bold shadow-lg shadow-green-50 hover:bg-[#93bd41] active:scale-95 transition">시작하기</button>
           </div>
         </section>
       )}
@@ -339,7 +413,7 @@ export default function BadmintonGameManager() {
                       <div className="flex items-center gap-1 shrink-0">
                         {isEditing ? (
                           <>
-                            <button onClick={() => saveEdit(game.id)} className="px-3 py-1.5 rounded-lg bg-[#93C54B] text-white text-[11px] font-black active:scale-95 transition">저장</button>
+                            <button onClick={() => saveEdit(game.id)} className="px-3 py-1.5 rounded-lg bg-[#A1C852] text-white text-[11px] font-black active:scale-95 transition">저장</button>
                             <button onClick={cancelEdit} className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-500 text-[11px] font-black active:scale-95 transition">취소</button>
                           </>
                         ) : (
@@ -423,7 +497,7 @@ function TeamResult({
       <div className="flex items-center gap-1.5 mb-1.5">
         <span className={`text-[11px] font-black truncate ${accentText}`}>{names.join(" & ")}</span>
         {won && (
-          <span className="shrink-0 bg-[#93C54B] text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">WIN</span>
+          <span className="shrink-0 bg-[#A1C852] text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">WIN</span>
         )}
       </div>
       {editing ? (
@@ -432,7 +506,7 @@ function TeamResult({
           inputMode="numeric"
           value={editValue}
           onChange={(e) => onEditChange(e.target.value)}
-          className="w-16 text-center font-black text-xl bg-white border border-slate-200 rounded-lg py-1 outline-none focus:ring-1 focus:ring-[#93C54B]"
+          className="w-16 text-center font-black text-xl bg-white border border-slate-200 rounded-lg py-1 outline-none focus:ring-1 focus:ring-[#A1C852]"
         />
       ) : (
         <p className={`font-black text-2xl ${won ? "text-[#5b6b0f]" : "text-slate-400"}`}>{score}</p>
