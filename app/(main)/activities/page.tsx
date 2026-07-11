@@ -154,7 +154,7 @@ export default function ActivitiesPage() {
                             </button>
                         ))}
                     </div>
-                    <button className="bg-[#2D5A27] text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold shadow-md hover:bg-[#1e3d1a] transition-all text-sm sm:text-base"
+                    <button className="bg-[#93C54B] text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold shadow-md hover:bg-[#81b23c] transition-all text-sm sm:text-base"
                         onClick={handleCreateLightning}>
                         + 번개 모임 만들기
                     </button>

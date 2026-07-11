@@ -79,7 +79,7 @@ export default function CreateLightningModal({ isOpen, onClose, onCreated }: Mod
         <div className="relative bg-white w-full max-w-lg max-h-[90vh] rounded-[32px] sm:rounded-[40px] overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300 mx-4 sm:mx-6 flex flex-col">
 
             {/* --- [1] 헤더 섹션 (초록색 배경) --- */}
-            <div className="bg-[#3D6B2C] px-6 py-6 sm:px-10 sm:py-8 text-white relative shrink-0">
+            <div className="bg-[#93C54B] px-6 py-6 sm:px-10 sm:py-8 text-white relative shrink-0">
             <button
                 onClick={onClose}
                 className="absolute top-5 right-5 sm:top-8 sm:right-8 text-white/80 hover:text-white transition-colors"
@@ -137,7 +137,7 @@ export default function CreateLightningModal({ isOpen, onClose, onCreated }: Mod
             <button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="py-3.5 bg-[#3D6B2C] text-white font-black rounded-xl sm:rounded-2xl shadow-lg hover:bg-[#2D5A27] transition-all disabled:opacity-50"
+                className="py-3.5 bg-[#93C54B] text-white font-black rounded-xl sm:rounded-2xl shadow-lg hover:bg-[#81b23c] transition-all disabled:opacity-50"
             >
                 {isSubmitting ? '생성 중...' : '번개 모임 만들기'}
             </button>

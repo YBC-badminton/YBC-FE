@@ -121,7 +121,7 @@ export default function CreateReviewModal({ isOpen, onClose }: ModalProps) {
             <div className="relative bg-white w-full max-w-xl rounded-[40px] overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300 mx-6 text-left">
                 
                 {/* --- [1] 헤더 섹션 --- */}
-                <div className="bg-[#3D6B2C] p-10 text-white relative">
+                <div className="bg-[#93C54B] p-10 text-white relative">
                     <button 
                         onClick={onClose}
                         className="absolute top-8 right-8 text-white/80 hover:text-white transition-colors"
@@ -149,7 +149,7 @@ export default function CreateReviewModal({ isOpen, onClose }: ModalProps) {
                                     onClick={() => setSelectedCategory(cat)}
                                     className={`px-6 py-2 rounded-xl text-sm font-bold border transition-all ${
                                         selectedCategory === cat 
-                                            ? 'bg-[#3D6B2C] text-white border-[#3D6B2C]' 
+                                            ? 'bg-[#93C54B] text-white border-[#93C54B]' 
                                             : 'bg-white text-slate-400 border-gray-200 hover:border-slate-300'
                                     }`}
                                 >
@@ -230,7 +230,7 @@ export default function CreateReviewModal({ isOpen, onClose }: ModalProps) {
                         type="button"
                         onClick={handleSubmit}
                         disabled={isSubmitting}
-                        className="py-4 bg-[#3D6B2C] text-white font-black rounded-2xl shadow-lg hover:bg-[#2D5A27] transition-all disabled:opacity-50"
+                        className="py-4 bg-[#93C54B] text-white font-black rounded-2xl shadow-lg hover:bg-[#81b23c] transition-all disabled:opacity-50"
                     >
                         {isSubmitting ? '등록 중...' : '후기 작성 완료'}
                     </button>

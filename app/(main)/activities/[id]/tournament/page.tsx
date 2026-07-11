@@ -110,7 +110,7 @@ export default function TournamentPage() {
                                     onClick={() => setOpenCourt(openCourt === court.courtNumber ? null : court.courtNumber)}
                                 >
                                     <div className="flex items-center gap-4">
-                                        <span className={`px-4 py-1.5 rounded-lg font-black text-sm ${openCourt === court.courtNumber ? 'bg-[#3D6B2C] text-white' : 'bg-slate-500 text-white'}`}>
+                                        <span className={`px-4 py-1.5 rounded-lg font-black text-sm ${openCourt === court.courtNumber ? 'bg-[#93C54B] text-white' : 'bg-slate-500 text-white'}`}>
                                             {court.courtNumber}코트
                                         </span>
                                         <div className="flex items-center gap-1 text-slate-400 font-bold text-sm">

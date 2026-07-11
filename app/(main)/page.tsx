@@ -201,22 +201,24 @@ export default function YBCMainPage() {
 
           {/* 3. 액션 버튼 그룹 */}
           <div className="flex flex-row items-center justify-center gap-3 sm:gap-4 w-full max-w-[320px] sm:max-w-[350px] mx-auto">
-            {/* 지원하기 버튼 (초록 바탕) — 모집중일 때만 노출 */}
+            {/* 지원하기 버튼 (브랜드 라임 그라데이션) — 모집중일 때만 노출 */}
             {recruiting === true && (
               <Link
                 href="/apply"
-                className="flex-1 flex items-center justify-center gap-1.5 bg-[#93C54B] text-white py-3 sm:py-3.5 rounded-full font-body font-semibold text-[17px] shadow-sm hover:bg-[#81b23c] active:scale-95 transition-all duration-200"
+                className="flex-1 flex items-center justify-center gap-1.5 bg-gradient-to-b from-[#a1c852] to-[#93C54B] text-white py-3 sm:py-3.5 rounded-full font-body font-semibold text-[17px] shadow-[0_6px_16px_rgba(147,197,75,0.35)] hover:from-[#93C54B] hover:to-[#81b23c] active:scale-95 transition-all duration-200"
               >
-                지원하기 <span className="ml-5 font-bold">↗</span>
+                지원하기
+                <ArrowUpRight className="w-4 h-4" />
               </Link>
             )}
 
-            {/* 정기모임 보기 버튼 (흰 바탕 + 초록 테두리) */}
+            {/* 정기모임 보기 버튼 (흰 바탕 + 브랜드 테두리) */}
             <Link
               href="/activities"
-              className="flex-1 flex items-center justify-center gap-1.5 bg-white border-2 border-[#93C54B] text-[#5b6b0f] py-3 sm:py-3.5 rounded-full font-body font-semibold text-[17px] shadow-sm hover:bg-[#f6fbf0] active:scale-95 transition-all duration-200"
+              className="flex-1 flex items-center justify-center gap-1.5 bg-white/90 backdrop-blur-sm border border-[#c3dd93] text-[#5b6b0f] py-3 sm:py-3.5 rounded-full font-body font-semibold text-[17px] shadow-[0_4px_14px_rgba(0,0,0,0.06)] hover:bg-[#f6fbf0] hover:border-[#93C54B] active:scale-95 transition-all duration-200"
             >
-              정기모임 보기 <span className="font-bold">↗</span>
+              정기모임 보기
+              <ArrowUpRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
