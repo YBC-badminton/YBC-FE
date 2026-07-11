@@ -48,6 +48,11 @@ body {
     background-color: #ffffff;
     color: var(--color-ink);
     font-family: var(--font-sans);
+    /* 한글은 기본값에서 어절 중간에 줄바꿈되어 어색하게 잘린다.
+       keep-all로 공백(어절) 단위로만 줄바꿈 → 데스크톱은 넓어서 줄바꿈이 없어 영향 없음.
+       긴 URL·영문 등 공백 없는 토큰만 overflow-wrap으로 강제 분리해 넘침 방지. */
+    word-break: keep-all;
+    overflow-wrap: break-word;
 }
 
 /* 가로 스크롤 영역의 스크롤바를 숨기는 유틸리티 (탭/필터 바 등) */
