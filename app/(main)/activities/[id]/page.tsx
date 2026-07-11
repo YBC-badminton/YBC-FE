@@ -318,7 +318,7 @@ export default function ActivityVotePage() {
             {/* --- [1] 활동 요약 카드 --- */}
             <section className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6 sm:p-8 space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                <span className="bg-[#5b6b0f] text-white text-[11px] font-black px-2.5 py-1 rounded w-fit uppercase">
+                <span className="bg-[#A1C852] text-white text-[11px] font-black px-2.5 py-1 rounded w-fit uppercase">
                 {TYPE_LABEL[activity.type] || activity.type}
                 </span>
                 <h1 className="text-2xl sm:text-3xl font-black text-slate-800 break-keep">{activity.name}</h1>
@@ -401,7 +401,7 @@ export default function ActivityVotePage() {
                 </div>
 
                 <div className="w-full h-8 bg-slate-100 rounded-lg overflow-hidden relative shadow-inner">
-                    <div className="h-full bg-[#5b6b0f] transition-all duration-700" style={{ width: `${attendanceRate}%` }} />
+                    <div className="h-full bg-[#A1C852] transition-all duration-700" style={{ width: `${attendanceRate}%` }} />
                     <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-black drop-shadow-sm">{attendanceRate}%</span>
                 </div>
 
@@ -494,7 +494,7 @@ export default function ActivityVotePage() {
                     aria-pressed={myAttendance === true}
                     className={`py-3 sm:py-3.5 font-black rounded-2xl transition-all shadow-md active:scale-[0.98] disabled:cursor-not-allowed ${
                         myAttendance === true
-                            ? 'bg-[#93bd41] text-white ring-2 ring-[#93bd41] opacity-100'
+                            ? 'bg-[#A1C852] text-white ring-2 ring-[#93bd41] opacity-100'
                             : 'bg-[#A1C852] text-white hover:bg-[#93bd41] disabled:opacity-50'
                     }`}
                 >

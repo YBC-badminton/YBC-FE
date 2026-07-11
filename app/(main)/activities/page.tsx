@@ -277,7 +277,7 @@ function ActivityCard({ data, isPast }: { data: VoteItem; isPast: boolean }) {
                             </div>
                             <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
                                 <div
-                                    className={`h-full transition-all duration-500 ${isPast ? 'bg-slate-400' : 'bg-[#5b6b0f]'}`}
+                                    className={`h-full transition-all duration-500 ${isPast ? 'bg-slate-400' : 'bg-[#A1C852]'}`}
                                     style={{ width: `${percentage}%` }}
                                 />
                             </div>
