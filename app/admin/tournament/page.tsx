@@ -26,11 +26,15 @@ interface AdminActivity {
     attendance: { currentAttendees: number; currentGuests: number; totalParticipants: number };
 }
 
-// 💡 수정됨: 백엔드 명세에 맞게 team1, team2는 숫자(ID) 배열만 받습니다.
+// 백엔드 명세(AdminMatchGameRequest): team1/team2는 {participantType, participantId} 객체 2개씩
+interface MatchParticipantPayload {
+    participantType: 'MEMBER' | 'GUEST';
+    participantId: number;
+}
 interface ServerMatch {
     matchNumber: number;
-    team1: number[];
-    team2: number[];
+    team1: MatchParticipantPayload[];
+    team2: MatchParticipantPayload[];
 }
 
 interface CourtMatchGroup {
@@ -340,28 +344,45 @@ export default function TournamentPage() {
         setSelectedId(null);
     };
 
-    // 💡 [핵심] 500 에러를 해결한 깔끔한 숫자 배열 Payload 생성 로직
+    // 명세(AdminMatchCourtRequest)에 맞춰 payload 생성.
+    // team1/team2는 각각 {participantType, participantId} 2개씩 필수 → 4칸이 모두 찬 매치만 전송한다.
     const handleSave = async () => {
+        // ID → {participantType, participantId} 객체로 변환
+        const toPayloadParticipant = (id: number): MatchParticipantPayload => {
+            const p = getParticipant(id);
+            return {
+                participantType: p?.participantType === 'GUEST' ? 'GUEST' : 'MEMBER',
+                participantId: id,
+            };
+        };
+
+        const payload: CourtMatchGroup[] = [];
+
+        Object.entries(brackets).forEach(([courtStr, rows]) => {
+            const courtNumber = Number(courtStr);
+
+            // 4칸(팀1 2명 + 팀2 2명)이 모두 채워진 매치만 유효
+            const fullRows = rows.filter(
+                (row) => row[0] !== null && row[1] !== null && row[2] !== null && row[3] !== null,
+            );
+            if (fullRows.length === 0) return; // 완성된 매치가 없는 코트는 제외 (courtMatches minItems:1)
+
+            const courtMatches: ServerMatch[] = fullRows.map((row, idx) => ({
+                matchNumber: idx + 1, // 완성된 매치 기준으로 1부터 재부여
+                team1: [toPayloadParticipant(row[0] as number), toPayloadParticipant(row[1] as number)],
+                team2: [toPayloadParticipant(row[2] as number), toPayloadParticipant(row[3] as number)],
+            }));
+
+            payload.push({ courtNumber, courtMatches });
+        });
+
+        if (payload.length === 0) {
+            showToast('저장할 대진이 없습니다. 각 매치의 4자리를 모두 채워주세요.', 'error');
+            return;
+        }
+
         setLoading(true);
         try {
-            const payload: CourtMatchGroup[] = [];
-            
-            Object.entries(brackets).forEach(([courtStr, rows]) => {
-                const courtNumber = Number(courtStr);
-                if (!rows.some(r => r.some(id => id !== null))) return;
-
-                const courtMatches: ServerMatch[] = rows.map((row, idx) => {
-                    return { 
-                        matchNumber: idx + 1, 
-                        // 배열 안의 널(null) 값을 쏙 빼고, 남은 순수 ID 숫자만 전송합니다.
-                        team1: [row[0], row[1]].filter((id): id is number => id !== null), 
-                        team2: [row[2], row[3]].filter((id): id is number => id !== null) 
-                    };
-                });
-                
-                payload.push({ courtNumber, courtMatches });
-            });
-
             console.log("📤 [API 전송 데이터]:", payload);
 
             if (isEditMode && activeMatchId) {
@@ -406,7 +427,7 @@ export default function TournamentPage() {
             {view === 'LIST' && (
                 <div className="max-w-4xl mx-auto p-4 sm:p-8 pt-10">
                     <div className="mb-8">
-                        <h1 className="text-3xl font-black text-gray-900 tracking-tight">대진표 관리</h1>
+                        <h1 className="text-xl sm:text-2xl font-bold text-gray-800 tracking-tight">대진표 관리</h1>
                         <p className="text-gray-500 font-medium mt-2">투표가 마감된 활동의 대진표를 편성하고 수정하세요.</p>
                     </div>
 
