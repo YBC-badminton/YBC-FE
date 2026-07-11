@@ -365,6 +365,17 @@ export default function ActivityVotePage() {
                     </div>
                 )}
             </div>
+
+            {/* 대진보기 — 상세 페이지 안에서도 대진표로 바로 이동 */}
+            <Link
+                href={`/activities/${voteId}/tournament`}
+                className="flex items-center justify-center gap-1.5 w-full bg-[#93C54B] text-white text-[15px] font-bold py-3.5 rounded-full shadow-sm hover:bg-[#81b23c] active:scale-[0.98] transition-all"
+            >
+                대진표 보기
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M7 17 17 7M9 7h8v8" />
+                </svg>
+            </Link>
             </section>
 
             {/* --- [2] 참석/불참 현황 --- */}
