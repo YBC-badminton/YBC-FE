@@ -154,7 +154,7 @@ export default function ActivitiesPage() {
                             </button>
                         ))}
                     </div>
-                    <button className="bg-[#93C54B] text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold shadow-md hover:bg-[#81b23c] transition-all text-sm sm:text-base"
+                    <button className="bg-[#A1C852] text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold shadow-md hover:bg-[#93bd41] transition-all text-sm sm:text-base"
                         onClick={handleCreateLightning}>
                         + 번개 모임 만들기
                     </button>
@@ -250,7 +250,7 @@ function ActivityCard({ data, isPast }: { data: VoteItem; isPast: boolean }) {
                             <Link
                                 href={`/activities/${data.voteId}/tournament`}
                                 onClick={(e) => e.stopPropagation()}
-                                className="bg-[#5b6b0f] text-white text-[11px] font-bold px-3 py-1 rounded-full whitespace-nowrap drop-shadow-sm hover:bg-[#46530c] transition-colors z-20"
+                                className="bg-[#A1C852] text-white text-[11px] font-bold px-3 py-1 rounded-full whitespace-nowrap drop-shadow-sm hover:bg-[#93bd41] transition-colors z-20"
                             >
                                 대진 확인
                             </Link>

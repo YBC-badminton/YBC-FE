@@ -369,7 +369,7 @@ export default function ActivityVotePage() {
             {/* 대진보기 — 상세 페이지 안에서도 대진표로 바로 이동 */}
             <Link
                 href={`/activities/${voteId}/tournament`}
-                className="flex items-center justify-center gap-1.5 w-full bg-[#93C54B] text-white text-[15px] font-bold py-3.5 rounded-full shadow-sm hover:bg-[#81b23c] active:scale-[0.98] transition-all"
+                className="flex items-center justify-center gap-1.5 w-full bg-[#A1C852] text-white text-[15px] font-bold py-3.5 rounded-full shadow-sm hover:bg-[#93bd41] active:scale-[0.98] transition-all"
             >
                 대진표 보기
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -494,8 +494,8 @@ export default function ActivityVotePage() {
                     aria-pressed={myAttendance === true}
                     className={`py-3 sm:py-3.5 font-black rounded-2xl transition-all shadow-md active:scale-[0.98] disabled:cursor-not-allowed ${
                         myAttendance === true
-                            ? 'bg-[#46530c] text-white ring-2 ring-[#46530c] opacity-100'
-                            : 'bg-[#5b6b0f] text-white hover:bg-[#46530c] disabled:opacity-50'
+                            ? 'bg-[#93bd41] text-white ring-2 ring-[#93bd41] opacity-100'
+                            : 'bg-[#A1C852] text-white hover:bg-[#93bd41] disabled:opacity-50'
                     }`}
                 >
                     참석{myAttendance === true && ' (선택됨)'}
@@ -593,7 +593,7 @@ export default function ActivityVotePage() {
                     <button
                         onClick={openGuestConfirm}
                         disabled={guestSubmitting}
-                        className="w-full py-3 sm:py-3.5 bg-[#5b6b0f] text-white font-black rounded-2xl shadow-md hover:bg-[#46530c] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                        className="w-full py-3 sm:py-3.5 bg-[#A1C852] text-white font-black rounded-2xl shadow-md hover:bg-[#93bd41] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                     >
                     {guestSubmitting ? '등록 중...' : '등록'}
                     </button>
@@ -639,7 +639,7 @@ export default function ActivityVotePage() {
                     <button
                       onClick={submitGuest}
                       disabled={guestSubmitting}
-                      className="py-3 font-black rounded-2xl bg-[#5b6b0f] text-white hover:bg-[#46530c] disabled:opacity-50"
+                      className="py-3 font-black rounded-2xl bg-[#A1C852] text-white hover:bg-[#93bd41] disabled:opacity-50"
                     >
                       {guestSubmitting ? '등록 중...' : '등록'}
                     </button>
