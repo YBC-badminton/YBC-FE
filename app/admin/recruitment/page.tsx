@@ -135,7 +135,7 @@ export default function RecruitmentPage() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-0 py-6 sm:py-8 font-sans">
             <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8">
                 <div>
-                    <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">모집 일정 관리</h1>
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-800 tracking-tight">모집 일정 관리</h1>
                     <p className="text-slate-400 text-xs sm:text-sm mt-1 font-medium">동아리 모집 일정을 설정하고 관리하세요.</p>
                 </div>
                 {viewMode === 'list' && (

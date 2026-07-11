@@ -137,7 +137,7 @@ export default function MembersPage() {
     return (
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="mb-8">
-                <h1 className="text-2xl font-black text-gray-800">부원 명단</h1>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-800 tracking-tight">부원 명단</h1>
                 <div className="text-sm text-gray-500 mt-2 font-bold">
                     전체 부원: {summary?.totalMembers || 0}명 
                     <span className="mx-2 text-gray-300">|</span> 

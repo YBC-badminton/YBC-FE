@@ -142,7 +142,7 @@ export default function ApplicantsPage() {
     return (
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 font-sans">
             <div className="mb-6 sm:mb-8">
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-800 underline underline-offset-4">지원자 조회</h1>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-800 tracking-tight">지원자 조회</h1>
                 <p className="text-sm text-gray-500 mt-1">합격 여부를 선택해 주세요.</p>
             </div>
 

@@ -84,7 +84,7 @@ export default function VoteReservationPage() {
     return (
         <div className="max-w-7xl mx-auto p-4">
             <div className="mb-8">
-                <h1 className="text-2xl font-bold text-gray-800">투표 예약</h1>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-800 tracking-tight">투표 예약</h1>
                 <p className="text-gray-500 text-sm">정기활동 및 특별활동 투표를 예약하세요.</p>
             </div>
 

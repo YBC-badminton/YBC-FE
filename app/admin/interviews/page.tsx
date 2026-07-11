@@ -175,7 +175,7 @@ export default function InterviewsPage() {
     return (
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 font-sans text-left">
             <div className="mb-6 sm:mb-8">
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-800">면접 관리</h1>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-800 tracking-tight">면접 관리</h1>
                 <p className="text-sm text-gray-500 mt-1 font-medium">면접 시간을 배정하고 결과를 입력하세요.</p>
             </div>
 
