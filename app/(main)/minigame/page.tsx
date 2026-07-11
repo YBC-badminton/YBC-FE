@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
 // --- 인터페이스 정의 ---
 interface GameResult {
@@ -10,6 +10,18 @@ interface GameResult {
   teamB: { names: string[]; score: number };
   targetScore: number;
   date: string;
+  createdAt: number; // 저장 시각(ms). 생성 후 1주일 뒤 자동 삭제 기준
+}
+
+// 브라우저 localStorage 저장 키 & 자동 삭제 기간(1주일)
+const STORAGE_KEY = "ybc-minigame-records";
+const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+// 승자 판별: "A" | "B" | "DRAW"
+function getWinner(g: GameResult): "A" | "B" | "DRAW" {
+  if (g.teamA.score > g.teamB.score) return "A";
+  if (g.teamB.score > g.teamA.score) return "B";
+  return "DRAW";
 }
 
 interface GameState {
@@ -37,7 +49,43 @@ export default function BadmintonGameManager() {
   const [playerNames, setPlayerNames] = useState(["", "", "", ""]);
   const [targetScore, setTargetScore] = useState(25);
 
+  // 기록 수정 상태 (수정 중인 경기 id + 편집 중인 점수)
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editScoreA, setEditScoreA] = useState("");
+  const [editScoreB, setEditScoreB] = useState("");
+
   const scoreboardRef = useRef<HTMLDivElement>(null);
+
+  // 최초 로드 시 localStorage에서 기록을 불러오며, 저장 후 1주일이 지난 경기는 자동 삭제
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const parsed: GameResult[] = JSON.parse(raw);
+      const now = Date.now();
+      const fresh = parsed.filter(
+        (g) => g.createdAt && now - g.createdAt < ONE_WEEK_MS,
+      );
+      // localStorage는 SSR 시점엔 없어 초기값으로 못 쓰므로, 마운트 후 동기화한다
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setGames(fresh);
+      // 만료된 기록이 있었다면 정리된 목록을 즉시 다시 저장
+      if (fresh.length !== parsed.length) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
+      }
+    } catch {
+      // 파싱 실패 시 조용히 무시하고 빈 목록 유지
+    }
+  }, []);
+
+  // 기록이 바뀔 때마다 localStorage에 동기화
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(games));
+    } catch {
+      /* 저장 용량 초과 등은 무시 */
+    }
+  }, [games]);
 
   // --- 전체 화면 및 가로 고정 핸들러 ---
   const toggleFullscreen = async () => {
@@ -106,6 +154,7 @@ export default function BadmintonGameManager() {
 
   const finalizeGame = (finalA: number, finalB: number) => {
     if (!activeGame) return;
+    const winnerNames = (finalA > finalB ? activeGame.teamA : activeGame.teamB).join(" & ");
     const newResult: GameResult = {
       id: Date.now().toString(),
       title: activeGame.title,
@@ -113,11 +162,48 @@ export default function BadmintonGameManager() {
       teamB: { names: activeGame.teamB, score: finalB },
       targetScore: activeGame.targetScore,
       date: new Date().toLocaleString(),
+      createdAt: Date.now(),
     };
     setGames([newResult, ...games]);
-    alert(`${finalA > finalB ? '팀 A' : '팀 B'} 승리!`);
+    alert(`🏆 ${winnerNames} 승리! (${finalA} : ${finalB})`);
     if (document.fullscreenElement) document.exitFullscreen();
     setActiveGame(null);
+  };
+
+  // --- 기록 수정 / 삭제 ---
+  const startEdit = (game: GameResult) => {
+    setEditingId(game.id);
+    setEditScoreA(String(game.teamA.score));
+    setEditScoreB(String(game.teamB.score));
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditScoreA("");
+    setEditScoreB("");
+  };
+
+  const saveEdit = (id: string) => {
+    const a = Number(editScoreA);
+    const b = Number(editScoreB);
+    if (Number.isNaN(a) || Number.isNaN(b) || a < 0 || b < 0) {
+      alert("점수를 올바르게 입력해주세요.");
+      return;
+    }
+    setGames(
+      games.map((g) =>
+        g.id === id
+          ? { ...g, teamA: { ...g.teamA, score: a }, teamB: { ...g.teamB, score: b } }
+          : g,
+      ),
+    );
+    cancelEdit();
+  };
+
+  const deleteGame = (id: string) => {
+    if (!confirm("이 기록을 삭제할까요?")) return;
+    setGames(games.filter((g) => g.id !== id));
+    if (editingId === id) cancelEdit();
   };
 
   const handleCreateGame = () => {
@@ -146,7 +232,7 @@ export default function BadmintonGameManager() {
           <h1 className="text-2xl font-black text-gray-900 tracking-tighter">양배추 미니게임</h1>
         </div>
         {!activeGame && !isCreating && (
-          <button onClick={() => setIsCreating(true)} className="bg-[#1E8A44] text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md active:scale-95 transition">새 경기</button>
+          <button onClick={() => setIsCreating(true)} className="bg-[#93C54B] text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md hover:bg-[#81b23c] active:scale-95 transition">새 경기</button>
         )}
       </header>
 
@@ -173,7 +259,7 @@ export default function BadmintonGameManager() {
             <select className="w-full p-4 bg-gray-50 rounded-xl font-bold outline-none" value={targetScore} onChange={e => setTargetScore(Number(e.target.value))}>
               <option value={11}>11점</option><option value={21}>21점</option><option value={25}>25점</option>
             </select>
-            <button onClick={handleCreateGame} className="w-full py-4 bg-[#1E8A44] text-white rounded-xl font-bold shadow-lg shadow-green-50 active:scale-95 transition">시작하기</button>
+            <button onClick={handleCreateGame} className="w-full py-4 bg-[#93C54B] text-white rounded-xl font-bold shadow-lg shadow-green-50 hover:bg-[#81b23c] active:scale-95 transition">시작하기</button>
           </div>
         </section>
       )}
@@ -230,24 +316,66 @@ export default function BadmintonGameManager() {
       {/* 3. 최근 기록 */}
       {!activeGame && !isCreating && (
         <section className="mt-6 text-left">
-          <h3 className="text-lg font-black text-slate-800 mb-3 ml-1">최근 기록</h3>
-          <div className="grid gap-2">
+          <div className="flex items-baseline justify-between mb-3 ml-1">
+            <h3 className="text-lg font-black text-slate-800">최근 기록</h3>
+            <span className="text-[10px] font-bold text-slate-300">기록은 1주일간 보관돼요</span>
+          </div>
+          <div className="grid gap-2.5">
             {games.length === 0 ? (
                <div className="bg-slate-50 border-2 border-dashed border-slate-100 rounded-[24px] py-16 text-center">
                   <p className="text-slate-300 font-bold text-xs">기록된 경기가 없습니다.</p>
                </div>
             ) : (
-              games.map(game => (
-                <div key={game.id} className="bg-white p-4 rounded-xl border border-slate-100 flex items-center justify-between shadow-sm">
-                  <div className="text-left">
-                    <p className="text-sm font-black">{game.title}</p>
-                    <p className="text-[10px] text-slate-400 font-medium">{game.date}</p>
+              games.map((game) => {
+                const winner = getWinner(game);
+                const isEditing = editingId === game.id;
+                return (
+                  <div key={game.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="text-left min-w-0">
+                        <p className="text-sm font-black truncate">{game.title}</p>
+                        <p className="text-[10px] text-slate-400 font-medium">{game.date}</p>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {isEditing ? (
+                          <>
+                            <button onClick={() => saveEdit(game.id)} className="px-3 py-1.5 rounded-lg bg-[#93C54B] text-white text-[11px] font-black active:scale-95 transition">저장</button>
+                            <button onClick={cancelEdit} className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-500 text-[11px] font-black active:scale-95 transition">취소</button>
+                          </>
+                        ) : (
+                          <>
+                            <button onClick={() => startEdit(game)} className="px-3 py-1.5 rounded-lg bg-slate-50 text-slate-500 text-[11px] font-black hover:bg-slate-100 active:scale-95 transition">수정</button>
+                            <button onClick={() => deleteGame(game.id)} className="px-3 py-1.5 rounded-lg bg-slate-50 text-red-400 text-[11px] font-black hover:bg-red-50 active:scale-95 transition">삭제</button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 팀별 결과 (승리 팀 강조 + WIN 배지) */}
+                    <div className="mt-3 flex items-stretch gap-2">
+                      <TeamResult
+                        names={game.teamA.names}
+                        score={game.teamA.score}
+                        won={winner === "A"}
+                        accent="blue"
+                        editing={isEditing}
+                        editValue={editScoreA}
+                        onEditChange={setEditScoreA}
+                      />
+                      <div className="flex items-center text-slate-300 font-black text-sm">VS</div>
+                      <TeamResult
+                        names={game.teamB.names}
+                        score={game.teamB.score}
+                        won={winner === "B"}
+                        accent="red"
+                        editing={isEditing}
+                        editValue={editScoreB}
+                        onEditChange={setEditScoreB}
+                      />
+                    </div>
                   </div>
-                  <div className="font-black text-blue-600 bg-slate-50 px-3 py-1 rounded-lg">
-                    {game.teamA.score} <span className="text-slate-300">:</span> {game.teamB.score}
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </section>
@@ -261,6 +389,54 @@ export default function BadmintonGameManager() {
           flex-direction: column !important;
         }
       `}</style>
+    </div>
+  );
+}
+
+// 기록 카드의 팀별 결과 (승리 팀 강조 + 수정 모드 시 점수 인풋)
+function TeamResult({
+  names,
+  score,
+  won,
+  accent,
+  editing,
+  editValue,
+  onEditChange,
+}: {
+  names: string[];
+  score: number;
+  won: boolean;
+  accent: "blue" | "red";
+  editing: boolean;
+  editValue: string;
+  onEditChange: (v: string) => void;
+}) {
+  const accentText = accent === "blue" ? "text-blue-500" : "text-red-500";
+  return (
+    <div
+      className={`flex-1 min-w-0 rounded-xl p-3 border transition-colors ${
+        won
+          ? "bg-[#f2f8e1] border-[#cfe39a]"
+          : "bg-slate-50 border-transparent"
+      }`}
+    >
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <span className={`text-[11px] font-black truncate ${accentText}`}>{names.join(" & ")}</span>
+        {won && (
+          <span className="shrink-0 bg-[#93C54B] text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">WIN</span>
+        )}
+      </div>
+      {editing ? (
+        <input
+          type="number"
+          inputMode="numeric"
+          value={editValue}
+          onChange={(e) => onEditChange(e.target.value)}
+          className="w-16 text-center font-black text-xl bg-white border border-slate-200 rounded-lg py-1 outline-none focus:ring-1 focus:ring-[#93C54B]"
+        />
+      ) : (
+        <p className={`font-black text-2xl ${won ? "text-[#5b6b0f]" : "text-slate-400"}`}>{score}</p>
+      )}
     </div>
   );
 }
