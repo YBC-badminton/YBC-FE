@@ -109,7 +109,7 @@ export default function VoteReservationPage() {
             </div>
 
             {/* 예약 대기열 섹션 */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8">
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 sm:p-8">
                 <h3 className="text-lg font-bold mb-6">투표 예약 대기열 {queueResponse && `(${queueResponse.count}건)`}</h3>
 
                 {loading && <p className="text-center text-blue-500">데이터를 불러오는 중입니다...</p>}
@@ -177,11 +177,11 @@ function VoteFormCard({ title, formData, setFormData, onSubmit, buttonColor, act
     };
 
     return (
-        <div className="bg-white p-8 rounded-xl border border-gray-100 shadow-sm">
+        <div className="bg-white p-5 sm:p-8 rounded-xl border border-gray-100 shadow-sm">
             <h2 className="text-lg font-bold mb-6 text-gray-800">{title}</h2>
             <div className="space-y-4">
                 {/* 활동 유형 및 제목 */}
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-4">
                     {showTypeSelector && (
                         <div className="flex-1 min-w-0">
                             <label className="block text-xs font-medium text-gray-400 mb-1">활동 유형</label>
@@ -200,12 +200,12 @@ function VoteFormCard({ title, formData, setFormData, onSubmit, buttonColor, act
                     <InputGroup label="제목" name="title" value={formData.title} onChange={handleChange} placeholder="예: 4월 3주차 정기 배드민턴 투표" />
                 </div>
                 {/* 날짜 및 시간 */}
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-4">
                     <InputGroup label="활동 날짜" name="activityDate" type="date" value={formData.activityDate} onChange={handleChange} />
                     <InputGroup label="활동 시간" name="activityTime" value={formData.activityTime} onChange={handleChange} placeholder="예: 14:00 ~ 17:00" />
                 </div>
                 {/* 장소 및 정원 */}
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-4">
                     <InputGroup label="장소" name="location" value={formData.location} onChange={handleChange} placeholder="예: 망원나들목체육관" />
                     <InputGroup label="정원" name="capacity" type="text" inputMode="numeric" value={formData.capacity} onChange={handleChange} placeholder="예: 25" />
                 </div>
@@ -222,7 +222,7 @@ function VoteFormCard({ title, formData, setFormData, onSubmit, buttonColor, act
                     />
                 </div>
                 {/* 투표 기간 */}
-                <div className="flex gap-4 pt-2">
+                <div className="flex flex-col sm:flex-row gap-4 pt-2">
                     <InputGroup label="투표 시작" name="voteStartAt" type="datetime-local" value={formData.voteStartAt} onChange={handleChange} />
                     <InputGroup label="투표 종료" name="voteEndAt" type="datetime-local" value={formData.voteEndAt} onChange={handleChange} />
                 </div>
