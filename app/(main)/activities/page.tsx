@@ -147,7 +147,7 @@ export default function ActivitiesPage() {
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
                                 className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
-                                    activeTab === tab ? 'bg-[#5b6b0f] text-white shadow-md' : 'text-slate-400 hover:text-slate-600'
+                                    activeTab === tab ? 'bg-[#A1C852] text-white shadow-md' : 'text-slate-400 hover:text-slate-600'
                                 }`}
                             >
                                 {tab}
