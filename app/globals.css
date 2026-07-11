@@ -16,11 +16,13 @@
 
 /* ── Design tokens (Figma: TalkFile_YBC) ───────────────────── */
 @theme {
+    /* 전체 UI 서체는 SUITE Variable로 통일 (메인 페이지 "YBC badminton club" 아래 설명 기준).
+       body/sans 계열을 하나로 맞춰, font-body를 쓰던 곳도 동일 서체로 렌더링된다. */
     --font-sans: "SUITE Variable", "Pretendard Variable", ui-sans-serif,
         system-ui, sans-serif;
-    --font-body: "Pretendard Variable", "SUITE Variable", ui-sans-serif,
+    --font-body: "SUITE Variable", "Pretendard Variable", ui-sans-serif,
         system-ui, sans-serif;
-    /* Agbalumo (--font-agbalumo) is injected by next/font on <html> */
+    /* Agbalumo (--font-agbalumo) is injected by next/font on <html> — 브랜드 로고타입("YBC badminton club") 전용 */
     --font-display: var(--font-agbalumo), "SUITE Variable", ui-sans-serif,
         system-ui, sans-serif;
 
