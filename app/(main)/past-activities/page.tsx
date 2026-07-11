@@ -430,7 +430,7 @@ export default function PastActivitiesPage() {
                     {/* 하단 텍스트 (모바일: 좌측 정렬 / 데스크톱: 우측 정렬) */}
                     <div className="flex flex-col items-start md:items-end gap-2 text-[13px] font-bold text-gray-400 w-full">
                         <a
-                        href="#"
+                        href="/policy/privacy"
                         className="text-gray-900 font-black text-[14px] hover:text-gray-700 transition-colors"
                         >
                         개인정보 처리방침
