@@ -44,23 +44,12 @@ export default function AdminPrivacyPage() {
         }
 
         setIsSaving(true);
-
-        // 오늘 날짜를 YYYY-MM-DD 형식으로 구합니다.
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        const formattedDate = `${year}-${month}-${day}`;
-
         try {
-            // 명세서 상 Request Body 구조: { "content": "...", "updatedAt": "YYYY-MM-DD" }
-            const response = await api.put('/admin/content/privacy-policy', { 
-                content,
-                updatedAt: formattedDate
-            });
+            // 확실하게 확인된 PUT 메서드로 호출합니다.
+            const response = await api.put('/admin/content/privacy-policy', { content });
             
             if (response.data) {
-                // 성공적으로 반환되면 변경된 날짜와 텍스트 상태 업데이트
+                // 성공 응답으로 돌아온 데이터로 상태 갱신
                 setContent(response.data.content);
                 setUpdatedAt(response.data.updatedAt);
                 showToast('개인정보 처리방침이 성공적으로 수정되었습니다.', 'success');
@@ -100,16 +89,15 @@ export default function AdminPrivacyPage() {
                         type="button"
                         onClick={handleSave}
                         disabled={isSaving}
-                        className="w-full md:w-auto flex items-center justify-center gap-1.5 bg-[#A1C852] hover:bg-[#8eb344] text-white font-bold px-6 py-3.5 rounded-xl text-sm transition-all shadow-md disabled:opacity-50 active:scale-95"
+                        className="w-full md:w-auto flex items-center justify-center gap-1.5 bg-[#A1C852] hover:bg-[#8eb344] text-white font-bold px-6 py-3.5 rounded-xl text-sm transition-all shadow-md disabled:opacity-50 active:scale-[0.98]"
                     >
                         <Save className="w-4.5 h-4.5" />
                         {isSaving ? '저장 중...' : '저장하여 최종 배포하기'}
                     </button>
                 </div>
 
+                {/* 편집 에디터 카드 */}
                 <div className="grid grid-cols-1 gap-8">
-                    
-                    {/* 편집 에디터 카드 */}
                     <div className="bg-white rounded-[24px] border border-gray-100 p-6 sm:p-8 shadow-sm space-y-4">
                         <div className="border-b pb-3 border-slate-100 flex items-center justify-between">
                             <h2 className="text-lg font-black text-slate-800 flex items-center gap-2">
@@ -123,7 +111,7 @@ export default function AdminPrivacyPage() {
                         <div className="space-y-4">
                             <div className="bg-slate-50 p-4 rounded-xl space-y-1">
                                 <div className="text-[12px] text-slate-400 font-bold">마지막 반영일</div>
-                                <div className="text-[14px] text-slate-700 font-bold">{updatedAt || '데이터 없음 (저장 시 자동 갱신)'}</div>
+                                <div className="text-[14px] text-slate-700 font-bold">{updatedAt || '데이터 없음'}</div>
                             </div>
 
                             <div className="space-y-2">
