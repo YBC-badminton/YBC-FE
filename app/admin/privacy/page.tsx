@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../../lib/axios';
 import { useToast } from '../../../components/ui/Toast';
-import { Save, FileText, CheckCircle, RefreshCw } from 'lucide-react';
+import { Save, FileText } from 'lucide-react';
 
 interface PrivacyData {
     content: string;
@@ -44,15 +44,26 @@ export default function AdminPrivacyPage() {
         }
 
         setIsSaving(true);
+
+        // 오늘 날짜를 YYYY-MM-DD 형식으로 구합니다.
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const formattedDate = `${year}-${month}-${day}`;
+
         try {
-            // 명세서 상 Request Body 구조: { "content": "..." }
-            const response = await api.put('/admin/content/privacy-policy', { content });
+            // 명세서 상 Request Body 구조: { "content": "...", "updatedAt": "YYYY-MM-DD" }
+            const response = await api.put('/admin/content/privacy-policy', { 
+                content,
+                updatedAt: formattedDate
+            });
             
             if (response.data) {
                 // 성공적으로 반환되면 변경된 날짜와 텍스트 상태 업데이트
                 setContent(response.data.content);
                 setUpdatedAt(response.data.updatedAt);
-                showToast('개인정보 처리방침이 저장되었습니다.', 'success');
+                showToast('개인정보 처리방침이 성공적으로 수정되었습니다.', 'success');
             }
         } catch (error: any) {
             console.error('저장 실패', error);
@@ -72,8 +83,8 @@ export default function AdminPrivacyPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#F8F9FA] py-6 sm:py-10 px-4 sm:px-6 lg:px-8 font-sans select-none text-left">
-            <div className="max-w-[1440px] mx-auto space-y-6">
+        <div className="min-h-screen bg-[#F8F9FA] py-6 sm:py-10 px-4 sm:px-6 lg:px-8 font-sans select-none text-left flex flex-col">
+            <div className="max-w-[1440px] mx-auto w-full space-y-6">
                 
                 {/* 관리자 대시보드 헤더 */}
                 <div className="bg-white rounded-[24px] border border-gray-100 shadow-sm p-6 sm:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -96,10 +107,9 @@ export default function AdminPrivacyPage() {
                     </button>
                 </div>
 
-                {/* 2컬럼 레이아웃 (좌: 통편집 텍스트 영역, 우: 프론트 UI 100% 동일 미리보기) */}
                 <div className="grid grid-cols-1 gap-8">
                     
-                    {/* 왼쪽 컬럼: 편집 에디터 카드 */}
+                    {/* 편집 에디터 카드 */}
                     <div className="bg-white rounded-[24px] border border-gray-100 p-6 sm:p-8 shadow-sm space-y-4">
                         <div className="border-b pb-3 border-slate-100 flex items-center justify-between">
                             <h2 className="text-lg font-black text-slate-800 flex items-center gap-2">
