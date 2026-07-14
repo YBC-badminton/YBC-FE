@@ -112,7 +112,7 @@ export default function AdminFAQPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#f7f9f5] py-6 sm:py-12 px-4 sm:px-6 lg:px-24 font-sans select-none text-left flex flex-col">
+        <div className="min-h-screen bg-[#f9fafb] py-6 sm:py-12 px-4 sm:px-6 lg:px-24 font-sans select-none text-left flex flex-col">
             <div className="max-w-[1000px] mx-auto w-full flex flex-col flex-grow">
                 
                 {/* 관리자 헤더 안내 영역 */}

@@ -415,7 +415,7 @@ export default function TournamentPage() {
     // 렌더링 영역
     // ============================================================================
     return (
-        <div className="min-h-screen bg-[#F8FAF3] pb-24 sm:pb-12 text-gray-800">
+        <div className="min-h-screen bg-[#f9fafb] pb-24 sm:pb-12 text-gray-800">
             {loading && (
                 <div className="fixed inset-0 bg-white/70 backdrop-blur-sm z-[999] flex flex-col items-center justify-center">
                     <RefreshCw className="w-8 h-8 animate-spin text-[#93C54B] mb-4" />
