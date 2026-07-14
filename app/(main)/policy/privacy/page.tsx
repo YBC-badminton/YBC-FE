@@ -2,66 +2,32 @@
 
 import React, { useState, useEffect } from 'react';
 import api from '../../../../lib/axios';
-import { useToast } from '../../../../components/ui/Toast';
-import { Save, FileText } from 'lucide-react';
 
 interface PrivacyData {
     content: string;
     updatedAt: string;
 }
 
-export default function AdminPrivacyPage() {
-    const { showToast } = useToast();
-    const [content, setContent] = useState<string>('');
-    const [updatedAt, setUpdatedAt] = useState<string>('');
+export default function PrivacyPolicyPage() {
+    const [privacyData, setPrivacyData] = useState<PrivacyData | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [isSaving, setIsSaving] = useState<boolean>(false);
 
-    // 1. 개인정보 처리방침 내용 조회 (GET /privacy-policy)
     useEffect(() => {
-        const fetchPrivacyData = async () => {
+        const fetchPrivacy = async () => {
             try {
+                // GET /privacy-policy 호출
                 const response = await api.get('/privacy-policy');
                 if (response.data) {
-                    setContent(response.data.content || '');
-                    setUpdatedAt(response.data.updatedAt || '');
+                    setPrivacyData(response.data);
                 }
             } catch (error) {
-                console.error('데이터 조회 실패', error);
-                showToast('기존 데이터를 불러오지 못했습니다.', 'error');
+                console.error('개인정보 처리방침 로드 실패', error);
             } finally {
                 setIsLoading(false);
             }
         };
-        fetchPrivacyData();
+        fetchPrivacy();
     }, []);
-
-    // 2. 변경 사항 서버 반영 (PATCH /admin/content/privacy-policy)
-    const handleSave = async () => {
-        if (!content.trim()) {
-            showToast('내용을 입력해 주세요.', 'error');
-            return;
-        }
-
-        setIsSaving(true);
-        try {
-            // 💡 명세서에 명시된 대로 PUT 대신 PATCH 메서드를 호출합니다.
-            const response = await api.patch('/admin/content/privacy-policy', { content });
-            
-            if (response.data) {
-                // 성공 응답으로 돌아온 데이터로 상태 갱신
-                setContent(response.data.content);
-                setUpdatedAt(response.data.updatedAt);
-                showToast('개인정보 처리방침이 성공적으로 수정되었습니다.', 'success');
-            }
-        } catch (error: any) {
-            console.error('저장 실패', error);
-            const message = error?.response?.data?.message || '업데이트에 실패했습니다.';
-            showToast(message, 'error');
-        } finally {
-            setIsSaving(false);
-        }
-    };
 
     if (isLoading) {
         return (
@@ -71,62 +37,33 @@ export default function AdminPrivacyPage() {
         );
     }
 
+    if (!privacyData) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA] font-sans">
+                <p className="text-slate-500 font-bold">처리방침 데이터를 불러올 수 없습니다.</p>
+            </div>
+        );
+    }
+
     return (
-        <div className="min-h-screen bg-[#F8F9FA] py-6 sm:py-10 px-4 sm:px-6 lg:px-8 font-sans select-none text-left flex flex-col">
-            <div className="max-w-[1440px] mx-auto w-full space-y-6">
+        <div className="min-h-screen bg-[#F8F9FA] py-10 px-6 lg:px-24 font-sans select-none text-left">
+            <div className="max-w-3xl mx-auto space-y-6">
                 
-                {/* 관리자 대시보드 헤더 */}
-                <div className="bg-white rounded-[24px] border border-gray-100 shadow-sm p-6 sm:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <span className="inline-block bg-[#f7f9f5] text-[#A1C852] px-3 py-1.5 rounded-lg text-[12px] font-extrabold uppercase tracking-wider mb-2">
-                            Policy Admin System
-                        </span>
-                        <h1 className="text-2xl font-black text-slate-800 tracking-tight">
-                            개인정보 처리방침 편집 및 관리
-                        </h1>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={handleSave}
-                        disabled={isSaving}
-                        className="w-full md:w-auto flex items-center justify-center gap-1.5 bg-[#A1C852] hover:bg-[#8eb344] text-white font-bold px-6 py-3.5 rounded-xl text-sm transition-all shadow-md disabled:opacity-50 active:scale-[0.98]"
-                    >
-                        <Save className="w-4.5 h-4.5" />
-                        {isSaving ? '저장 중...' : '저장하여 최종 배포하기'}
-                    </button>
-                </div>
+                {/* 헤더 안내 영역 */}
+                <header className="space-y-2">
+                    <h1 className="text-3xl font-black text-slate-800">개인정보 처리방침</h1>
+                    <p className="text-sm font-bold text-slate-400">
+                        시행일: {privacyData.updatedAt}
+                    </p>
+                </header>
 
-                {/* 편집 에디터 카드 */}
-                <div className="grid grid-cols-1 gap-8">
-                    <div className="bg-white rounded-[24px] border border-gray-100 p-6 sm:p-8 shadow-sm space-y-4">
-                        <div className="border-b pb-3 border-slate-100 flex items-center justify-between">
-                            <h2 className="text-lg font-black text-slate-800 flex items-center gap-2">
-                                <FileText className="w-5 h-5 text-[#A1C852]" />
-                                처리방침 내용 작성
-                            </h2>
-                            <span className="text-xs text-slate-400 font-medium">
-                                줄바꿈 및 간격을 자유롭게 작성하세요
-                            </span>
-                        </div>
-                        <div className="space-y-4">
-                            <div className="bg-slate-50 p-4 rounded-xl space-y-1">
-                                <div className="text-[12px] text-slate-400 font-bold">마지막 반영일</div>
-                                <div className="text-[14px] text-slate-700 font-bold">{updatedAt || '데이터 없음'}</div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="block text-xs font-bold text-slate-500">방침 전체 본문 내용</label>
-                                <textarea
-                                    value={content}
-                                    onChange={(e) => setContent(e.target.value)}
-                                    rows={25}
-                                    placeholder="개인정보 처리방침 내용을 입력하세요."
-                                    className="w-full px-4 py-3 bg-[#F8F9FA] border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#A1C852]/30 focus:border-[#A1C852]/50 transition leading-relaxed resize-y min-h-[500px]"
-                                />
-                            </div>
-                        </div>
+                {/* 통 텍스트를 렌더링하는 100% 싱크로율의 단일 섹션 */}
+                <section className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-8">
+                    <div className="text-[15px] leading-7 text-slate-700 whitespace-pre-wrap break-keep font-medium">
+                        {privacyData.content}
                     </div>
-                </div>
+                </section>
+
             </div>
         </div>
     );
