@@ -2,10 +2,17 @@
 
 import React, { useState } from 'react';
 
-const FAQ_DATA = [
+// 백엔드에서 내려주는 데이터 구조에 맞춰 image 필드를 추가한 타입 정의입니다.
+interface FAQItem {
+    question: string;
+    answer: string;
+}
+
+const FAQ_DATA: FAQItem[] = [
     {
         question: '동아리는 어떤 방식으로 운영되나요? 처음 참여해도 괜찮을까요?',
         answer: '양배추 배드민턴 동아리는 매주 화요일, 목요일 정기 운동을 중심으로 운영됩니다. 실력에 상관없이 누구나 참여할 수 있으며, 처음 오시는 분들도 편하게 즐기실 수 있도록 분위기를 만들고 있습니다.',
+        // 백엔드에서 이미지가 오지 않는 경우(undefined)에도 대응하도록 예외 처리됩니다.
     },
     {
         question: 'OT는 무엇인가요? 꼭 참여해야 하나요?',
@@ -120,7 +127,8 @@ export default function InquiryPage() {
 
                                     {/* 펼쳐지는 답변 내용 */}
                                     {isOpen && (
-                                        <div className="px-5 sm:px-8 pb-5 sm:pb-6 animate-in fade-in slide-in-from-top-1 duration-200">
+                                        <div className="px-5 sm:px-8 pb-5 sm:pb-6 animate-in fade-in slide-in-from-top-1 duration-200 flex flex-col gap-4">
+                                            {/* 텍스트 답변 */}
                                             <p className="text-[14px] sm:text-[15px] text-[#4e5968] sm:text-[#6B7684] font-medium leading-[1.6] break-keep">
                                                 {faq.answer}
                                             </p>
