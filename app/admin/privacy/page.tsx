@@ -98,7 +98,6 @@ export default function AdminPrivacyPage() {
 
                 {/* 2컬럼 레이아웃 (좌: 통편집 텍스트 영역, 우: 프론트 UI 100% 동일 미리보기) */}
                 <div className="grid grid-cols-1 gap-8">
-                    
                     {/* 왼쪽 컬럼: 편집 에디터 카드 */}
                     <div className="bg-white rounded-[24px] border border-gray-100 p-6 sm:p-8 shadow-sm space-y-4">
                         <div className="border-b pb-3 border-slate-100 flex items-center justify-between">
