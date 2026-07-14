@@ -1,32 +1,34 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-// 제공해주신 상대 경로에 맞춰 axios 인스턴스를 임포트합니다.
 import api from '../../../lib/axios';
 
-// 백엔드에서 이미지와 함께 내려주는 FAQ 타입 정의
+// 백엔드 API 응답 구조에 맞춘 타입 정의
 interface FAQItem {
+    faqId: number;
     question: string;
     answer: string;
-    image?: string; // 백엔드에서 이미지 URL이 올 경우 (Optional)
 }
 
 const KAKAO_CHANNEL_URL = 'https://open.kakao.com/o/sf2p7ipg';
 
 export default function InquiryPage() {
-    const [faqData, setFaqData] = useState<FAQItem[]>([]); // API로 받아올 FAQ 데이터 상태
+    const [faqData, setFaqData] = useState<FAQItem[]>([]); // API로 받아올 FAQ 리스트
     const [isLoading, setIsLoading] = useState<boolean>(true); // 로딩 상태 관리
     const [openIndex, setOpenIndex] = useState<number | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
 
-    // 제공해주신 파일의 호출 방식인 커스텀 axios 인스턴스(api)를 활용한 호출
+    // 백엔드 API 호출 (/faqs)
     useEffect(() => {
         const fetchFAQs = async () => {
             try {
-                // 백엔드 엔드포인트에 맞춰 GET 요청을 보냅니다.
-                const response = await api.get('/faq');
-                // axios는 응답 데이터가 response.data에 담깁니다.
-                setFaqData(response.data);
+                // 1. 명세서에 맞춰 엔드포인트를 '/faqs'로 수정합니다.
+                const response = await api.get('/faqs');
+                
+                // 2. 백엔드에서 { "faqs": [...] } 형태로 주기 때문에 response.data.faqs를 담아줍니다.
+                if (response.data && response.data.faqs) {
+                    setFaqData(response.data.faqs);
+                }
             } catch (error) {
                 console.error('FAQ 데이터 로드 실패', error);
             } finally {
@@ -97,23 +99,23 @@ export default function InquiryPage() {
                 {/* FAQ 아코디언 리스트 */}
                 <div className="space-y-3 sm:space-y-4 pb-12">
                     {isLoading ? (
-                        /* 데이터 로딩 중 피드백 (디자인을 해치지 않는 깔끔한 스타일) */
+                        /* 데이터 로딩 스피너 */
                         <div className="py-16 text-center">
                             <div className="inline-block w-8 h-8 border-4 border-[#A1C852] border-t-transparent rounded-full animate-spin"></div>
                             <p className="text-[14px] text-[#8b95a1] mt-4 font-medium">자주 묻는 질문을 가져오고 있습니다...</p>
                         </div>
                     ) : filteredFAQ.length > 0 ? (
-                        filteredFAQ.map((faq, index) => {
-                            const originalIndex = faqData.indexOf(faq);
-                            const isOpen = openIndex === originalIndex;
+                        filteredFAQ.map((faq) => {
+                            // originalIndex 대신 백엔드 고유 ID인 faqId를 활용해 열고 닫기 상태를 식별합니다.
+                            const isOpen = openIndex === faq.faqId;
 
                             return (
                                 <div
-                                    key={originalIndex}
+                                    key={faq.faqId}
                                     className="bg-white rounded-[16px] sm:rounded-[24px] border border-gray-100 shadow-sm overflow-hidden transition-all"
                                 >
                                     <button
-                                        onClick={() => toggleFAQ(originalIndex)}
+                                        onClick={() => toggleFAQ(faq.faqId)}
                                         className="w-full flex items-center justify-between px-5 sm:px-8 py-5 sm:py-6 text-left gap-4 hover:bg-gray-50/50 transition-colors"
                                     >
                                         <span className="text-[15px] sm:text-[16px] font-bold text-[#1a1a1a] sm:text-[#333D4B] leading-snug break-keep">
@@ -133,17 +135,6 @@ export default function InquiryPage() {
                                             <p className="text-[14px] sm:text-[15px] text-[#4e5968] sm:text-[#6B7684] font-medium leading-[1.6] break-keep">
                                                 {faq.answer}
                                             </p>
-                                            
-                                            {/* 백엔드에서 받아온 image URL이 존재할 경우에만 렌더링 */}
-                                            {faq.image && (
-                                                <div className="w-full mt-2 overflow-hidden rounded-xl">
-                                                    <img 
-                                                        src={faq.image} 
-                                                        alt="질문 상세 이미지" 
-                                                        className="w-full h-auto object-cover max-h-[360px]" 
-                                                    />
-                                                </div>
-                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -157,7 +148,7 @@ export default function InquiryPage() {
                     )}
                 </div>
 
-                {/* 모바일 전용 푸터 섹션 (sm:hidden 속성으로 데스크탑에서는 숨김 처리) */}
+                {/* 모바일 전용 푸터 섹션 */}
                 <div className="sm:hidden p-4">
                     <img 
                         src="/images/logo.png"
