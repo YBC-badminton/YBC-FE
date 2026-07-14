@@ -36,7 +36,7 @@ export default function AdminPrivacyPage() {
         fetchPrivacyData();
     }, []);
 
-    // 2. 변경 사항 서버 반영 (PUT /admin/content/privacy-policy)
+    // 2. 변경 사항 서버 반영 (PATCH /admin/content/privacy-policy)
     const handleSave = async () => {
         if (!content.trim()) {
             showToast('내용을 입력해 주세요.', 'error');
@@ -45,11 +45,11 @@ export default function AdminPrivacyPage() {
 
         setIsSaving(true);
         try {
-            // 최종 확인된 명세서 구조에 맞춰 Request Body에는 오직 content만 실어서 보냅니다.
-            const response = await api.put('/admin/content/privacy-policy', { content });
+            // 💡 명세서에 명시된 대로 PUT 대신 PATCH 메서드를 호출합니다.
+            const response = await api.patch('/admin/content/privacy-policy', { content });
             
             if (response.data) {
-                // 성공 응답(Success Response)으로 돌아온 데이터로 프론트엔드 상태를 갱신합니다.
+                // 성공 응답으로 돌아온 데이터로 상태 갱신
                 setContent(response.data.content);
                 setUpdatedAt(response.data.updatedAt);
                 showToast('개인정보 처리방침이 성공적으로 수정되었습니다.', 'success');
