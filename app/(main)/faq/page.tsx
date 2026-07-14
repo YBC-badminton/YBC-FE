@@ -1,52 +1,48 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+// 제공해주신 상대 경로에 맞춰 axios 인스턴스를 임포트합니다.
+import api from '../../../lib/axios';
 
-// 백엔드에서 내려주는 데이터 구조에 맞춰 image 필드를 추가한 타입 정의입니다.
+// 백엔드에서 이미지와 함께 내려주는 FAQ 타입 정의
 interface FAQItem {
     question: string;
     answer: string;
+    image?: string; // 백엔드에서 이미지 URL이 올 경우 (Optional)
 }
-
-const FAQ_DATA: FAQItem[] = [
-    {
-        question: '동아리는 어떤 방식으로 운영되나요? 처음 참여해도 괜찮을까요?',
-        answer: '양배추 배드민턴 동아리는 매주 화요일, 목요일 정기 운동을 중심으로 운영됩니다. 실력에 상관없이 누구나 참여할 수 있으며, 처음 오시는 분들도 편하게 즐기실 수 있도록 분위기를 만들고 있습니다.',
-        // 백엔드에서 이미지가 오지 않는 경우(undefined)에도 대응하도록 예외 처리됩니다.
-    },
-    {
-        question: 'OT는 무엇인가요? 꼭 참여해야 하나요?',
-        answer: 'OT(오리엔테이션)는 신규 부원을 위한 동아리 소개 및 친목 행사입니다. 필수 참석은 아니지만, 동아리 운영 방식과 부원들을 알아가는 좋은 기회이므로 가능하시면 참석을 권장합니다.',
-    },
-    {
-        question: '정기 운동 일정과 참석은 어떻게 하나요?',
-        answer: '정기 운동은 매주 화요일, 목요일 저녁 7시에 진행됩니다. 참석 여부는 활동 페이지에서 투표를 통해 사전에 알려주시면 됩니다. 불참 시에도 별도의 불이익은 없습니다.',
-    },
-    {
-        question: '회비와 가입비는 어떻게 되며 어디에 사용되나요?',
-        answer: '가입비와 월 회비는 체육관 대관료, 셔틀콕 구매, 동아리 행사 운영 등에 사용됩니다. 구체적인 금액은 합격 후 안내드리고 있으며, 투명하게 운영하고 있습니다.',
-    },
-    {
-        question: '활동 기간이나 보장 일정은 어떻게 되나요?',
-        answer: '활동 기간에 대한 제한은 없으며, 원하시는 기간 동안 자유롭게 활동하실 수 있습니다. 한 학기 이상 활동을 권장하지만 개인 사정에 따라 조정 가능합니다.',
-    },
-    {
-        question: '장비가 없어도 참여할 수 있나요?',
-        answer: '배드민턴화는 필수이며, 라켓은 동아리에서 여분을 보유하고 있어 처음에는 빌려 사용하실 수 있습니다. 활동을 지속하시게 되면 개인 라켓 구매를 권장합니다.',
-    },
-];
 
 const KAKAO_CHANNEL_URL = 'https://open.kakao.com/o/sf2p7ipg';
 
 export default function InquiryPage() {
+    const [faqData, setFaqData] = useState<FAQItem[]>([]); // API로 받아올 FAQ 데이터 상태
+    const [isLoading, setIsLoading] = useState<boolean>(true); // 로딩 상태 관리
     const [openIndex, setOpenIndex] = useState<number | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+
+    // 제공해주신 파일의 호출 방식인 커스텀 axios 인스턴스(api)를 활용한 호출
+    useEffect(() => {
+        const fetchFAQs = async () => {
+            try {
+                // 백엔드 엔드포인트에 맞춰 GET 요청을 보냅니다.
+                const response = await api.get('/faq');
+                // axios는 응답 데이터가 response.data에 담깁니다.
+                setFaqData(response.data);
+            } catch (error) {
+                console.error('FAQ 데이터 로드 실패', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        
+        fetchFAQs();
+    }, []);
 
     const toggleFAQ = (index: number) => {
         setOpenIndex(openIndex === index ? null : index);
     };
 
-    const filteredFAQ = FAQ_DATA.filter(
+    // 실시간 검색어 필터링
+    const filteredFAQ = faqData.filter(
         (faq) =>
             faq.question.includes(searchQuery) ||
             faq.answer.includes(searchQuery)
@@ -78,7 +74,6 @@ export default function InquiryPage() {
                         
                         {/* 우측 캐릭터 이미지 영역 */}
                         <div className="shrink-0 mb-auto sm:mb-0">
-                            {/* 파일 확장자는 실제 프로젝트 환경에 맞게 사용해 주세요 (요청하신 대로 .svg로 표기) */}
                             <img 
                                 src="/images/character-faq.svg" 
                                 alt="궁금해하는 양배추 마스코트" 
@@ -101,9 +96,15 @@ export default function InquiryPage() {
 
                 {/* FAQ 아코디언 리스트 */}
                 <div className="space-y-3 sm:space-y-4 pb-12">
-                    {filteredFAQ.length > 0 ? (
+                    {isLoading ? (
+                        /* 데이터 로딩 중 피드백 (디자인을 해치지 않는 깔끔한 스타일) */
+                        <div className="py-16 text-center">
+                            <div className="inline-block w-8 h-8 border-4 border-[#A1C852] border-t-transparent rounded-full animate-spin"></div>
+                            <p className="text-[14px] text-[#8b95a1] mt-4 font-medium">자주 묻는 질문을 가져오고 있습니다...</p>
+                        </div>
+                    ) : filteredFAQ.length > 0 ? (
                         filteredFAQ.map((faq, index) => {
-                            const originalIndex = FAQ_DATA.indexOf(faq);
+                            const originalIndex = faqData.indexOf(faq);
                             const isOpen = openIndex === originalIndex;
 
                             return (
@@ -132,6 +133,17 @@ export default function InquiryPage() {
                                             <p className="text-[14px] sm:text-[15px] text-[#4e5968] sm:text-[#6B7684] font-medium leading-[1.6] break-keep">
                                                 {faq.answer}
                                             </p>
+                                            
+                                            {/* 백엔드에서 받아온 image URL이 존재할 경우에만 렌더링 */}
+                                            {faq.image && (
+                                                <div className="w-full mt-2 overflow-hidden rounded-xl">
+                                                    <img 
+                                                        src={faq.image} 
+                                                        alt="질문 상세 이미지" 
+                                                        className="w-full h-auto object-cover max-h-[360px]" 
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -147,7 +159,6 @@ export default function InquiryPage() {
 
                 {/* 모바일 전용 푸터 섹션 (sm:hidden 속성으로 데스크탑에서는 숨김 처리) */}
                 <div className="sm:hidden p-4">
-                    {/* 로고 이미지 경로는 실제 프로젝트 환경에 맞게 수정해 주세요 */}
                     <img 
                         src="/images/logo.png"
                         alt="YBC BADMINTON CLUB" 
