@@ -12,7 +12,8 @@ const menuItems = [
     { name: '투표 예약 현황', href: '/admin/votes', icon: 'votes_status' },
     { name: '모집 일정', href: '/admin/recruitment', icon: 'recruitment' },
     { name: '대진 관리', href: '/admin/tournament', icon: 'tournament' },
-    { name: '문의하기 관리', href: '/admin/faq', icon: 'faq' }
+    { name: '문의하기 관리', href: '/admin/faq', icon: 'faq' },
+    { name: '개인정보 처리방침', href: '/admin/privacy', icon: 'privacy' },
 ];
 
 export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
