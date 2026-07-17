@@ -116,7 +116,7 @@ export default function Header() {
               <button
                 onClick={() => setIsProfileOpen((v) => !v)}
                 aria-label="프로필 메뉴"
-                className="w-10 h-10 rounded-full bg-brand-dark text-white font-bold text-[15px] flex items-center justify-center hover:brightness-110 active:scale-95 transition-all"
+                className="w-10 h-10 rounded-full bg-brand text-white font-bold text-[15px] flex items-center justify-center hover:brightness-110 active:scale-95 transition-all"
               >
                 {initial}
               </button>
@@ -170,7 +170,7 @@ export default function Header() {
           <div className="flex items-center justify-between px-5 h-[72px] border-b border-gray-100">
             {user ? (
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-full bg-brand-dark text-white font-bold text-sm flex items-center justify-center">
+                <div className="w-9 h-9 rounded-full bg-brand text-white font-bold text-sm flex items-center justify-center">
                   {initial}
                 </div>
                 <span className="text-[15px] font-bold text-ink truncate max-w-[160px]">
