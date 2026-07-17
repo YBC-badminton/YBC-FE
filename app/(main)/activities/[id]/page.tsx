@@ -33,6 +33,8 @@ interface MemberShort {
     memberId: number;
     nickname: string;
     isWaiting?: boolean;
+    attendeeNumber?: number;
+    votedAt?: string;
 }
 
 interface AttendeesResponse {
@@ -82,6 +84,18 @@ function formatDate(dateStr: string): string {
 function formatDateTime(dateStr: string): string {
     const d = new Date(dateStr);
     return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+// 투표 시각: "2026-07-04T04:35:09.806698" → "07.04 (토) 13:35"
+function formatVoteTime(dateStr: string): string {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mi = String(d.getMinutes()).padStart(2, '0');
+    return `${mm}.${dd} (${days[d.getDay()]}) ${hh}:${mi}`;
 }
 
 export default function ActivityVotePage() {
@@ -411,13 +425,20 @@ export default function ActivityVotePage() {
                             <p className="text-sm text-slate-400 font-bold text-center">아직 참석자가 없습니다.</p>
                         ) : (
                             attendees.map((m, idx) => (
-                                <div key={m.memberId} className="flex justify-between items-center p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
-                                    {/* 💡 번호와 닉네임 */}
-                                    <span className="font-bold text-slate-700 text-sm">
-                                        {idx + 1}. {m.nickname}
-                                    </span>
+                                <div key={m.memberId} className="flex justify-between items-center gap-3 p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
+                                    {/* 💡 번호·닉네임과 사람별 투표 시각 */}
+                                    <div className="flex flex-col min-w-0">
+                                        <span className="font-bold text-slate-700 text-sm truncate">
+                                            {(m.attendeeNumber ?? idx + 1)}. {m.nickname}
+                                        </span>
+                                        {m.votedAt && (
+                                            <span className="text-[11px] font-bold text-slate-400 mt-0.5">
+                                                {formatVoteTime(m.votedAt)} 투표
+                                            </span>
+                                        )}
+                                    </div>
                                     {/* 💡 isWaiting에 따른 뱃지 */}
-                                    <span className={`text-[10px] font-black px-2.5 py-1 rounded-full ${m.isWaiting ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-[#5b6b0f]'}`}>
+                                    <span className={`shrink-0 text-[10px] font-black px-2.5 py-1 rounded-full ${m.isWaiting ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-[#5b6b0f]'}`}>
                                         {m.isWaiting ? '대기' : '참가'}
                                     </span>
                                 </div>
