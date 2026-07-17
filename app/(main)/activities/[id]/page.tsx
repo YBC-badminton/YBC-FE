@@ -470,17 +470,28 @@ export default function ActivityVotePage() {
                 </div>
 
                 {showAbsent && (
-                    <div className="bg-slate-50 rounded-2xl border border-gray-100 p-4 sm:p-6 mt-6">
+                    <div className="bg-slate-50 rounded-2xl border border-gray-100 p-4 sm:p-6 mt-6 space-y-2">
                         {absentees.length === 0 ? (
                             <p className="text-sm text-slate-400 font-bold text-center">아직 불참자가 없습니다.</p>
                         ) : (
-                            <ul className="flex flex-wrap gap-2">
-                                {absentees.map((m) => (
-                                    <li key={m.memberId} className="px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm font-bold text-slate-500 shadow-sm">
-                                        {m.nickname}
-                                    </li>
-                                ))}
-                            </ul>
+                            absentees.map((m, idx) => (
+                                <div key={m.memberId} className="flex justify-between items-center gap-3 p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
+                                    {/* 💡 번호·닉네임과 사람별 투표 시각 */}
+                                    <div className="flex flex-col min-w-0">
+                                        <span className="font-bold text-slate-500 text-sm truncate">
+                                            {(m.attendeeNumber ?? idx + 1)}. {m.nickname}
+                                        </span>
+                                        {m.votedAt && (
+                                            <span className="text-[11px] font-bold text-slate-400 mt-0.5">
+                                                {formatVoteTime(m.votedAt)} 투표
+                                            </span>
+                                        )}
+                                    </div>
+                                    <span className="shrink-0 text-[10px] font-black px-2.5 py-1 rounded-full bg-slate-200 text-slate-500">
+                                        불참
+                                    </span>
+                                </div>
+                            ))
                         )}
                     </div>
                 )}
