@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation';
 
 // [수정 포인트] 성재님의 아이콘 파일 경로(예: /images/icons/...)로 이름을 맞춰주세요.
 const menuItems = [
+    { name: '메인페이지 관리', href: '/admin/home', icon: 'home' },
+    { name: '지난 활동 관리', href: '/admin/activities', icon: 'activities' },
     { name: '지원자 조회', href: '/admin/applicants', icon: 'applicants' },
     { name: '면접 관리', href: '/admin/interviews', icon: 'interviews' },
     { name: '부원 명단', href: '/admin/members', icon: 'members' },
