@@ -35,6 +35,7 @@ interface MemberShort {
     isWaiting?: boolean;
     attendeeNumber?: number;
     votedAt?: string;
+    isAdmin?: boolean;
 }
 
 interface AttendeesResponse {
@@ -430,6 +431,7 @@ export default function ActivityVotePage() {
                                     <div className="flex flex-col min-w-0">
                                         <span className="font-bold text-slate-700 text-sm truncate">
                                             {(m.attendeeNumber ?? idx + 1)}. {m.nickname}
+                                            {m.isAdmin && <span title="운영진" className="ml-1">🥬</span>}
                                         </span>
                                         {m.votedAt && (
                                             <span className="text-[11px] font-bold text-slate-400 mt-0.5">
@@ -480,6 +482,7 @@ export default function ActivityVotePage() {
                                     <div className="flex flex-col min-w-0">
                                         <span className="font-bold text-slate-500 text-sm truncate">
                                             {(m.attendeeNumber ?? idx + 1)}. {m.nickname}
+                                            {m.isAdmin && <span title="운영진" className="ml-1">🥬</span>}
                                         </span>
                                         {m.votedAt && (
                                             <span className="text-[11px] font-bold text-slate-400 mt-0.5">
