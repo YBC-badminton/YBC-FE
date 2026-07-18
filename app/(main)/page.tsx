@@ -129,13 +129,47 @@ function InstagramIcon({ className = "" }: { className?: string }) {
   );
 }
 
+interface HomeContent {
+  clubIntroduction: string;
+  activityImageUrl: string;
+  regularMeetingCount: number;
+  memberCount: number;
+}
+
+// API(GET /) 응답이 없을 때 사용할 기본값 (기존 하드코딩 문구를 폴백으로 유지)
+const DEFAULT_HOME: HomeContent = {
+  clubIntroduction:
+    "양질의 배드민턴을 추구하는 사람들이 모인 동아리, 양배추입니다.\n매주 화요일·토요일, 실력보다 열정을 가진 분들과 함께합니다.\n처음이어도 괜찮아요. 함께 즐기며 성장하는 배드민턴을 경험하세요.",
+  activityImageUrl: "",
+  regularMeetingCount: 2,
+  memberCount: 50,
+};
+
 export default function YBCMainPage() {
   const [recentVotes, setRecentVotes] = useState<VoteData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [recruiting, setRecruiting] = useState<boolean | null>(null);
   // 셔틀콕 데코가 따라갈 카드 인덱스 (마우스 오버 카드, 없으면 첫 카드)
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const [home, setHome] = useState<HomeContent>(DEFAULT_HOME);
   const { user } = useAuth();
+
+  // 메인페이지 콘텐츠 조회 (GET /) — 동아리 소개글·활동 사진·정기활동 횟수·부원 수
+  useEffect(() => {
+    api
+      .get<HomeContent>("/")
+      .then((res) => {
+        const d = res.data;
+        if (!d) return;
+        setHome({
+          clubIntroduction: d.clubIntroduction || DEFAULT_HOME.clubIntroduction,
+          activityImageUrl: d.activityImageUrl || "",
+          regularMeetingCount: d.regularMeetingCount ?? DEFAULT_HOME.regularMeetingCount,
+          memberCount: d.memberCount ?? DEFAULT_HOME.memberCount,
+        });
+      })
+      .catch((error) => console.warn("메인페이지 콘텐츠를 불러오지 못했습니다.", error));
+  }, []);
 
   useEffect(() => {
     const fetchActiveVotes = async () => {
@@ -264,15 +298,11 @@ export default function YBCMainPage() {
             YBC badminton club
           </h2>
 
-          {/* 소개 텍스트 본문 */}
+          {/* 소개 텍스트 본문 (GET / clubIntroduction, 줄바꿈 단위로 문단 렌더링) */}
           <div className="text-base sm:text-[18px] font-normal text-[#484848] leading-[1.5] max-w-2xl space-y-1.5">
-            <p>
-              양질의 배드민턴을 추구하는 사람들이 모인 동아리, 양배추입니다.
-            </p>
-            <p>매주 화요일·토요일, 실력보다 열정을 가진 분들과 함께합니다.</p>
-            <p>
-              처음이어도 괜찮아요. 함께 즐기며 성장하는 배드민턴을 경험하세요.
-            </p>
+            {home.clubIntroduction.split("\n").map((line, i) => (
+              <p key={i}>{line}</p>
+            ))}
           </div>
 
           {/* 하단 카드 레이아웃 영역 (모바일 그리드, 데스크탑 플렉스) */}
@@ -282,9 +312,17 @@ export default function YBCMainPage() {
               className="col-span-2 place-self-center w-full sm:flex-[1.3] max-w-[380px] sm:max-w-none min-h-[180px] sm:min-h-[220px] bg-[#93C54B] flex items-center justify-center text-white/90 font-bold text-sm sm:text-base px-8 text-center shadow-md overflow-hidden transition-transform hover:scale-[1.02]"
               style={{ borderRadius: "28% 72% 38% 62% / 45% 36% 64% 55%" }}
             >
-              {/* 💡 추후 실제 이미지 삽입 시 아래 주석 해제 후 사용하세요 */}
-              {/* <img src="/images/activity.png" alt="동아리 실제 활동 사진" className="w-full h-full object-cover" /> */}
-              <span>동아리 실제 활동 사진 삽입</span>
+              {/* GET / activityImageUrl — 있으면 실제 사진, 없으면 안내 문구 */}
+              {home.activityImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={home.activityImageUrl}
+                  alt="동아리 실제 활동 사진"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span>동아리 실제 활동 사진 삽입</span>
+              )}
             </div>
 
             {/* 2. 정기 활동 블롭 카드 (연두빛 틴트 배경) */}
@@ -300,7 +338,7 @@ export default function YBCMainPage() {
                   주
                 </span>
                 <span className="text-4xl sm:text-[66px] font-bold text-[#74bf63] leading-none">
-                  2회
+                  {home.regularMeetingCount}회
                 </span>
               </p>
             </div>
@@ -315,7 +353,7 @@ export default function YBCMainPage() {
               </p>
               <p className="flex items-baseline gap-1">
                 <span className="text-4xl sm:text-[66px] font-bold text-[#5b6b0f] leading-none">
-                  50+
+                  {home.memberCount}
                 </span>
                 <span className="text-xl sm:text-[40px] font-normal text-[#5b6b0f] ml-1">
                   명
