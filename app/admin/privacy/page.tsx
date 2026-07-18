@@ -5,11 +5,6 @@ import api from '../../../lib/axios';
 import { useToast } from '../../../components/ui/Toast';
 import { Save, FileText } from 'lucide-react';
 
-interface PrivacyData {
-    content: string;
-    updatedAt: string;
-}
-
 export default function AdminPrivacyPage() {
     const { showToast } = useToast();
     const [content, setContent] = useState<string>('');
@@ -45,8 +40,8 @@ export default function AdminPrivacyPage() {
 
         setIsSaving(true);
         try {
-            // 확실하게 확인된 PUT 메서드로 호출합니다.
-            const response = await api.put('/admin/content/privacy-policy', { content });
+            // 배포된 백엔드는 PATCH 메서드를 사용합니다. (PUT은 405 발생)
+            const response = await api.patch('/admin/content/privacy-policy', { content });
             
             if (response.data) {
                 // 성공 응답으로 돌아온 데이터로 상태 갱신
@@ -54,9 +49,11 @@ export default function AdminPrivacyPage() {
                 setUpdatedAt(response.data.updatedAt);
                 showToast('개인정보 처리방침이 성공적으로 수정되었습니다.', 'success');
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('저장 실패', error);
-            const message = error?.response?.data?.message || '업데이트에 실패했습니다.';
+            const message =
+                (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+                '업데이트에 실패했습니다.';
             showToast(message, 'error');
         } finally {
             setIsSaving(false);
