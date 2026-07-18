@@ -309,16 +309,16 @@ export default function YBCMainPage() {
           <div className="grid grid-cols-2 sm:flex sm:flex-row items-center justify-center gap-4 sm:gap-6 mt-10 w-full max-w-4xl">
             {/* 1. 동아리 실제 활동 사진 블롭 카드 (초록 배경) */}
             <div
-              className="col-span-2 place-self-center w-full sm:flex-[1.3] max-w-[380px] sm:max-w-none min-h-[180px] sm:min-h-[220px] bg-[#93C54B] flex items-center justify-center text-white/90 font-bold text-sm sm:text-base px-8 text-center shadow-md overflow-hidden transition-transform hover:scale-[1.02]"
+              className="relative col-span-2 place-self-center w-full sm:flex-[1.3] max-w-[380px] sm:max-w-none min-h-[180px] sm:min-h-[220px] bg-[#93C54B] flex items-center justify-center text-white/90 font-bold text-sm sm:text-base px-8 text-center shadow-md overflow-hidden transition-transform hover:scale-[1.02]"
               style={{ borderRadius: "28% 72% 38% 62% / 45% 36% 64% 55%" }}
             >
-              {/* GET / activityImageUrl — 있으면 실제 사진, 없으면 안내 문구 */}
+              {/* GET / activityImageUrl — 있으면 실제 사진(블롭을 꽉 채움), 없으면 안내 문구 */}
               {home.activityImageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={home.activityImageUrl}
                   alt="동아리 실제 활동 사진"
-                  className="w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover"
                 />
               ) : (
                 <span>동아리 실제 활동 사진 삽입</span>
