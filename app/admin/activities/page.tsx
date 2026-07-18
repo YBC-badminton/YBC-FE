@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../../lib/axios';
 import { useToast } from '../../../components/ui/Toast';
 import ImageUploader from '../../../components/admin/ImageUploader';
-import { Save, Sparkles, Users, CalendarDays, PartyPopper, Plus, Trash2, ImagePlus } from 'lucide-react';
+import { Save, Sparkles, Users, CalendarDays, PartyPopper, ImagePlus } from 'lucide-react';
 
 interface RegularMeeting {
     description: string;
@@ -145,7 +145,7 @@ export default function AdminActivitiesPage() {
         });
     };
 
-    // --- 이벤트 ---
+    // --- 이벤트 (개수 고정, 기존 항목 편집만 가능) ---
     const updateEvent = (index: number, patch: Partial<ActivityEvent>) => {
         setContent((c) => {
             const events = [...c.events];
@@ -153,29 +153,14 @@ export default function AdminActivitiesPage() {
             return { ...c, events };
         });
     };
-    const addEvent = () => {
-        setContent((c) => ({ ...c, events: [...c.events, { title: '', description: '', imageUrl: '' }] }));
-    };
-    const removeEvent = (index: number) => {
-        setContent((c) => ({ ...c, events: c.events.filter((_, i) => i !== index) }));
-    };
 
-    // --- 뒤풀이 설명 (문자열 배열) ---
+    // --- 뒤풀이 설명 (문자열 배열, 개수 고정, 기존 줄 편집만 가능) ---
     const updateAfterPartyLine = (index: number, value: string) => {
         setContent((c) => {
             const description = [...c.afterParties.description];
             description[index] = value;
             return { ...c, afterParties: { ...c.afterParties, description } };
         });
-    };
-    const addAfterPartyLine = () => {
-        setContent((c) => ({ ...c, afterParties: { ...c.afterParties, description: [...c.afterParties.description, ''] } }));
-    };
-    const removeAfterPartyLine = (index: number) => {
-        setContent((c) => ({
-            ...c,
-            afterParties: { ...c.afterParties, description: c.afterParties.description.filter((_, i) => i !== index) },
-        }));
     };
 
     if (isLoading) {
@@ -287,24 +272,17 @@ export default function AdminActivitiesPage() {
                     </div>
                 </div>
 
-                {/* 이벤트 */}
+                {/* 이벤트 (개수 고정) */}
                 <div className="bg-white rounded-[24px] border border-gray-100 p-6 sm:p-8 shadow-sm space-y-4">
-                    <div className="border-b pb-3 border-slate-100 flex items-center justify-between">
+                    <div className="border-b pb-3 border-slate-100">
                         <h2 className="text-lg font-black text-slate-800 flex items-center gap-2">
                             <CalendarDays className="w-5 h-5 text-[#A1C852]" />
                             이벤트 ({content.events.length})
                         </h2>
-                        <button
-                            type="button"
-                            onClick={addEvent}
-                            className="flex items-center gap-1 text-[#A1C852] hover:text-[#8eb344] text-sm font-bold transition"
-                        >
-                            <Plus className="w-4 h-4" /> 이벤트 추가
-                        </button>
                     </div>
 
                     {content.events.length === 0 && (
-                        <p className="text-sm text-slate-400 font-medium py-6 text-center">등록된 이벤트가 없습니다. 우측 상단에서 추가하세요.</p>
+                        <p className="text-sm text-slate-400 font-medium py-6 text-center">등록된 이벤트가 없습니다.</p>
                     )}
 
                     <div className="space-y-4">
@@ -319,18 +297,10 @@ export default function AdminActivitiesPage() {
                                     />
                                 </div>
                                 <div className="flex-1 space-y-3">
-                                    <div className="flex items-start justify-between gap-2">
+                                    <div className="flex items-start gap-2">
                                         <span className="inline-flex items-center justify-center bg-[#A1C852] text-white text-xs font-black w-6 h-6 rounded-lg shrink-0">
                                             {i + 1}
                                         </span>
-                                        <button
-                                            type="button"
-                                            onClick={() => removeEvent(i)}
-                                            className="text-slate-400 hover:text-red-500 p-1.5 hover:bg-red-50 rounded-lg transition"
-                                            aria-label="이벤트 삭제"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
                                     </div>
                                     <input
                                         type="text"
@@ -362,40 +332,22 @@ export default function AdminActivitiesPage() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="md:col-span-2 space-y-2">
-                            <div className="flex items-center justify-between">
-                                <label className="block text-xs font-bold text-slate-500">설명 (줄 단위)</label>
-                                <button
-                                    type="button"
-                                    onClick={addAfterPartyLine}
-                                    className="flex items-center gap-1 text-[#A1C852] hover:text-[#8eb344] text-xs font-bold transition"
-                                >
-                                    <Plus className="w-3.5 h-3.5" /> 줄 추가
-                                </button>
-                            </div>
+                            <label className="block text-xs font-bold text-slate-500">설명 (줄 단위)</label>
                             {content.afterParties.description.length === 0 && (
                                 <p className="text-sm text-slate-400 font-medium py-4 text-center border border-dashed border-gray-200 rounded-xl">
-                                    설명 줄을 추가하세요.
+                                    등록된 설명이 없습니다.
                                 </p>
                             )}
                             <div className="space-y-2">
                                 {content.afterParties.description.map((line, i) => (
-                                    <div key={i} className="flex items-center gap-2">
-                                        <input
-                                            type="text"
-                                            value={line}
-                                            onChange={(e) => updateAfterPartyLine(i, e.target.value)}
-                                            placeholder={`설명 ${i + 1}`}
-                                            className={inputClass}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => removeAfterPartyLine(i)}
-                                            className="text-slate-400 hover:text-red-500 p-2 hover:bg-red-50 rounded-lg transition shrink-0"
-                                            aria-label="설명 줄 삭제"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                    </div>
+                                    <input
+                                        key={i}
+                                        type="text"
+                                        value={line}
+                                        onChange={(e) => updateAfterPartyLine(i, e.target.value)}
+                                        placeholder={`설명 ${i + 1}`}
+                                        className={inputClass}
+                                    />
                                 ))}
                             </div>
                         </div>
