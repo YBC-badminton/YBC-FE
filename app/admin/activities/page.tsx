@@ -91,7 +91,15 @@ export default function AdminActivitiesPage() {
 
         setIsSaving(true);
         try {
-            const response = await api.patch<ActivitiesContent>('/admin/content/activities', content);
+            // 비어 있는(삭제 후 미교체) 정기모임 이미지 슬롯은 전송에서 제외합니다.
+            const payload: ActivitiesContent = {
+                ...content,
+                regularMeeting: {
+                    ...content.regularMeeting,
+                    imageUrls: content.regularMeeting.imageUrls.filter(Boolean),
+                },
+            };
+            const response = await api.patch<ActivitiesContent>('/admin/content/activities', payload);
             const d = response.data;
             if (d) {
                 setContent({
@@ -126,21 +134,15 @@ export default function AdminActivitiesPage() {
 
     const onError = (msg: string) => showToast(msg, 'error');
 
-    // --- 정기 모임 이미지 갤러리 ---
+    // --- 정기 모임 이미지 갤러리 (개수 고정) ---
+    // 이미지 개수는 기존 개수로 고정됩니다. 삭제 시 슬롯은 유지되고(빈 슬롯),
+    // 같은 슬롯에 새 이미지를 업로드해 교체합니다. 슬롯을 추가/제거하지 않습니다.
     const updateMeetingImage = (index: number, url: string) => {
         setContent((c) => {
             const imageUrls = [...c.regularMeeting.imageUrls];
-            if (url) imageUrls[index] = url;
-            else imageUrls.splice(index, 1); // 삭제
+            imageUrls[index] = url; // '' 이면 빈 슬롯으로 유지
             return { ...c, regularMeeting: { ...c.regularMeeting, imageUrls } };
         });
-    };
-    const addMeetingImage = (url: string) => {
-        if (!url) return;
-        setContent((c) => ({
-            ...c,
-            regularMeeting: { ...c.regularMeeting, imageUrls: [...c.regularMeeting.imageUrls, url] },
-        }));
     };
 
     // --- 이벤트 ---
@@ -261,20 +263,27 @@ export default function AdminActivitiesPage() {
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="block text-xs font-bold text-slate-500">이미지 ({content.regularMeeting.imageUrls.length}장)</label>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                            {content.regularMeeting.imageUrls.map((url, i) => (
-                                <ImageUploader
-                                    key={i}
-                                    value={url}
-                                    onChange={(newUrl) => updateMeetingImage(i, newUrl)}
-                                    onError={onError}
-                                    heightClass="h-32"
-                                />
-                            ))}
-                            {/* 새 이미지 추가 슬롯 */}
-                            <ImageUploader value="" onChange={addMeetingImage} onError={onError} heightClass="h-32" />
+                        <div className="flex items-center justify-between">
+                            <label className="block text-xs font-bold text-slate-500">이미지 ({content.regularMeeting.imageUrls.length}장 고정)</label>
+                            <span className="text-[11px] font-medium text-slate-400">변경하려면 삭제 후 새 이미지를 업로드하세요</span>
                         </div>
+                        {content.regularMeeting.imageUrls.length === 0 ? (
+                            <p className="text-sm text-slate-400 font-medium py-6 text-center border border-dashed border-gray-200 rounded-xl">
+                                등록된 이미지가 없습니다.
+                            </p>
+                        ) : (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                                {content.regularMeeting.imageUrls.map((url, i) => (
+                                    <ImageUploader
+                                        key={i}
+                                        value={url}
+                                        onChange={(newUrl) => updateMeetingImage(i, newUrl)}
+                                        onError={onError}
+                                        heightClass="h-32"
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
 

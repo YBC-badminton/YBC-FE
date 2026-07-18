@@ -65,15 +65,8 @@ export default function ImageUploader({
                 <div className={`relative w-full ${heightClass} rounded-xl overflow-hidden border border-gray-200 bg-slate-50 group`}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={value} alt="업로드된 이미지" className="w-full h-full object-cover" />
+                    {/* 이미지 변경은 "삭제 후 새로 업로드" 방식으로만 가능합니다. */}
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                        <button
-                            type="button"
-                            onClick={() => inputRef.current?.click()}
-                            disabled={isUploading}
-                            className="bg-white/90 text-slate-700 text-xs font-bold px-3 py-2 rounded-lg hover:bg-white transition disabled:opacity-50"
-                        >
-                            변경
-                        </button>
                         <button
                             type="button"
                             onClick={() => onChange('')}
