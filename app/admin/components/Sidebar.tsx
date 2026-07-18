@@ -72,7 +72,6 @@ export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
             <aside className={`
                 /* 디자인 및 너비 유지 */
                 w-60 bg-white p-6
-                flex flex-col
 
                 /* [핵심] 기존 고정 및 반응형 스크롤 로직 유지 */
                 fixed top-0 bottom-0 left-0 z-[50]
@@ -112,8 +111,8 @@ export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
                     {operationItems.map(renderItem)}
                 </nav>
 
-                {/* 사이트 관리 메뉴 (하단 고정, 소제목으로 구분) */}
-                <div className="mt-auto pt-8 border-t border-slate-100">
+                {/* 사이트 관리 메뉴 (운영 메뉴 바로 아래, 소제목으로 구분) */}
+                <div className="mt-8 pt-8 border-t border-slate-100">
                     <p className="px-4 mb-3 text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
                         사이트 관리
                     </p>
