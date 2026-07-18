@@ -1,33 +1,54 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { MapPin, Calendar } from 'lucide-react';
+import api from "../../../lib/axios";
 
-// 하드코딩된 활동 데이터
-const HARDCODED_ACTIVITIES = [
-    {
-        id: "regular", // regular (정기 운동)
-        subtitle: "매주 화, 토요일마다",
-        title: "정기운동",
-        imageUrl: "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?q=80&w=1200&auto=format&fit=crop", 
-        heightClass: "h-[280px] sm:h-[320px]",
+// GET /activities 응답 타입
+interface RegularMeeting { description: string; imageUrls: string[]; }
+interface ActivityEvent { title: string; description: string; imageUrl: string; }
+interface AfterParties { description: string[]; imageUrl: string; }
+interface ActivitiesContent {
+    mainTitle: string;
+    subDescription: string;
+    regularMeeting: RegularMeeting;
+    events: ActivityEvent[];
+    afterParties: AfterParties;
+}
+
+// API 응답이 없을 때 사용할 기본값 (기존 하드코딩 문구를 폴백으로 유지)
+const DEFAULT_ACTIVITIES: ActivitiesContent = {
+    mainTitle: "양배추의 지난 활동을 소개합니다!",
+    subDescription:
+        "매주 만나는 정기운동부터, 함께 겨루고 즐거움을 나누는 이벤트,\n그리고 운동 뒤의 뒷풀이까지.\n양배추의 모든 활동을 한눈에 담았어요.",
+    regularMeeting: {
+        description:
+            "매주 두 번, 화요일과 토요일에 만나요\n꾸준함이 실력이 되는 양배추의 기본 루틴이에요.",
+        imageUrls: [],
     },
-    {
-        id: "event", // event (이벤트)
-        subtitle: "부원들끼리 실력을 판가름하는",
-        title: "이벤트",
-        imageUrl: "https://images.unsplash.com/photo-1599474924187-334a4ae5bd3c?q=80&w=800&auto=format&fit=crop",
-        heightClass: "h-[240px] sm:h-[260px]",
+    events: [
+        {
+            title: "양배추 자체 대회",
+            description:
+                "실력보다 즐기는 마음이 먼저!\n팀을 나눠 토너먼트로 겨루고, 시상까지 이어지는 양배추의 축제예요.",
+            imageUrl: "",
+        },
+        {
+            title: "단합 MT",
+            description:
+                "라켓을 잠시 내려놓고 떠나는 1박 2일.\n코트 밖에서 더 가까워지는, 양배추다운 단합의 시간이에요.",
+            imageUrl: "",
+        },
+    ],
+    afterParties: {
+        description: [
+            "시원한 한 잔과 함께 나누는 오늘의 명장면들.\n부담 없이 모여 이야기하다 보면\n어느새 더 끈끈해진 양배추를 만나게 돼요.",
+            "참석은 필수가 아니에요.\n자유롭게 이야기를 나누며\n부원들과 함께해요.",
+        ],
+        imageUrl: "",
     },
-    {
-        id: "party", // party (뒷풀이)
-        subtitle: "종종 정기 운동이 끝나고 난 후는",
-        title: "뒷풀이",
-        imageUrl: "https://images.unsplash.com/photo-1528605248644-14dd04022da1?q=80&w=800&auto=format&fit=crop",
-        heightClass: "h-[240px] sm:h-[260px]",
-    }
-];
+};
 
 /* ── 공용 아이콘 (Figma: tabler / solar 세트) ─────────────── */
 function PinIcon({ className = "" }: { className?: string }) {
@@ -128,6 +149,43 @@ function InstagramIcon({ className = "" }: { className?: string }) {
 }
 
 export default function PastActivitiesPage() {
+    const [content, setContent] = useState<ActivitiesContent>(DEFAULT_ACTIVITIES);
+
+    // 지난 활동 콘텐츠 조회 (GET /activities)
+    useEffect(() => {
+        api
+            .get<ActivitiesContent>("/activities")
+            .then((res) => {
+                const d = res.data;
+                if (!d) return;
+                setContent({
+                    mainTitle: d.mainTitle || DEFAULT_ACTIVITIES.mainTitle,
+                    subDescription: d.subDescription || DEFAULT_ACTIVITIES.subDescription,
+                    regularMeeting: {
+                        description:
+                            d.regularMeeting?.description || DEFAULT_ACTIVITIES.regularMeeting.description,
+                        imageUrls: d.regularMeeting?.imageUrls ?? [],
+                    },
+                    events:
+                        d.events && d.events.length > 0
+                            ? d.events.map((e) => ({
+                                  title: e.title ?? "",
+                                  description: e.description ?? "",
+                                  imageUrl: e.imageUrl ?? "",
+                              }))
+                            : DEFAULT_ACTIVITIES.events,
+                    afterParties: {
+                        description:
+                            d.afterParties?.description && d.afterParties.description.length > 0
+                                ? d.afterParties.description
+                                : DEFAULT_ACTIVITIES.afterParties.description,
+                        imageUrl: d.afterParties?.imageUrl ?? "",
+                    },
+                });
+            })
+            .catch((error) => console.warn("지난 활동 콘텐츠를 불러오지 못했습니다.", error));
+    }, []);
+
     return (
         <div className="min-h-screen flex flex-col font-sans select-none bg-white">
             <section className="relative w-full -top-[96px] min-h-[700px] bg-gradient-to-b from-[#FDFFEE] to-[#E3EDA9] overflow-hidden flex flex-col items-center">
@@ -135,17 +193,15 @@ export default function PastActivitiesPage() {
                 {/* 1. 메인 히어로 텍스트 및 캐릭터 영역 */}
                 <div className="relative z-10 flex flex-col items-center text-center mt-48 px-4 w-full max-w-4xl">
                     
-                    {/* 메인 타이틀 */}
-                    <h1 className="text-3xl md:text-[42px] font-black text-[#445028] mb-6 tracking-tight">
-                        양배추의 지난 활동을 소개합니다!
+                    {/* 메인 타이틀 (GET /activities mainTitle) */}
+                    <h1 className="text-3xl md:text-[42px] font-black text-[#445028] mb-6 tracking-tight break-keep">
+                        {content.mainTitle}
                     </h1>
-                    
-                    {/* 서브 텍스트 & 캐릭터 컨테이너 */}
+
+                    {/* 서브 텍스트 & 캐릭터 컨테이너 (subDescription) */}
                     <div className="relative flex justify-center w-full mt-2">
-                        <p className="text-[#5b663b] font-medium leading-[1.8] text-[14px] md:text-[15px]">
-                            매주 만나는 정기운동부터,<br className="block md:hidden" /> 함께 겨루고 즐거움을 나누는 이벤트,<br className="block" />
-                            그리고 운동 뒤의 뒷풀이까지.<br className="block" />
-                            양배추의 모든 활동을 한눈에 담았어요.
+                        <p className="text-[#5b663b] font-medium leading-[1.8] text-[14px] md:text-[15px] whitespace-pre-line break-keep">
+                            {content.subDescription}
                         </p>
 
                         {/* 캐릭터 이미지 (절대 좌표로 우측에 자연스럽게 배치) */}
@@ -190,18 +246,18 @@ export default function PastActivitiesPage() {
                     
                     <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4 sm:gap-0">
                         <h2 className="text-2xl sm:text-[28px] font-black text-gray-900 tracking-tight">정기모임</h2>
-                        <p className="text-left sm:text-right text-[13px] sm:text-sm text-gray-500 font-medium leading-relaxed pt-8">
-                            매주 두 번, 화요일과 토요일에 만나요<br />
-                            꾸준함이 실력이 되는 양배추의 기본 루틴이에요.
+                        <p className="text-left sm:text-right text-[13px] sm:text-sm text-gray-500 font-medium leading-relaxed pt-8 whitespace-pre-line break-keep">
+                            {content.regularMeeting.description}
                         </p>
                     </div>
 
                     <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* 화요 운동 카드 */}
+                        {/* 화요 운동 카드 (이미지: regularMeeting.imageUrls[0]) */}
                         <div className="bg-white rounded-[32px] p-5 shadow-[0_8px_20px_rgb(0,0,0,0.13)] border border-gray-50 transition-transform hover:-translate-y-1 duration-300">
-                            <div className="w-full h-[200px] bg-gray-50 rounded-[24px] mb-6">
-                                {/* 실제 이미지 사용 시 아래 img 태그 활용 */}
-                                {/* <img src="/image-path.jpg" alt="화요 운동" className="w-full h-full object-cover rounded-[24px]" /> */}
+                            <div className="w-full h-[200px] bg-gray-50 rounded-[24px] mb-6 overflow-hidden">
+                                {content.regularMeeting.imageUrls[0] && (
+                                    <img src={content.regularMeeting.imageUrls[0]} alt="화요 운동" className="w-full h-full object-cover rounded-[24px]" />
+                                )}
                             </div>
                             <div className="px-2">
                                 <h3 className="text-lg font-bold text-gray-900 mb-3">화요 운동</h3>
@@ -216,9 +272,13 @@ export default function PastActivitiesPage() {
                             </div>
                         </div>
 
-                        {/* 토요 운동 카드 */}
+                        {/* 토요 운동 카드 (이미지: regularMeeting.imageUrls[1]) */}
                         <div className="bg-white rounded-[32px] p-5 shadow-[0_8px_20px_rgb(0,0,0,0.13)] border border-gray-50 transition-transform hover:-translate-y-1 duration-300">
-                            <div className="w-full h-[200px] bg-gray-50 rounded-[24px] mb-6"></div>
+                            <div className="w-full h-[200px] bg-gray-50 rounded-[24px] mb-6 overflow-hidden">
+                                {content.regularMeeting.imageUrls[1] && (
+                                    <img src={content.regularMeeting.imageUrls[1]} alt="토요 운동" className="w-full h-full object-cover rounded-[24px]" />
+                                )}
+                            </div>
                             <div className="px-2">
                                 <h3 className="text-lg font-bold text-gray-900 mb-3">토요 운동</h3>
                                 <div className="space-y-2">
@@ -251,29 +311,22 @@ export default function PastActivitiesPage() {
                     </div>
 
                     <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* 자체 대회 카드 */}
-                        <div className="bg-white rounded-[32px] p-5 shadow-[0_8px_20px_rgb(0,0,0,0.13)] border border-gray-50 transition-transform hover:-translate-y-1 duration-300">
-                            <div className="w-full h-[200px] bg-gray-50 rounded-[24px] mb-6"></div>
-                            <div className="px-2">
-                                <h3 className="text-lg font-bold text-gray-900 mb-2">양배추 자체 대회</h3>
-                                <p className="text-[13px] text-gray-500 font-medium leading-relaxed ">
-                                    실력보다 즐기는 마음이 먼저!<br />
-                                    팀을 나눠 토너먼트로 겨루고, 시상까지 이어지는 양배추의 축제예요.
-                                </p>
+                        {/* 이벤트 카드 (events[] → title·description·imageUrl) */}
+                        {content.events.map((ev, i) => (
+                            <div key={i} className="bg-white rounded-[32px] p-5 shadow-[0_8px_20px_rgb(0,0,0,0.13)] border border-gray-50 transition-transform hover:-translate-y-1 duration-300">
+                                <div className="w-full h-[200px] bg-gray-50 rounded-[24px] mb-6 overflow-hidden">
+                                    {ev.imageUrl && (
+                                        <img src={ev.imageUrl} alt={ev.title} className="w-full h-full object-cover rounded-[24px]" />
+                                    )}
+                                </div>
+                                <div className="px-2">
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">{ev.title}</h3>
+                                    <p className="text-[13px] text-gray-500 font-medium leading-relaxed whitespace-pre-line break-keep">
+                                        {ev.description}
+                                    </p>
+                                </div>
                             </div>
-                        </div>
-
-                        {/* MT 카드 */}
-                        <div className="bg-white rounded-[32px] p-5 shadow-[0_8px_20px_rgb(0,0,0,0.13)] border border-gray-50 transition-transform hover:-translate-y-1 duration-300">
-                            <div className="w-full h-[200px] bg-gray-50 rounded-[24px] mb-6"></div>
-                            <div className="px-2">
-                                <h3 className="text-lg font-bold text-gray-900 mb-2">단합 MT</h3>
-                                <p className="text-[13px] text-gray-500 font-medium leading-relaxed">
-                                    라켓을 잠시 내려놓고 떠나는 1박 2일.<br />
-                                    코트 밖에서 더 가까워지는, 양배추다운 단합의 시간이에요.
-                                </p>
-                            </div>
-                        </div>
+                        ))}
                     </div>
                 </div>
 
@@ -297,24 +350,29 @@ export default function PastActivitiesPage() {
                         {/* 좌측: 비정형 이미지 도형 (Blob) */}
                         <div className="w-full md:w-[500px] flex justify-center">
                             <div className="w-full max-w-[400px] max-h-[300px] aspect-square bg-[#F8FAF3] rounded-[77%_23%_70%_30%/22%_28%_72%_78%] overflow-hidden flex items-center justify-center shadow-inner">
-                                {/* 실제 사진이 들어갈 경우 */}
-                                {/* <img src="/afterparty.jpg" alt="뒷풀이 사진" className="w-full h-full object-cover" /> */}
+                                {/* 뒷풀이 이미지 (afterParties.imageUrl) */}
+                                {content.afterParties.imageUrl && (
+                                    <img src={content.afterParties.imageUrl} alt="뒷풀이 사진" className="w-full h-full object-cover" />
+                                )}
                             </div>
                         </div>
 
                         {/* 우측: 텍스트 및 캐릭터 */}
                         <div className="flex-1 relative pb-20 md:pb-0">
                             <div className="space-y-6">
-                                <p className="text-[15px] sm:text-base text-gray-800 font-bold leading-[1.8]">
-                                    시원한 한 잔과 함께 나누는 오늘의 명장면들.<br />
-                                    부담 없이 모여 이야기하다 보면<br />
-                                    어느새 더 끈끈해진 양배추를 만나게 돼요.
-                                </p>
-                                <p className="text-[13px] sm:text-sm text-gray-600 font-medium leading-[1.8]">
-                                    참석은 필수가 아니에요.<br />
-                                    자유롭게 이야기를 나누며<br />
-                                    부원들과 함께해요.
-                                </p>
+                                {/* 뒷풀이 설명 (afterParties.description[]) — 첫 줄은 강조, 이후는 보조 스타일 */}
+                                {content.afterParties.description.map((line, i) => (
+                                    <p
+                                        key={i}
+                                        className={
+                                            i === 0
+                                                ? "text-[15px] sm:text-base text-gray-800 font-bold leading-[1.8] whitespace-pre-line break-keep"
+                                                : "text-[13px] sm:text-sm text-gray-600 font-medium leading-[1.8] whitespace-pre-line break-keep"
+                                        }
+                                    >
+                                        {line}
+                                    </p>
+                                ))}
                             </div>
                             
                             {/* 캐릭터 이미지 (우측 하단 절대 좌표 배치) */}
