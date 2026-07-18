@@ -164,11 +164,14 @@ export default function YBCMainPage() {
         setHome({
           clubIntroduction: d.clubIntroduction || DEFAULT_HOME.clubIntroduction,
           activityImageUrl: d.activityImageUrl || "",
-          regularMeetingCount: d.regularMeetingCount ?? DEFAULT_HOME.regularMeetingCount,
+          regularMeetingCount:
+            d.regularMeetingCount ?? DEFAULT_HOME.regularMeetingCount,
           memberCount: d.memberCount ?? DEFAULT_HOME.memberCount,
         });
       })
-      .catch((error) => console.warn("메인페이지 콘텐츠를 불러오지 못했습니다.", error));
+      .catch((error) =>
+        console.warn("메인페이지 콘텐츠를 불러오지 못했습니다.", error),
+      );
   }, []);
 
   useEffect(() => {
@@ -356,7 +359,7 @@ export default function YBCMainPage() {
                   {home.memberCount}
                 </span>
                 <span className="text-xl sm:text-[40px] font-normal text-[#5b6b0f] ml-1">
-                  명
+                  명+
                 </span>
               </p>
             </div>
@@ -408,9 +411,7 @@ export default function YBCMainPage() {
                 themeIndex={idx}
                 isLoggedIn={!!user}
                 // 포커스(=마우스 오버, 미오버 시 첫 카드)된 카드가 테두리+셔틀콕을 함께 가져간다
-                focused={
-                  hoveredIdx === null ? idx === 0 : hoveredIdx === idx
-                }
+                focused={hoveredIdx === null ? idx === 0 : hoveredIdx === idx}
                 onHoverChange={(hovering) =>
                   setHoveredIdx(hovering ? idx : null)
                 }
@@ -585,7 +586,9 @@ function getDDayLabel(activityDate?: string): string {
   const target = new Date(y, m - 1, d);
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const diffDays = Math.round((target.getTime() - today.getTime()) / 86_400_000);
+  const diffDays = Math.round(
+    (target.getTime() - today.getTime()) / 86_400_000,
+  );
   if (diffDays === 0) return "오늘";
   if (diffDays > 0) return `D-${diffDays}`;
   return "종료";
@@ -677,7 +680,9 @@ function MeetingCard({
               모집완료
             </span>
           ) : (
-            <span className={`${theme.pill} text-white text-sm font-normal px-3 py-1 rounded-full flex items-center gap-1.5`}>
+            <span
+              className={`${theme.pill} text-white text-sm font-normal px-3 py-1 rounded-full flex items-center gap-1.5`}
+            >
               <span className="w-1.5 h-1.5 bg-white/90 rounded-full animate-pulse" />
               모집중
             </span>
@@ -713,7 +718,9 @@ function MeetingCard({
                 {isLoggedIn ? `${ratio}%` : "??%"}
               </span>
             </div>
-            <div className={`w-full h-2.5 ${theme.track} rounded-full overflow-hidden`}>
+            <div
+              className={`w-full h-2.5 ${theme.track} rounded-full overflow-hidden`}
+            >
               <div
                 className={`h-full rounded-full transition-all duration-1000 ease-out ${full ? "bg-brand-dark" : theme.bar}`}
                 style={{ width: `${isLoggedIn ? ratio : 0}%` }}
