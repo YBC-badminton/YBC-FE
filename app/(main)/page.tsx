@@ -359,7 +359,7 @@ export default function YBCMainPage() {
                   {home.memberCount}
                 </span>
                 <span className="text-xl sm:text-[40px] font-normal text-[#5b6b0f] ml-1">
-                  명+
+                  +명
                 </span>
               </p>
             </div>
