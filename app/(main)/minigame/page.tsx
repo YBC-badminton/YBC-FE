@@ -120,9 +120,9 @@ export default function BadmintonGameManager() {
           names: [item.team2Member1, item.team2Member2].filter(Boolean),
           score: item.team2Score ?? 0,
         },
-        targetScore: 25, // 서버에 별도 targetScore가 없을 경우 기본값
+        targetScore: 25, // 기본값
         date: formatDisplayDate(item.startTime),
-        isCreator: item.isCreator ?? true, // 서버 권한 체크 필드 (기본값 true)
+        isCreator: Boolean(item.isCreator), // 💡 생성자 권한이 명확히 true인 경우에만 허용
       }));
 
       setGames(formatted);
@@ -234,10 +234,7 @@ export default function BadmintonGameManager() {
 
   // --- 기록 수정 / 삭제 (본인 생성 경기만 가능) ---
   const startEdit = (game: GameResult) => {
-    if (!game.isCreator) {
-      alert("경기 결과를 수정할 권한이 없습니다.");
-      return;
-    }
+    if (!game.isCreator) return;
     setEditingId(game.id);
     setEditScoreA(String(game.teamA.score));
     setEditScoreB(String(game.teamB.score));
@@ -258,12 +255,7 @@ export default function BadmintonGameManager() {
     }
 
     const target = games.find((g) => g.id === id);
-    if (!target) return;
-
-    if (!target.isCreator) {
-      alert("경기 결과를 수정할 권한이 없습니다.");
-      return;
-    }
+    if (!target || !target.isCreator) return;
 
     // 서버에 완료 경기 수정 반영 (PATCH /games/{gameId})
     try {
@@ -286,10 +278,7 @@ export default function BadmintonGameManager() {
   };
 
   const deleteGame = async (game: GameResult) => {
-    if (!game.isCreator) {
-      alert("경기 결과를 삭제할 권한이 없습니다.");
-      return;
-    }
+    if (!game.isCreator) return;
 
     if (!confirm("이 기록을 삭제할까요?")) return;
 
@@ -597,7 +586,7 @@ export default function BadmintonGameManager() {
                           </p>
                         </div>
 
-                        {/* 💡 수정/삭제 권한 체크: 작성자 본인만 버튼 노출 */}
+                        {/* 💡 작성자 본인(isCreator가 true)인 경우에만 버튼을 노출 */}
                         {game.isCreator && (
                           <div className="flex items-center gap-1 shrink-0">
                             {isEditing ? (
