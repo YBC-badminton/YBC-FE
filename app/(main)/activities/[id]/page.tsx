@@ -115,6 +115,7 @@ export default function ActivityVotePage() {
     const [absentees, setAbsentees] = useState<MemberShort[]>([]);
     const [guests, setGuests] = useState<GuestItem[]>([]);
     const [totalGuestCount, setTotalGuestCount] = useState(0);
+    const [hasMatches, setHasMatches] = useState<boolean>(false); // 💡 대진표 존재 여부 상태 추가
 
     // 게스트 폼 상태
     const [guestName, setGuestName] = useState('');
@@ -213,6 +214,17 @@ export default function ActivityVotePage() {
         }
     }, [voteId]);
 
+    // 💡 대진표 데이터 존재 여부 확인 API 호출
+    const fetchMatchesExist = useCallback(async () => {
+        try {
+            await api.get(`/votes/${voteId}/matches`);
+            setHasMatches(true);
+        } catch (err) {
+            // 404 (MATCH_NOT_FOUND) 등 에러 발생 시 대진표 없음으로 간주
+            setHasMatches(false);
+        }
+    }, [voteId]);
+
     useEffect(() => {
         setLoading(true);
         setError(null);
@@ -222,8 +234,9 @@ export default function ActivityVotePage() {
             fetchAttendees(),
             fetchAbsentees(),
             fetchGuests(),
+            fetchMatchesExist(), // 💡 대진표 존재 여부 조회 추가
         ]).finally(() => setLoading(false));
-    }, [fetchDetail, fetchMyAttendance, fetchAttendees, fetchAbsentees, fetchGuests]);
+    }, [fetchDetail, fetchMyAttendance, fetchAttendees, fetchAbsentees, fetchGuests, fetchMatchesExist]);
 
     // --- 액션 함수들 ---
 
@@ -381,16 +394,18 @@ export default function ActivityVotePage() {
                 )}
             </div>
 
-            {/* 대진보기 — 상세 페이지 안에서도 대진표로 바로 이동 */}
-            <Link
-                href={`/activities/${voteId}/tournament`}
-                className="flex items-center justify-center gap-1.5 w-full bg-[#A1C852] text-white text-[15px] font-bold py-3.5 rounded-full shadow-sm hover:bg-[#93bd41] active:scale-[0.98] transition-all"
-            >
-                대진표 보기
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M7 17 17 7M9 7h8v8" />
-                </svg>
-            </Link>
+            {/* 💡 조건부 렌더링: 타입이 REGULAR이면서 대진 정보가 존재(hasMatches === true)할 때만 렌더링 */}
+            {activity.type === 'REGULAR' && hasMatches && (
+                <Link
+                    href={`/activities/${voteId}/tournament`}
+                    className="flex items-center justify-center gap-1.5 w-full bg-[#A1C852] text-white text-[15px] font-bold py-3.5 rounded-full shadow-sm hover:bg-[#93bd41] active:scale-[0.98] transition-all"
+                >
+                    대진표 보기
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M7 17 17 7M9 7h8v8" />
+                    </svg>
+                </Link>
+            )}
             </section>
 
             {/* --- [2] 참석/불참 현황 --- */}
@@ -427,7 +442,6 @@ export default function ActivityVotePage() {
                         ) : (
                             attendees.map((m, idx) => (
                                 <div key={m.memberId} className="flex justify-between items-center gap-3 p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
-                                    {/* 💡 번호·닉네임과 사람별 투표 시각 */}
                                     <div className="flex flex-col min-w-0">
                                         <span className="font-bold text-slate-700 text-sm truncate">
                                             {(m.attendeeNumber ?? idx + 1)}. {m.nickname}
@@ -439,7 +453,6 @@ export default function ActivityVotePage() {
                                             </span>
                                         )}
                                     </div>
-                                    {/* 💡 isWaiting에 따른 뱃지 */}
                                     <span className={`shrink-0 text-[10px] font-black px-2.5 py-1 rounded-full ${m.isWaiting ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-[#5b6b0f]'}`}>
                                         {m.isWaiting ? '대기' : '참가'}
                                     </span>
@@ -478,7 +491,6 @@ export default function ActivityVotePage() {
                         ) : (
                             absentees.map((m, idx) => (
                                 <div key={m.memberId} className="flex justify-between items-center gap-3 p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
-                                    {/* 💡 번호·닉네임과 사람별 투표 시각 */}
                                     <div className="flex flex-col min-w-0">
                                         <span className="font-bold text-slate-500 text-sm truncate">
                                             {(m.attendeeNumber ?? idx + 1)}. {m.nickname}
@@ -557,7 +569,6 @@ export default function ActivityVotePage() {
                         return (
                             <li key={g.guestId} className="flex justify-between items-center bg-slate-50 rounded-2xl border border-gray-100 px-4 sm:px-5 py-3 sm:py-4">
                                 <div className="flex flex-col min-w-0 mr-3">
-                                    {/* 💡 수정된 부분: 이름 옆에 대기/참석 뱃지 추가 */}
                                     <div className="flex items-center gap-2">
                                         <span className="font-black text-slate-800 text-[14px] sm:text-[15px] truncate">{g.guestName}</span>
                                         <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${g.isWaiting ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-[#5b6b0f]'}`}>
