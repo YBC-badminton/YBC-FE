@@ -115,7 +115,7 @@ export default function ActivityVotePage() {
     const [absentees, setAbsentees] = useState<MemberShort[]>([]);
     const [guests, setGuests] = useState<GuestItem[]>([]);
     const [totalGuestCount, setTotalGuestCount] = useState(0);
-    const [hasMatches, setHasMatches] = useState<boolean>(false); // 💡 대진표 존재 여부 상태 추가
+    const [hasMatches, setHasMatches] = useState<boolean>(false);
 
     // 게스트 폼 상태
     const [guestName, setGuestName] = useState('');
@@ -145,10 +145,6 @@ export default function ActivityVotePage() {
     const attendanceRate = activity && activity.capacity > 0
     ? Math.min(Math.round((attendees.length / activity.capacity) * 100), 100)
     : 0;
-
-    const absentRate = activity && activity.capacity > 0
-        ? Math.round((absentees.length / activity.capacity) * 100)
-        : 0;
 
     // --- API 호출 함수들 ---
 
@@ -214,13 +210,12 @@ export default function ActivityVotePage() {
         }
     }, [voteId]);
 
-    // 💡 대진표 데이터 존재 여부 확인 API 호출
+    // 대진표 데이터 존재 여부 확인 API 호출
     const fetchMatchesExist = useCallback(async () => {
         try {
             await api.get(`/votes/${voteId}/matches`);
             setHasMatches(true);
-        } catch (err) {
-            // 404 (MATCH_NOT_FOUND) 등 에러 발생 시 대진표 없음으로 간주
+        } catch {
             setHasMatches(false);
         }
     }, [voteId]);
@@ -234,7 +229,7 @@ export default function ActivityVotePage() {
             fetchAttendees(),
             fetchAbsentees(),
             fetchGuests(),
-            fetchMatchesExist(), // 💡 대진표 존재 여부 조회 추가
+            fetchMatchesExist(),
         ]).finally(() => setLoading(false));
     }, [fetchDetail, fetchMyAttendance, fetchAttendees, fetchAbsentees, fetchGuests, fetchMatchesExist]);
 
@@ -289,7 +284,6 @@ export default function ActivityVotePage() {
         }
     };
 
-    // 등록 버튼 → 유효성 검사 후 확인 모달 열기 (등록 후 수정 불가 정책 안내)
     const openGuestConfirm = () => {
         if (!guestName.trim() || !guestGender || !guestLevel) {
             showToast('이름, 성별, 실력을 모두 입력해 주세요.', 'error');
@@ -352,7 +346,6 @@ export default function ActivityVotePage() {
                 <h1 className="text-2xl sm:text-3xl font-black text-slate-800 break-keep">{activity.name}</h1>
             </div>
 
-            {/* 💡 모바일 화면 깨짐 현상 수정을 위한 그리드 반응형 및 flex 설정 변경 */}
             <div className="bg-[#F2F8E1] p-5 sm:p-6 rounded-2xl grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-y-6 sm:gap-x-8">
                 <InfoItem icon={<MapPin className="w-5 h-5 text-[#5b6b0f]" />} label="장소" value={activity.location} />
                 <InfoItem icon={<Clock className="w-5 h-5 text-[#5b6b0f]" />} label="시간" value={activity.activityTime} />
@@ -394,7 +387,7 @@ export default function ActivityVotePage() {
                 )}
             </div>
 
-            {/* 💡 조건부 렌더링: 타입이 REGULAR이면서 대진 정보가 존재(hasMatches === true)할 때만 렌더링 */}
+            {/* 조건부 렌더링: 타입이 REGULAR이면서 대진 정보가 존재할 때만 렌더링 */}
             {activity.type === 'REGULAR' && hasMatches && (
                 <Link
                     href={`/activities/${voteId}/tournament`}
@@ -430,10 +423,13 @@ export default function ActivityVotePage() {
                     </span>
                 </div>
 
-                <div className="w-full h-8 bg-slate-100 rounded-lg overflow-hidden relative shadow-inner">
-                    <div className="h-full bg-[#A1C852] transition-all duration-700" style={{ width: `${attendanceRate}%` }} />
-                    <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-black drop-shadow-sm">{attendanceRate}%</span>
-                </div>
+                {/* 💡 FLASH(번개모임)가 아닐 때(REGULAR 등)에만 참가 % 게이지 표시 */}
+                {activity.type !== 'FLASH' && (
+                    <div className="w-full h-8 bg-slate-100 rounded-lg overflow-hidden relative shadow-inner">
+                        <div className="h-full bg-[#A1C852] transition-all duration-700" style={{ width: `${attendanceRate}%` }} />
+                        <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-black drop-shadow-sm">{attendanceRate}%</span>
+                    </div>
+                )}
 
                 {showAttending && (
                     <div className="bg-slate-50 rounded-2xl border border-gray-100 p-4 sm:p-6 mt-6 space-y-2">
@@ -479,10 +475,8 @@ export default function ActivityVotePage() {
                     {absentees.length}명
                     </span>
                 </div>
-                <div className="w-full h-8 bg-slate-100 rounded-lg overflow-hidden relative shadow-inner">
-                    <div className="h-full bg-slate-400 transition-all duration-700" style={{ width: `${absentRate}%` }} />
-                    <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-black drop-shadow-sm">{absentRate}%</span>
-                </div>
+
+                {/* 💡 불참 % 게이지는 항상 숨김 처리 */}
 
                 {showAbsent && (
                     <div className="bg-slate-50 rounded-2xl border border-gray-100 p-4 sm:p-6 mt-6 space-y-2">
@@ -699,7 +693,7 @@ export default function ActivityVotePage() {
     );
 }
 
-// 정보 아이템 컴포넌트 (모바일 레이아웃 및 lucide-react 적용 완료)
+// 정보 아이템 컴포넌트
 function InfoItem({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
     return (
         <div className="flex items-start gap-3 w-full">
