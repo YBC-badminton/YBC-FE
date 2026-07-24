@@ -188,7 +188,7 @@ export default function YBCMainPage() {
           data = response.data.data;
         }
 
-        // 활동 날짜순 오름차순 정렬 (가까운 날짜부터, ISO 문자열이라 문자열 비교로 충분)
+        // 활동 날짜순 오름차순 정렬 (가까운 날짜부터)
         data.sort((a: VoteData, b: VoteData) =>
           (a.activityDate ?? "").localeCompare(b.activityDate ?? ""),
         );
@@ -221,7 +221,6 @@ export default function YBCMainPage() {
           <img
             src="/images/background.png"
             alt="양배추 배드민턴 배경"
-            // object-bottom을 유지하되, 컨테이너 높이가 넉넉해져서 상단이 잘리지 않습니다.
             className="w-full h-full object-cover object-bottom"
           />
         </div>
@@ -261,8 +260,6 @@ export default function YBCMainPage() {
         </div>
 
         {/* 2. 캐릭터 하단 배치 영역 (z-5) */}
-        {/* mt-auto로 콘텐츠(버튼) 아래 하단 밴드에 정상 흐름으로 배치 → 어떤 화면비에서도 버튼과 겹치지 않음.
-            flex justify-between + clamp() 너비로 마이너스 오프셋 없이 화면 안쪽에 균등 배치 → 잘림도 없음. */}
         <div className="relative z-[5] mt-auto w-full max-w-screen-2xl mx-auto px-3 sm:px-8 lg:px-12 flex items-end justify-between gap-2 sm:gap-3 pointer-events-none">
           {/* [왼쪽 캐릭터] 서서 라켓 들고 손 흔드는 양배추 */}
           <div className="shrink-0 w-[clamp(84px,24vw,250px)] transition-all duration-300">
@@ -296,26 +293,22 @@ export default function YBCMainPage() {
       {/* ── 동아리 소개 ──────────────────────────────────── */}
       <section className="w-full bg-gradient-to-b from-[#fefff4] to-[#ffffff] pt-6 pb-16 sm:pt-36 sm:pb-24">
         <div className="max-w-screen-lg mx-auto px-6 flex flex-col items-center text-center gap-6">
-          {/* 타이틀 명 (Figma 전용 폰트 스타일 및 시그니처 컬러 반영) */}
           <h2 className="text-[26px] sm:text-[50px] font-display text-[#5b6b0f] break-keep">
             YBC badminton club
           </h2>
 
-          {/* 소개 텍스트 본문 (GET / clubIntroduction, 줄바꿈 단위로 문단 렌더링) */}
           <div className="text-base sm:text-[18px] font-normal text-[#484848] leading-[1.5] max-w-2xl space-y-1.5">
             {home.clubIntroduction.split("\n").map((line, i) => (
               <p key={i}>{line}</p>
             ))}
           </div>
 
-          {/* 하단 카드 레이아웃 영역 (모바일 그리드, 데스크탑 플렉스) */}
           <div className="grid grid-cols-2 sm:flex sm:flex-row items-center justify-center gap-4 sm:gap-6 mt-10 w-full max-w-4xl">
-            {/* 1. 동아리 실제 활동 사진 블롭 카드 (초록 배경) */}
+            {/* 1. 동아리 실제 활동 사진 블롭 카드 */}
             <div
               className="relative col-span-2 place-self-center w-full sm:flex-[1.3] max-w-[380px] sm:max-w-none min-h-[180px] sm:min-h-[220px] bg-[#93C54B] flex items-center justify-center text-white/90 font-bold text-sm sm:text-base px-8 text-center shadow-md overflow-hidden transition-transform hover:scale-[1.02]"
               style={{ borderRadius: "28% 72% 38% 62% / 45% 36% 64% 55%" }}
             >
-              {/* GET / activityImageUrl — 있으면 실제 사진(블롭을 꽉 채움), 없으면 안내 문구 */}
               {home.activityImageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -328,7 +321,7 @@ export default function YBCMainPage() {
               )}
             </div>
 
-            {/* 2. 정기 활동 블롭 카드 (연두빛 틴트 배경) */}
+            {/* 2. 정기 활동 블롭 카드 */}
             <div
               className="col-span-1 w-full sm:flex-1 min-h-[160px] sm:min-h-[220px] bg-[#E8F5E9] flex flex-col items-center justify-center gap-2 px-2 sm:px-6 text-center shadow-sm transition-transform hover:scale-[1.02]"
               style={{ borderRadius: "62% 38% 43% 57% / 46% 54% 46% 54%" }}
@@ -346,7 +339,7 @@ export default function YBCMainPage() {
               </p>
             </div>
 
-            {/* 3. 부원 수 블롭 카드 (연한 그레이시 그린 배경) */}
+            {/* 3. 부원 수 블롭 카드 */}
             <div
               className="col-span-1 w-full sm:flex-1 min-h-[160px] sm:min-h-[220px] bg-[#EDF1EC] flex flex-col items-center justify-center gap-2 px-2 sm:px-6 text-center shadow-sm transition-transform hover:scale-[1.02]"
               style={{ borderRadius: "44% 56% 42% 58% / 55% 45% 55% 45%" }}
@@ -382,7 +375,6 @@ export default function YBCMainPage() {
         </div>
 
         <div className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-          {/* 3번째 카드 뒤에서 빼꼼 나오는 마스코트 (모바일 숨김) */}
           <img
             src="/images/mascot-peek.svg"
             alt=""
@@ -410,7 +402,6 @@ export default function YBCMainPage() {
                 vote={vote}
                 themeIndex={idx}
                 isLoggedIn={!!user}
-                // 포커스(=마우스 오버, 미오버 시 첫 카드)된 카드가 테두리+셔틀콕을 함께 가져간다
                 focused={hoveredIdx === null ? idx === 0 : hoveredIdx === idx}
                 onHoverChange={(hovering) =>
                   setHoveredIdx(hovering ? idx : null)
@@ -433,7 +424,6 @@ export default function YBCMainPage() {
         id="apply-section"
         className="relative w-full mt-10 pt-20 sm:pt-28 pb-6 overflow-hidden bg-gradient-to-b from-[#E3EDA9] to-[#F8FAF3] sm:rounded-t-[36px] md:rounded-t-[48px]"
       >
-        {/* 0. 상단 파도치는 디자인 (SVG Shape Divider) */}
         <div className="absolute top-0 left-0 w-full overflow-hidden leading-[0] z-10 pointer-events-none">
           <svg
             viewBox="0 0 1200 120"
@@ -447,8 +437,6 @@ export default function YBCMainPage() {
           </svg>
         </div>
 
-        {/* 1. 뒷배경 코트 이미지 */}
-        {/* 모바일에서는 복잡성을 줄이기 위해 투명도를 더 낮추거나 숨기고, 데스크톱에서 선명하게 보이도록 조정 */}
         <div className="absolute inset-0 z-0 pointer-events-none flex justify-end">
           <img
             src="/images/court-bg.svg"
@@ -457,7 +445,6 @@ export default function YBCMainPage() {
           />
         </div>
 
-        {/* 2. 지원하기 좌측 텍스트 콘텐츠 */}
         <div className="relative z-10 max-w-screen-xl mx-auto px-6 sm:px-16 flex flex-col justify-start min-h-[200px] md:min-h-[300px] mt-4">
           <h2 className="text-[28px] sm:text-[40px] font-bold text-ink mb-4 sm:mb-5">
             지원하기
@@ -473,12 +460,9 @@ export default function YBCMainPage() {
           </Link>
         </div>
 
-        {/* 3. 하단 반투명 푸터 박스 (모바일 반응형 완벽 적용) */}
         <div className="relative z-20 w-full max-w-screen-4xl mx-auto px-4 sm:px-6 mt-12 md:mt-16">
           <div className="bg-[#F8FAF3]/85 backdrop-blur-md rounded-[28px] sm:rounded-[36px] p-7 sm:p-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-8 md:gap-10 shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-white/50">
-            {/* 좌측(모바일 상단) 정보 영역 */}
             <div className="flex flex-col gap-6 w-full md:w-auto">
-              {/* 로고 & 모바일 전용 인스타그램 아이콘 */}
               <div className="flex justify-between items-center w-full">
                 <img
                   src="/images/logo.png"
@@ -486,7 +470,6 @@ export default function YBCMainPage() {
                   className="h-6 sm:h-7 object-contain"
                 />
 
-                {/* 모바일 화면에서만 우측에 나타나는 인스타그램 버튼 */}
                 <a
                   href="https://www.instagram.com/ybc_badmintonclub/"
                   target="_blank"
@@ -498,7 +481,6 @@ export default function YBCMainPage() {
                 </a>
               </div>
 
-              {/* 연락처 정보 */}
               <div className="flex flex-col gap-2.5 text-[16px] font-medium text-[#626262]">
                 <a
                   href="mailto:ybc.since240120@gmail.com"
@@ -510,9 +492,7 @@ export default function YBCMainPage() {
               </div>
             </div>
 
-            {/* 우측(모바일 하단) 약관 및 저작권 영역 */}
             <div className="flex flex-col items-start md:items-end gap-6 w-full md:w-auto">
-              {/* 데스크톱 화면에서만 우측 상단에 나타나는 인스타그램 버튼 */}
               <a
                 href="https://www.instagram.com/ybc_badmintonclub/"
                 target="_blank"
@@ -523,7 +503,6 @@ export default function YBCMainPage() {
                 <InstagramIcon className="w-4.5 h-4.5" />
               </a>
 
-              {/* 하단 텍스트 (모바일: 좌측 정렬 / 데스크톱: 우측 정렬) */}
               <div className="flex flex-col items-start md:items-end gap-2 text-[13px] font-bold text-gray-400 w-full">
                 <a
                   href="/policy/privacy"
@@ -541,7 +520,6 @@ export default function YBCMainPage() {
           </div>
         </div>
 
-        {/* 4. 코트를 바라보는 뒷모습 캐릭터 (모바일에서는 숨김 처리) */}
         <div className="absolute left-[50%] sm:left-[45%] bottom-[160px] sm:bottom-[180px] w-[160px] sm:w-[350px] z-30 pointer-events-none transform -translate-x-1/2 drop-shadow-lg hidden md:block">
           <img
             src="/images/character-back.svg"
@@ -550,13 +528,11 @@ export default function YBCMainPage() {
           />
         </div>
 
-        {/* 5. 우측 하단 플로팅 지원하기 버튼 (FAB, 스크롤 시 화면 고정) */}
         <div className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-50 block">
           <Link
             href="/apply"
             className="relative group flex flex-col items-center"
           >
-            {/* 셔틀콕 데코레이션 */}
             <div className="absolute -top-6 right-2 w-10 h-10 pointer-events-none drop-shadow-sm group-hover:-translate-y-1.5 transition-transform duration-300">
               <img
                 src="/images/shuttlecock2.svg"
@@ -564,7 +540,6 @@ export default function YBCMainPage() {
                 className="w-full h-full object-contain"
               />
             </div>
-            {/* 동그란 버튼 본체 */}
             <button
               style={{ borderRadius: "70% 31% 60% 50% / 35% 30% 60% 70%" }}
               className="bg-[#93C54B] text-white text-[13px] font-black w-[68px] h-[68px] rounded-full shadow-lg border-[3px] border-white flex items-center justify-center hover:bg-[#81b23c] active:scale-95 transition-all"
@@ -578,7 +553,6 @@ export default function YBCMainPage() {
   );
 }
 
-/* 활동일까지 남은 일수를 D-day 배지 문구로 변환 (D-0 → "오늘", 지난 날짜 → "종료") */
 function getDDayLabel(activityDate?: string): string {
   if (!activityDate) return "";
   const [y, m, d] = activityDate.split("-").map(Number);
@@ -594,7 +568,6 @@ function getDDayLabel(activityDate?: string): string {
   return "종료";
 }
 
-/* 카드별 컬러 테마 (Figma: 22:743 초록 / 19:428 올리브 / 93:3793 골드) — 인덱스순으로 적용 */
 const CARD_THEMES = [
   {
     bg: "bg-[#eef7ec]",
@@ -641,7 +614,7 @@ function MeetingCard({
   const currentCount =
     vote.currentParticipantCount ?? vote.attendance?.currentAttendees ?? 0;
   const maxCount = vote.capacity ?? vote.attendance?.totalParticipants ?? 0;
-  const hasCapacity = maxCount > 0; // FLASH(번개)는 정원이 없어 0으로 옴
+  const hasCapacity = maxCount > 0;
   const ratio = hasCapacity
     ? Math.min(Math.round((currentCount / maxCount) * 100), 100)
     : 0;
@@ -649,8 +622,9 @@ function MeetingCard({
   const dDayLabel = getDDayLabel(vote.activityDate);
 
   return (
+    /* 💡 수정된 부분: 바로 상세 투표 페이지로 이동하도록 URL 연결 (/activities/{voteId}) */
     <Link
-      href="/activities"
+      href={`/activities/${vote.voteId}`}
       onMouseEnter={() => onHoverChange(true)}
       onMouseLeave={() => onHoverChange(false)}
       className={`group relative rounded-[28px] p-6 sm:p-7 flex flex-col gap-5 transition-all hover:-translate-y-1 ${theme.bg} ${
@@ -911,7 +885,7 @@ function GymLocationSection() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-y-10 lg:gap-x-20 items-start">
-        {/* 1. 탭 메뉴 (모바일: 중앙 정렬, 상단 배치 / 데스크탑: 좌측 정렬) */}
+        {/* 1. 탭 메뉴 */}
         <div className="order-1 lg:order-1 flex justify-center lg:justify-start w-full">
           <div className="bg-white rounded-full shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-1.5 flex w-[90%] max-w-[320px] sm:max-w-none sm:w-auto border border-gray-100/50">
             {GYMS.map((g) => (
@@ -930,9 +904,8 @@ function GymLocationSection() {
           </div>
         </div>
 
-        {/* 2. 지도 영역 (모바일: 탭과 상세 정보 사이 / 데스크탑: 우측) */}
+        {/* 2. 지도 영역 */}
         <div className="order-2 lg:order-2 lg:col-start-2 lg:row-span-2 w-full relative flex justify-center">
-          {/* 지도 컨테이너 (유기적 Blob 테두리 곡선 적용) */}
           <div
             className="w-full sm:w-[90%] lg:w-full h-[320px] sm:h-[400px] relative overflow-hidden shadow-sm"
             style={{ borderRadius: "82% 18% 56% 44% / 29% 20% 80% 71%" }}
@@ -940,7 +913,6 @@ function GymLocationSection() {
             <GymMap gym={gym} sdkReady={sdkReady} />
           </div>
 
-          {/* 데코레이션 캐릭터 */}
           <div className="hidden lg:block absolute -bottom-8 -right-2 sm:-bottom-12 sm:-right-8 lg:-right-14 w-[160px] sm:w-[240px] lg:w-[280px] z-10 pointer-events-none drop-shadow-md transition-all">
             <img
               src="/images/character-map.svg"
@@ -950,7 +922,7 @@ function GymLocationSection() {
           </div>
         </div>
 
-        {/* 3. 상세 정보 및 버튼 영역 (모바일: 지도 아래 / 데스크탑: 좌측 탭 아래) */}
+        {/* 3. 상세 정보 및 버튼 영역 */}
         <div className="order-3 lg:order-3 lg:col-start-1 w-full flex flex-col gap-6 lg:mt-0 font-body">
           <h3 className="text-[20px] sm:text-[24px] font-bold text-black">
             {gym.name}
@@ -971,10 +943,8 @@ function GymLocationSection() {
             </p>
           </div>
 
-          {/* 구분선 */}
           <div className="h-px w-full bg-gray-100 my-1" />
 
-          {/* 지도 앱 바로가기 버튼 그룹 (모바일 환경 2x2 반응형 적용) */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
             {mapApps.map((m) => (
               <MapAppButton key={m.label} {...m} />
