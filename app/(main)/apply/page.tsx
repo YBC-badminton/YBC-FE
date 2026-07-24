@@ -298,7 +298,7 @@ export default function ApplyPage() {
               )}
             </div>
 
-            <div className="pt-2">
+            {/* <div className="pt-2">
               <div className="flex items-center gap-2 mb-2 sm:mb-3">
                 <Calendar className="w-4.5 h-4.5 text-[#A1C852]" />
                 <p className="font-bold text-[#1a1a1a] sm:text-slate-800">
@@ -352,7 +352,7 @@ export default function ApplyPage() {
                   * 표시 항목은 모두 필수 입력 항목입니다.
                 </li>
               </ul>
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -511,7 +511,7 @@ export default function ApplyPage() {
                 required
                 value={form.referralDetail}
                 onChange={(v) => handleChange("referralDetail", v)}
-                placeholder="예) 지인 소개"
+                placeholder="예) OOO 지인"
               />
             )}
 
