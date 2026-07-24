@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { Pencil, Trash2, X, Check } from "lucide-react";
 import api from "@/lib/axios";
+import { useAuth } from "@/context/AuthContext";
 
 // --- 서버 API 응답용 인터페이스 ---
 interface ServerGameItem {
@@ -16,7 +18,9 @@ interface ServerGameItem {
   winnerTeam: "TEAM1" | "TEAM2" | "DRAW";
   startTime: string;
   endTime?: string;
-  isCreator?: boolean; // 서버에서 반환하는 본인 작성 여부
+  memberId?: number;
+  writer?: string;
+  isCreator?: boolean;
 }
 
 interface ServerGamesResponse {
@@ -26,13 +30,15 @@ interface ServerGamesResponse {
 // --- 클라이언트 내부 화면 표현용 인터페이스 ---
 interface GameResult {
   id: string;
-  gameId: number; // 서버 게임 ID
+  gameId: number;
   title: string;
   teamA: { names: string[]; score: number };
   teamB: { names: string[]; score: number };
   targetScore: number;
   date: string;
-  isCreator: boolean; // 수정/삭제 권한 판단용
+  isCreator: boolean;
+  writer?: string;
+  memberId?: number;
 }
 
 // 날짜/시간 포맷 헬퍼 (서버 요청용)
@@ -46,7 +52,6 @@ const timeStr = () => {
   return `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
 };
 
-// "2026-07-19T14:00:00" -> "2026.07.19 14:00" 포맷 변환
 const formatDisplayDate = (isoStr: string) => {
   if (!isoStr) return "";
   try {
@@ -58,7 +63,6 @@ const formatDisplayDate = (isoStr: string) => {
   }
 };
 
-// 승자 판별: "A" | "B" | "DRAW"
 function getWinner(g: GameResult): "A" | "B" | "DRAW" {
   if (g.teamA.score > g.teamB.score) return "A";
   if (g.teamB.score > g.teamA.score) return "B";
@@ -72,12 +76,15 @@ interface GameState {
 }
 
 export default function BadmintonGameManager() {
+  const { user } = useAuth();
   const [games, setGames] = useState<GameResult[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [selectedGame, setSelectedGame] = useState<GameResult | null>(null);
+
   const [activeGame, setActiveGame] = useState<{
-    gameId: number; // 서버 게임 ID
-    startedAt: string; // 경기 시작 시각
+    gameId: number;
+    startedAt: string;
     title: string;
     teamA: string[];
     teamB: string[];
@@ -93,37 +100,50 @@ export default function BadmintonGameManager() {
   const [playerNames, setPlayerNames] = useState(["", "", "", ""]);
   const [targetScore, setTargetScore] = useState(25);
 
-  // 기록 수정 상태 (수정 중인 경기 id + 편집 중인 점수)
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editScoreA, setEditScoreA] = useState("");
-  const [editScoreB, setEditScoreB] = useState("");
-
   const scoreboardRef = useRef<HTMLDivElement>(null);
 
-  // --- 1. 미니게임 목록 조회 API 호출 ---
+  // --- 미니게임 목록 조회 ---
   const fetchGames = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get<ServerGamesResponse>("/games");
       const serverList = res.data?.games || [];
 
-      // 서버 응답 데이터를 화면 구조에 맞게 매핑
-      const formatted: GameResult[] = serverList.map((item) => ({
-        id: String(item.gameId),
-        gameId: item.gameId,
-        title: item.title,
-        teamA: {
-          names: [item.team1Member1, item.team1Member2].filter(Boolean),
-          score: item.team1Score ?? 0,
-        },
-        teamB: {
-          names: [item.team2Member1, item.team2Member2].filter(Boolean),
-          score: item.team2Score ?? 0,
-        },
-        targetScore: 25, // 기본값
-        date: formatDisplayDate(item.startTime),
-        isCreator: Boolean(item.isCreator), // 💡 생성자 권한이 명확히 true인 경우에만 허용
-      }));
+      const formatted: GameResult[] = serverList.map((item) => {
+        let checkCreator = false;
+        
+        if (typeof item.isCreator === "boolean") {
+          checkCreator = item.isCreator;
+        } else if (user) {
+          // 💡 user 객체 타입 단언 처리
+          const authUser = user as any;
+          if (item.memberId && authUser.memberId) {
+            checkCreator = Number(item.memberId) === Number(authUser.memberId);
+          } else if (item.writer) {
+            checkCreator =
+              item.writer === authUser.name || item.writer === authUser.nickname;
+          }
+        }
+
+        return {
+          id: String(item.gameId),
+          gameId: item.gameId,
+          title: item.title,
+          teamA: {
+            names: [item.team1Member1, item.team1Member2].filter(Boolean),
+            score: item.team1Score ?? 0,
+          },
+          teamB: {
+            names: [item.team2Member1, item.team2Member2].filter(Boolean),
+            score: item.team2Score ?? 0,
+          },
+          targetScore: 25,
+          date: formatDisplayDate(item.startTime),
+          isCreator: checkCreator,
+          writer: item.writer,
+          memberId: item.memberId,
+        };
+      });
 
       setGames(formatted);
     } catch (err) {
@@ -131,13 +151,13 @@ export default function BadmintonGameManager() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchGames();
   }, [fetchGames]);
 
-  // --- 전체 화면 및 가로 고정 핸들러 ---
+  // --- 전체 화면 및 가로 고정 ---
   const toggleFullscreen = async () => {
     if (!document.fullscreenElement) {
       try {
@@ -210,7 +230,6 @@ export default function BadmintonGameManager() {
       finalA > finalB ? activeGame.teamA : activeGame.teamB
     ).join(" & ");
 
-    // 서버에 경기 종료 반영 (PATCH /games/{gameId}/end)
     if (activeGame.gameId) {
       try {
         await api.patch(`/games/${activeGame.gameId}/end`, {
@@ -229,68 +248,7 @@ export default function BadmintonGameManager() {
     alert(`🏆 ${winnerNames} 승리! (${finalA} : ${finalB})`);
     if (document.fullscreenElement) document.exitFullscreen();
     setActiveGame(null);
-    fetchGames(); // 목록 새로고침
-  };
-
-  // --- 기록 수정 / 삭제 (본인 생성 경기만 가능) ---
-  const startEdit = (game: GameResult) => {
-    if (!game.isCreator) return;
-    setEditingId(game.id);
-    setEditScoreA(String(game.teamA.score));
-    setEditScoreB(String(game.teamB.score));
-  };
-
-  const cancelEdit = () => {
-    setEditingId(null);
-    setEditScoreA("");
-    setEditScoreB("");
-  };
-
-  const saveEdit = async (id: string) => {
-    const a = Number(editScoreA);
-    const b = Number(editScoreB);
-    if (Number.isNaN(a) || Number.isNaN(b) || a < 0 || b < 0) {
-      alert("점수를 올바르게 입력해주세요.");
-      return;
-    }
-
-    const target = games.find((g) => g.id === id);
-    if (!target || !target.isCreator) return;
-
-    // 서버에 완료 경기 수정 반영 (PATCH /games/{gameId})
-    try {
-      await api.patch(`/games/${target.gameId}`, {
-        title: target.title,
-        team1Member1: target.teamA.names[0],
-        team1Member2: target.teamA.names[1],
-        team2Member1: target.teamB.names[0],
-        team2Member2: target.teamB.names[1],
-        team1Score: a,
-        team2Score: b,
-      });
-      alert("수정되었습니다.");
-      cancelEdit();
-      fetchGames(); // 목록 재조회
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || "경기 수정 중 오류가 발생했습니다.";
-      alert(msg);
-    }
-  };
-
-  const deleteGame = async (game: GameResult) => {
-    if (!game.isCreator) return;
-
-    if (!confirm("이 기록을 삭제할까요?")) return;
-
-    try {
-      await api.delete(`/games/${game.gameId}`);
-      alert("삭제되었습니다.");
-      if (editingId === game.id) cancelEdit();
-      fetchGames(); // 목록 재조회
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || "삭제 중 오류가 발생했습니다.";
-      alert(msg);
-    }
+    fetchGames();
   };
 
   const handleCreateGame = async () => {
@@ -326,7 +284,8 @@ export default function BadmintonGameManager() {
       setHistory([]);
       setIsCreating(false);
     } catch (err: any) {
-      const msg = err?.response?.data?.message || "경기 생성 중 오류가 발생했습니다.";
+      const msg =
+        err?.response?.data?.message || "경기 생성 중 오류가 발생했습니다.";
       alert(msg);
     }
   };
@@ -358,20 +317,7 @@ export default function BadmintonGameManager() {
               onClick={() => setIsCreating(false)}
               className="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-400 rounded-full hover:bg-gray-100 transition"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
+              <X className="w-5 h-5" />
             </button>
           </div>
 
@@ -545,7 +491,7 @@ export default function BadmintonGameManager() {
         </section>
       )}
 
-      {/* 3. 최근 기록 (서버 API 조회 연동) */}
+      {/* 3. 최근 기록 */}
       {!activeGame && !isCreating && (
         <section className="mt-6 text-left">
           <div className="flex items-baseline justify-between mb-3 ml-1">
@@ -570,70 +516,30 @@ export default function BadmintonGameManager() {
               ) : (
                 games.map((game) => {
                   const winner = getWinner(game);
-                  const isEditing = editingId === game.id;
                   return (
                     <div
                       key={game.id}
-                      className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm"
+                      onClick={() => setSelectedGame(game)}
+                      className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-[#A1C852]/50 transition cursor-pointer"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="text-left min-w-0">
-                          <p className="text-sm font-black truncate">
+                          <p className="text-sm font-black truncate text-slate-800">
                             {game.title}
                           </p>
                           <p className="text-[10px] text-slate-400 font-medium">
-                            {game.date}
+                            {game.date} {game.writer && `· 작성자: ${game.writer}`}
                           </p>
                         </div>
-
-                        {/* 💡 작성자 본인(isCreator가 true)인 경우에만 버튼을 노출 */}
-                        {game.isCreator && (
-                          <div className="flex items-center gap-1 shrink-0">
-                            {isEditing ? (
-                              <>
-                                <button
-                                  onClick={() => saveEdit(game.id)}
-                                  className="px-3 py-1.5 rounded-lg bg-[#A1C852] text-white text-[11px] font-black active:scale-95 transition"
-                                >
-                                  저장
-                                </button>
-                                <button
-                                  onClick={cancelEdit}
-                                  className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-500 text-[11px] font-black active:scale-95 transition"
-                                >
-                                  취소
-                                </button>
-                              </>
-                            ) : (
-                              <>
-                                <button
-                                  onClick={() => startEdit(game)}
-                                  className="px-3 py-1.5 rounded-lg bg-slate-50 text-slate-500 text-[11px] font-black hover:bg-slate-100 active:scale-95 transition"
-                                >
-                                  수정
-                                </button>
-                                <button
-                                  onClick={() => deleteGame(game)}
-                                  className="px-3 py-1.5 rounded-lg bg-slate-50 text-red-400 text-[11px] font-black hover:bg-red-50 active:scale-95 transition"
-                                >
-                                  삭제
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        )}
                       </div>
 
-                      {/* 팀별 결과 (승리 팀 강조 + WIN 배지) */}
+                      {/* 팀별 결과 카드 */}
                       <div className="mt-3 flex items-stretch gap-2">
                         <TeamResult
                           names={game.teamA.names}
                           score={game.teamA.score}
                           won={winner === "A"}
                           accent="blue"
-                          editing={isEditing}
-                          editValue={editScoreA}
-                          onEditChange={setEditScoreA}
                         />
                         <div className="flex items-center text-slate-300 font-black text-sm">
                           VS
@@ -643,9 +549,6 @@ export default function BadmintonGameManager() {
                           score={game.teamB.score}
                           won={winner === "B"}
                           accent="red"
-                          editing={isEditing}
-                          editValue={editScoreB}
-                          onEditChange={setEditScoreB}
                         />
                       </div>
                     </div>
@@ -655,6 +558,25 @@ export default function BadmintonGameManager() {
             </div>
           )}
         </section>
+      )}
+
+      {/* 💡 리뷰 페이지의 isAuthor 검증 방식(!!user && user.name/nickname === writer)과 동일하게 전달 */}
+      {selectedGame && (
+        <GameDetailModal
+          game={selectedGame}
+          onClose={() => setSelectedGame(null)}
+          isAuthor={
+            !!user &&
+            (selectedGame.isCreator ||
+              user.name === selectedGame.writer ||
+              (user as any).nickname === selectedGame.writer ||
+              (!!selectedGame.memberId && (user as any).memberId === selectedGame.memberId))
+          }
+          onChanged={() => {
+            fetchGames();
+            setSelectedGame(null);
+          }}
+        />
       )}
 
       <style jsx global>{`
@@ -669,23 +591,17 @@ export default function BadmintonGameManager() {
   );
 }
 
-// 기록 카드의 팀별 결과 (승리 팀 강조 + 수정 모드 시 점수 인풋)
+// 목록용 간단한 팀 결과 컴포넌트
 function TeamResult({
   names,
   score,
   won,
   accent,
-  editing,
-  editValue,
-  onEditChange,
 }: {
   names: string[];
   score: number;
   won: boolean;
   accent: "blue" | "red";
-  editing: boolean;
-  editValue: string;
-  onEditChange: (v: string) => void;
 }) {
   const accentText = accent === "blue" ? "text-blue-500" : "text-red-500";
   return (
@@ -706,23 +622,313 @@ function TeamResult({
           </span>
         )}
       </div>
-      {editing ? (
-        <input
-          type="number"
-          inputMode="numeric"
-          value={editValue}
-          onChange={(e) => onEditChange(e.target.value)}
-          className="w-16 text-center font-black text-xl bg-white border border-slate-200 rounded-lg py-1 outline-none focus:ring-1 focus:ring-[#A1C852]"
-        />
-      ) : (
-        <p
-          className={`font-black text-2xl ${
-            won ? "text-[#5b6b0f]" : "text-slate-400"
-          }`}
+      <p
+        className={`font-black text-2xl ${
+          won ? "text-[#5b6b0f]" : "text-slate-400"
+        }`}
+      >
+        {score}
+      </p>
+    </div>
+  );
+}
+
+// 💡 미니게임 상세 모달
+function GameDetailModal({
+  game,
+  onClose,
+  isAuthor,
+  onChanged,
+}: {
+  game: GameResult;
+  onClose: () => void;
+  isAuthor: boolean;
+  onChanged: () => void;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  // 수정용 폼 상태
+  const [editTitle, setEditTitle] = useState(game.title);
+  const [editTeamA1, setEditTeamA1] = useState(game.teamA.names[0] || "");
+  const [editTeamA2, setEditTeamA1_2] = useState(game.teamA.names[1] || "");
+  const [editTeamB1, setEditTeamB1] = useState(game.teamB.names[0] || "");
+  const [editTeamB2, setEditTeamB2] = useState(game.teamB.names[1] || "");
+  const [editScoreA, setEditScoreA] = useState(String(game.teamA.score));
+  const [editScoreB, setEditScoreB] = useState(String(game.teamB.score));
+
+  const saveEdit = async () => {
+    const scoreA = Number(editScoreA);
+    const scoreB = Number(editScoreB);
+
+    if (!editTitle.trim()) {
+      alert("경기 제목을 입력해 주세요.");
+      return;
+    }
+    if (
+      Number.isNaN(scoreA) ||
+      Number.isNaN(scoreB) ||
+      scoreA < 0 ||
+      scoreB < 0
+    ) {
+      alert("점수를 올바르게 입력해 주세요.");
+      return;
+    }
+
+    setBusy(true);
+    try {
+      await api.patch(`/games/${game.gameId}`, {
+        title: editTitle.trim(),
+        team1Member1: editTeamA1.trim(),
+        team1Member2: editTeamA2.trim(),
+        team2Member1: editTeamB1.trim(),
+        team2Member2: editTeamB2.trim(),
+        team1Score: scoreA,
+        team2Score: scoreB,
+      });
+      alert("수정되었습니다.");
+      setIsEditing(false);
+      onChanged();
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message || "경기 수정 중 오류가 발생했습니다.";
+      alert(msg);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm("정말 이 기록을 삭제하시겠습니까?")) return;
+    try {
+      await api.delete(`/games/${game.gameId}`);
+      alert("삭제되었습니다.");
+      onChanged();
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message || "삭제 중 오류가 발생했습니다.";
+      alert(msg);
+    }
+  };
+
+  const winner = getWinner(game);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className="bg-white w-full max-w-xl p-6 sm:p-10 rounded-[28px] sm:rounded-[36px] relative shadow-2xl max-h-[90vh] overflow-y-auto animate-in zoom-in duration-200">
+        <button
+          onClick={onClose}
+          className="absolute top-6 right-6 sm:top-8 sm:right-8 text-slate-400 hover:text-slate-600 transition"
         >
-          {score}
-        </p>
-      )}
+          <X className="w-6 h-6" />
+        </button>
+
+        {/* 헤더 섹션 */}
+        <div className="mb-6 space-y-2 text-left">
+          <span className="inline-block px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-[#f2f8e1] text-[#5b6b0f]">
+            MINIGAME MATCH
+          </span>
+
+          {isEditing ? (
+            <div className="pt-2">
+              <label className="text-xs font-bold text-slate-400 block mb-1">
+                경기 제목
+              </label>
+              <input
+                type="text"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                className="w-full p-3 border border-gray-200 rounded-xl text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-[#A1C852]"
+              />
+            </div>
+          ) : (
+            <h2 className="text-xl sm:text-3xl font-black text-slate-800 break-keep pr-8">
+              {game.title}
+            </h2>
+          )}
+
+          <div className="flex justify-between items-center text-xs font-bold text-slate-400 pt-2">
+            <span>작성자: {game.writer || "익명"}</span>
+            <span>일시: {game.date}</span>
+          </div>
+        </div>
+
+        {/* 경기 본문 / 수정 영역 */}
+        <div className="py-6 border-y border-slate-100 my-4">
+          {isEditing ? (
+            <div className="space-y-5 text-left">
+              {/* 팀 A 수정 */}
+              <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
+                <label className="text-xs font-black text-blue-500 block mb-2">
+                  TEAM A (블루)
+                </label>
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <input
+                    type="text"
+                    placeholder="선수 1"
+                    value={editTeamA1}
+                    onChange={(e) => setEditTeamA1(e.target.value)}
+                    className="p-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold outline-none"
+                  />
+                  <input
+                    type="text"
+                    placeholder="선수 2"
+                    value={editTeamA2}
+                    onChange={(e) => setEditTeamA1_2(e.target.value)}
+                    className="p-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold outline-none"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-500">
+                    점수:
+                  </span>
+                  <input
+                    type="number"
+                    value={editScoreA}
+                    onChange={(e) => setEditScoreA(e.target.value)}
+                    className="w-20 p-2 bg-white border border-gray-200 rounded-xl text-center font-black text-lg outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* 팀 B 수정 */}
+              <div className="p-4 bg-red-50/50 rounded-2xl border border-red-100">
+                <label className="text-xs font-black text-red-500 block mb-2">
+                  TEAM B (레드)
+                </label>
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <input
+                    type="text"
+                    placeholder="선수 1"
+                    value={editTeamB1}
+                    onChange={(e) => setEditTeamB1(e.target.value)}
+                    className="p-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold outline-none"
+                  />
+                  <input
+                    type="text"
+                    placeholder="선수 2"
+                    value={editTeamB2}
+                    onChange={(e) => setEditTeamB2(e.target.value)}
+                    className="p-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold outline-none"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-500">
+                    점수:
+                  </span>
+                  <input
+                    type="number"
+                    value={editScoreB}
+                    onChange={(e) => setEditScoreB(e.target.value)}
+                    className="w-20 p-2 bg-white border border-gray-200 rounded-xl text-center font-black text-lg outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-3">
+              {/* 팀 A 결과 */}
+              <div
+                className={`flex-1 p-4 rounded-2xl text-center border ${
+                  winner === "A"
+                    ? "bg-[#f2f8e1] border-[#cfe39a]"
+                    : "bg-slate-50 border-transparent"
+                }`}
+              >
+                <div className="flex items-center justify-center gap-1 mb-1">
+                  <span className="text-xs font-black text-blue-500 truncate">
+                    {game.teamA.names.join(" & ") || "Team A"}
+                  </span>
+                  {winner === "A" && (
+                    <span className="bg-[#A1C852] text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">
+                      WIN
+                    </span>
+                  )}
+                </div>
+                <p
+                  className={`text-4xl font-black ${
+                    winner === "A" ? "text-[#5b6b0f]" : "text-slate-400"
+                  }`}
+                >
+                  {game.teamA.score}
+                </p>
+              </div>
+
+              <div className="font-black text-slate-300 text-lg">VS</div>
+
+              {/* 팀 B 결과 */}
+              <div
+                className={`flex-1 p-4 rounded-2xl text-center border ${
+                  winner === "B"
+                    ? "bg-[#f2f8e1] border-[#cfe39a]"
+                    : "bg-slate-50 border-transparent"
+                }`}
+              >
+                <div className="flex items-center justify-center gap-1 mb-1">
+                  <span className="text-xs font-black text-red-500 truncate">
+                    {game.teamB.names.join(" & ") || "Team B"}
+                  </span>
+                  {winner === "B" && (
+                    <span className="bg-[#A1C852] text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">
+                      WIN
+                    </span>
+                  )}
+                </div>
+                <p
+                  className={`text-4xl font-black ${
+                    winner === "B" ? "text-[#5b6b0f]" : "text-slate-400"
+                  }`}
+                >
+                  {game.teamB.score}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 푸터: 수정 및 삭제 버튼 (리뷰 페이지와 완전 동일한 구교) */}
+        {isAuthor && (
+          <div className="flex gap-3 justify-end pt-4">
+            {isEditing ? (
+              <>
+                <button
+                  onClick={() => setIsEditing(false)}
+                  disabled={busy}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-gray-100 text-slate-600 rounded-full font-bold hover:bg-gray-200 text-sm transition"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={saveEdit}
+                  disabled={busy}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-[#A1C852] text-white rounded-full font-bold hover:bg-[#93bd41] text-sm transition"
+                >
+                  <Check className="w-4 h-4" /> 저장
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-gray-100 text-slate-600 rounded-full font-bold hover:bg-gray-200 text-sm transition"
+                >
+                  <Pencil className="w-4 h-4" /> 수정
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-red-50 text-red-600 rounded-full font-bold hover:bg-red-100 text-sm transition"
+                >
+                  <Trash2 className="w-4 h-4" /> 삭제
+                </button>
+              </>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
