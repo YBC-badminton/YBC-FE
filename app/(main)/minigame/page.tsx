@@ -8,18 +8,18 @@ import { useAuth } from "@/context/AuthContext";
 // --- 서버 API 응답용 인터페이스 ---
 interface ServerGameItem {
   gameId: number;
+  memberId?: number;
   title: string;
+  writer?: string;
   team1Member1: string;
   team1Member2: string;
   team2Member1: string;
   team2Member2: string;
   team1Score: number;
   team2Score: number;
-  winnerTeam: "TEAM1" | "TEAM2" | "DRAW";
+  winnerTeam?: "TEAM1" | "TEAM2" | "DRAW";
   startTime: string;
   endTime?: string;
-  memberId?: number;
-  writer?: string;
   isCreator?: boolean;
 }
 
@@ -110,12 +110,11 @@ export default function BadmintonGameManager() {
       const serverList = res.data?.games || [];
 
       const formatted: GameResult[] = serverList.map((item) => {
+        // 💡 백엔드 응답 데이터와 현재 유저 정보(as any 단언) 비교로 권한 체크
         let checkCreator = false;
-        
         if (typeof item.isCreator === "boolean") {
           checkCreator = item.isCreator;
         } else if (user) {
-          // 💡 user 객체 타입 단언 처리
           const authUser = user as any;
           if (item.memberId && authUser.memberId) {
             checkCreator = Number(item.memberId) === Number(authUser.memberId);
@@ -560,7 +559,7 @@ export default function BadmintonGameManager() {
         </section>
       )}
 
-      {/* 💡 리뷰 페이지의 isAuthor 검증 방식(!!user && user.name/nickname === writer)과 동일하게 전달 */}
+      {/* 💡 리뷰 페이지 방식과 동일하게 isAuthor 전달 */}
       {selectedGame && (
         <GameDetailModal
           game={selectedGame}
@@ -570,7 +569,8 @@ export default function BadmintonGameManager() {
             (selectedGame.isCreator ||
               user.name === selectedGame.writer ||
               (user as any).nickname === selectedGame.writer ||
-              (!!selectedGame.memberId && (user as any).memberId === selectedGame.memberId))
+              (!!selectedGame.memberId &&
+                (user as any).memberId === selectedGame.memberId))
           }
           onChanged={() => {
             fetchGames();
@@ -591,7 +591,7 @@ export default function BadmintonGameManager() {
   );
 }
 
-// 목록용 간단한 팀 결과 컴포넌트
+// 목록용 팀 결과 카드
 function TeamResult({
   names,
   score,
@@ -633,7 +633,7 @@ function TeamResult({
   );
 }
 
-// 💡 미니게임 상세 모달
+// 💡 미니게임 상세/수정/삭제 모달
 function GameDetailModal({
   game,
   onClose,
@@ -890,7 +890,7 @@ function GameDetailModal({
           )}
         </div>
 
-        {/* 푸터: 수정 및 삭제 버튼 (리뷰 페이지와 완전 동일한 구교) */}
+        {/* 모달 하단 수정/삭제 버튼 */}
         {isAuthor && (
           <div className="flex gap-3 justify-end pt-4">
             {isEditing ? (
