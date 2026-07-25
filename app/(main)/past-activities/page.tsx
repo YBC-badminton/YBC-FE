@@ -197,10 +197,10 @@ export default function PastActivitiesPage() {
 
     return (
         <div className="min-h-screen flex flex-col font-sans select-none bg-white">
-            <section className="relative w-full -top-[96px] min-h-[700px] bg-gradient-to-b from-[#FDFFEE] to-[#E3EDA9] overflow-hidden flex flex-col items-center">
+            <section className="relative w-full -top-[96px] min-h-[600px] bg-gradient-to-b from-[#FDFFEE] to-[#E3EDA9] overflow-hidden flex flex-col items-center">
 
                 {/* 1. 메인 히어로 텍스트 및 캐릭터 영역 */}
-                <div className="relative z-10 flex flex-col items-center text-center mt-48 px-4 w-full max-w-4xl">
+                <div className="relative z-10 flex flex-col items-center text-center mt-28 px-4 w-full max-w-4xl">
                     
                     {/* 메인 타이틀 (GET /activities mainTitle) */}
                     <h1 className="text-3xl md:text-[42px] font-black text-[#445028] mb-6 tracking-tight break-keep">
@@ -215,7 +215,7 @@ export default function PastActivitiesPage() {
 
                         {/* 캐릭터 이미지 (절대 좌표로 우측에 자연스럽게 배치) */}
                         {/* 실제 프로젝트에 맞게 src 경로를 "/cabbage-character.png" 등으로 수정해주세요 */}
-                        <div className="absolute top-[80%] md:top-20 right-0 md:-right-6 w-40 md:w-52 z-20 pointer-events-none">
+                        <div className="absolute top-[80%] md:top-24 right-0 md:-right-6 w-40 md:w-44 z-20 pointer-events-none">
                             <img 
                                 src="images/character-left-re.svg" 
                                 alt="양배추 캐릭터" 
