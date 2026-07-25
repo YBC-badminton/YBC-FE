@@ -279,12 +279,12 @@ export default function YBCMainPage() {
             />
           </div>
 
-          {/* [오른쪽 캐릭터 + 셔틀콕] 점프하며 스매싱 시도하는 양배추 */}
+          {/* [오른쪽 캐릭터 + 셔틀콕] 점프하며 스매싱 시도하는 양배추 (살짝 흔들리는 모션) */}
           <div className="shrink-0 w-[clamp(88px,25vw,320px)] transition-all duration-300">
             <img
               src="/images/character-right.svg"
               alt="스매싱하는 양배추 캐릭터"
-              className="w-full h-auto object-contain drop-shadow-sm"
+              className="w-full h-auto object-contain drop-shadow-sm animate-sway origin-bottom"
             />
           </div>
         </div>

@@ -44,6 +44,27 @@
     /* Signature soft shadows */
     --shadow-pill: 0 4px 40px 0 rgba(0, 0, 0, 0.1);
     --shadow-card: 0 4px 17px 0 rgba(172, 172, 172, 0.25);
+
+    /* 메인 히어로 우측 캐릭터가 살짝 흔들리는 스매싱 모션 */
+    --animate-sway: sway 3.5s ease-in-out infinite;
+}
+
+/* 발 끝(하단 중앙)을 축으로 좌우로 조금씩 기울어지는 스윙 애니메이션 */
+@keyframes sway {
+    0%,
+    100% {
+        transform: rotate(-3deg);
+    }
+    50% {
+        transform: rotate(3deg);
+    }
+}
+
+/* 사용자가 모션 최소화를 선호하면 애니메이션을 끈다 (접근성) */
+@media (prefers-reduced-motion: reduce) {
+    .animate-sway {
+        animation: none !important;
+    }
 }
 
 body {
