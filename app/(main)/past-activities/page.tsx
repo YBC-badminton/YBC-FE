@@ -304,10 +304,6 @@ export default function PastActivitiesPage() {
                     
                     <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4 sm:gap-0">
                         <h2 className="text-2xl sm:text-[28px] font-black text-gray-900 tracking-tight">이벤트</h2>
-                        <p className="text-left sm:text-right text-[13px] sm:text-sm text-gray-500 font-medium leading-relaxed pt-8">
-                            코트 위 진검승부부터 코트 밖 1박 2일까지.<br />
-                            함께라서 더 특별한 순간들.
-                        </p>
                     </div>
 
                     <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -340,10 +336,6 @@ export default function PastActivitiesPage() {
                     
                     <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-end mb-12 gap-4 sm:gap-0">
                         <h2 className="text-2xl sm:text-[28px] font-black text-gray-900 tracking-tight">뒷풀이</h2>
-                        <p className="text-left sm:text-right text-[13px] sm:text-sm text-gray-500 font-medium leading-relaxed pt-8">
-                            운동이 끝나고 모여요!<br />
-                            땀 흘린 뒤 다 같이 모이는 즐거운 시간.
-                        </p>
                     </div>
 
                     <div className="w-full flex flex-col md:flex-row items-center gap-12 md:gap-20">
