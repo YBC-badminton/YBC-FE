@@ -206,7 +206,7 @@ export default function PastActivitiesPage() {
 
                         {/* 캐릭터 이미지 (절대 좌표로 우측에 자연스럽게 배치) */}
                         {/* 실제 프로젝트에 맞게 src 경로를 "/cabbage-character.png" 등으로 수정해주세요 */}
-                        <div className="absolute top-[80%] md:-top-8 md:translate-y-0 right-0 md:-right-8 w-40 md:w-60 z-20 pointer-events-none">
+                        <div className="absolute top-[80%] md:top-20 right-0 md:-right-6 w-40 md:w-52 z-20 pointer-events-none">
                             <img 
                                 src="images/character-left-re.svg" 
                                 alt="양배추 캐릭터" 
@@ -350,7 +350,7 @@ export default function PastActivitiesPage() {
                         </div>
 
                         {/* 우측: 텍스트 및 캐릭터 */}
-                        <div className="flex-1 relative pb-20 md:pb-0">
+                        <div className="flex-1 relative pb-20 md:pb-0 lg:pr-48">
                             <div className="space-y-6">
                                 {/* 뒷풀이 설명 (afterParties.description[]) — 첫 줄은 강조, 이후는 보조 스타일 */}
                                 {content.afterParties.description.map((line, i) => (
@@ -367,8 +367,8 @@ export default function PastActivitiesPage() {
                                 ))}
                             </div>
                             
-                            {/* 캐릭터 이미지 (우측 하단 절대 좌표 배치) */}
-                            <div className="absolute -bottom-8 right-0 md:-bottom-20 md:-right-10 w-28 md:w-60 z-10">
+                            {/* 캐릭터 이미지 (우측 하단 절대 좌표 배치 — 텍스트를 가리지 않도록 lg에서 우측 여백 확보) */}
+                            <div className="absolute -bottom-8 right-0 md:-bottom-20 md:-right-10 w-28 md:w-52 z-10">
                                 {/* 프로젝트 내 캐릭터 경로로 수정 */}
                                 <img 
                                     src="images/character-map.svg" 
