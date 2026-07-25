@@ -263,10 +263,10 @@ export default function PastActivitiesPage() {
                                 <h3 className="text-lg font-bold text-gray-900 mb-3">화요 운동</h3>
                                 <div className="space-y-2">
                                     <p className="text-[13px] text-gray-500 flex items-center gap-2 font-medium">
-                                        <MapPin className="w-4 h-4 text-gray-400" /> 마포구민체육센터
+                                        <MapPin className="w-4 h-4 text-gray-400" /> 마곡실내배드민턴장
                                     </p>
                                     <p className="text-[13px] text-gray-500 flex items-center gap-2 font-medium">
-                                        <Calendar className="w-4 h-4 text-gray-400" /> 매주 화요일 19:30 - 22:00
+                                        <Calendar className="w-4 h-4 text-gray-400" /> 매주 화요일 16:00 - 19:00
                                     </p>
                                 </div>
                             </div>
@@ -283,10 +283,10 @@ export default function PastActivitiesPage() {
                                 <h3 className="text-lg font-bold text-gray-900 mb-3">토요 운동</h3>
                                 <div className="space-y-2">
                                     <p className="text-[13px] text-gray-500 flex items-center gap-2 font-medium">
-                                        <MapPin className="w-4 h-4 text-gray-400" /> 마곡 실내배드민턴장
+                                        <MapPin className="w-4 h-4 text-gray-400" /> 망원나들목체육관
                                     </p>
                                     <p className="text-[13px] text-gray-500 flex items-center gap-2 font-medium">
-                                        <Calendar className="w-4 h-4 text-gray-400" /> 매주 토요일 14:00 - 18:00
+                                        <Calendar className="w-4 h-4 text-gray-400" /> 매주 토요일 13:30 - 15:30 또는 16:00 - 18:00
                                     </p>
                                 </div>
                             </div>
