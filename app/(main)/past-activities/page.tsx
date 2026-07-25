@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { MapPin, Calendar } from 'lucide-react';
 import api from "../../../lib/axios";
@@ -150,6 +150,15 @@ function InstagramIcon({ className = "" }: { className?: string }) {
 
 export default function PastActivitiesPage() {
     const [content, setContent] = useState<ActivitiesContent>(DEFAULT_ACTIVITIES);
+    // 페이지 진입 시 첫 번째 정기모임(ACTIVITY 01) 카드로 자동 스크롤 이동
+    const firstSectionRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const id = window.setTimeout(() => {
+            firstSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
+        return () => window.clearTimeout(id);
+    }, []);
 
     // 지난 활동 콘텐츠 조회 (GET /activities)
     useEffect(() => {
@@ -239,7 +248,7 @@ export default function PastActivitiesPage() {
                 {/* =========================================
                     ACTIVITY 01: 정기모임
                 ========================================= */}
-                <div className="w-full max-w-5xl flex flex-col items-center mb-32 px-4 sm:px-6">
+                <div ref={firstSectionRef} className="w-full max-w-5xl flex flex-col items-center mb-32 px-4 sm:px-6 scroll-mt-28">
                     <span className="bg-[#93C54B] text-white px-5 py-1.5 rounded-full text-xs font-black tracking-widest mb-10 shadow-sm">
                         ACTIVITY 01
                     </span>
