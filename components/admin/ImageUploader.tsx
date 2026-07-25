@@ -13,6 +13,8 @@ interface ImageUploaderProps {
     onError?: (message: string) => void;
     /** 미리보기 영역 높이 클래스 (기본 h-40) */
     heightClass?: string;
+    /** true면 높이 대신 1:1 정사각형 비율로 미리보기 (지난 활동 페이지 카드와 동일한 비율) */
+    square?: boolean;
     className?: string;
 }
 
@@ -21,8 +23,11 @@ export default function ImageUploader({
     onChange,
     onError,
     heightClass = 'h-40',
+    square = false,
     className = '',
 }: ImageUploaderProps) {
+    // square일 때는 너비 기준 정사각형(aspect-square), 아니면 기존 고정 높이
+    const boxSizeClass = square ? 'w-full aspect-square' : `w-full ${heightClass}`;
     const inputRef = useRef<HTMLInputElement>(null);
     const [isUploading, setIsUploading] = useState(false);
 
@@ -62,7 +67,7 @@ export default function ImageUploader({
                 className="hidden"
             />
             {value ? (
-                <div className={`relative w-full ${heightClass} rounded-xl overflow-hidden border border-gray-200 bg-slate-50 group`}>
+                <div className={`relative ${boxSizeClass} rounded-xl overflow-hidden border border-gray-200 bg-slate-50 group`}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={value} alt="업로드된 이미지" className="w-full h-full object-cover" />
                     {/* 이미지 변경은 "삭제 후 새로 업로드" 방식으로만 가능합니다. */}
@@ -87,7 +92,7 @@ export default function ImageUploader({
                     type="button"
                     onClick={() => inputRef.current?.click()}
                     disabled={isUploading}
-                    className={`w-full ${heightClass} rounded-xl border-2 border-dashed border-gray-300 bg-slate-50 hover:border-[#A1C852] hover:bg-[#f7f9f5] transition flex flex-col items-center justify-center gap-2 text-slate-400 disabled:opacity-60`}
+                    className={`${boxSizeClass} rounded-xl border-2 border-dashed border-gray-300 bg-slate-50 hover:border-[#A1C852] hover:bg-[#f7f9f5] transition flex flex-col items-center justify-center gap-2 text-slate-400 disabled:opacity-60`}
                 >
                     {isUploading ? (
                         <>

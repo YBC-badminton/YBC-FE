@@ -263,7 +263,7 @@ export default function PastActivitiesPage() {
                     <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* 화요 운동 카드 (이미지: regularMeeting.imageUrls[0]) */}
                         <div className="bg-white rounded-[32px] p-5 shadow-[0_8px_20px_rgb(0,0,0,0.13)] border border-gray-50 transition-transform hover:-translate-y-1 duration-300">
-                            <div className="w-full h-[200px] bg-gray-50 rounded-[24px] mb-6 overflow-hidden">
+                            <div className="w-full aspect-square bg-gray-50 rounded-[24px] mb-6 overflow-hidden">
                                 {content.regularMeeting.imageUrls[0] && (
                                     <img src={content.regularMeeting.imageUrls[0]} alt="화요 운동" className="w-full h-full object-cover rounded-[24px]" />
                                 )}
@@ -283,7 +283,7 @@ export default function PastActivitiesPage() {
 
                         {/* 토요 운동 카드 (이미지: regularMeeting.imageUrls[1]) */}
                         <div className="bg-white rounded-[32px] p-5 shadow-[0_8px_20px_rgb(0,0,0,0.13)] border border-gray-50 transition-transform hover:-translate-y-1 duration-300">
-                            <div className="w-full h-[200px] bg-gray-50 rounded-[24px] mb-6 overflow-hidden">
+                            <div className="w-full aspect-square bg-gray-50 rounded-[24px] mb-6 overflow-hidden">
                                 {content.regularMeeting.imageUrls[1] && (
                                     <img src={content.regularMeeting.imageUrls[1]} alt="토요 운동" className="w-full h-full object-cover rounded-[24px]" />
                                 )}
@@ -319,7 +319,7 @@ export default function PastActivitiesPage() {
                         {/* 이벤트 카드 (events[] → title·description·imageUrl) */}
                         {content.events.map((ev, i) => (
                             <div key={i} className="bg-white rounded-[32px] p-5 shadow-[0_8px_20px_rgb(0,0,0,0.13)] border border-gray-50 transition-transform hover:-translate-y-1 duration-300">
-                                <div className="w-full h-[200px] bg-gray-50 rounded-[24px] mb-6 overflow-hidden">
+                                <div className="w-full aspect-square bg-gray-50 rounded-[24px] mb-6 overflow-hidden">
                                     {ev.imageUrl && (
                                         <img src={ev.imageUrl} alt={ev.title} className="w-full h-full object-cover rounded-[24px]" />
                                     )}
