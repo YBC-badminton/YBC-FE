@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { MapPin, Calendar } from 'lucide-react';
 import api from "../../../lib/axios";
@@ -150,6 +150,15 @@ function InstagramIcon({ className = "" }: { className?: string }) {
 
 export default function PastActivitiesPage() {
     const [content, setContent] = useState<ActivitiesContent>(DEFAULT_ACTIVITIES);
+    // 페이지 진입 시 첫 번째 정기모임(ACTIVITY 01) 카드로 자동 스크롤 이동
+    const firstSectionRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const id = window.setTimeout(() => {
+            firstSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
+        return () => window.clearTimeout(id);
+    }, []);
 
     // 지난 활동 콘텐츠 조회 (GET /activities)
     useEffect(() => {
@@ -188,10 +197,10 @@ export default function PastActivitiesPage() {
 
     return (
         <div className="min-h-screen flex flex-col font-sans select-none bg-white">
-            <section className="relative w-full -top-[96px] min-h-[700px] bg-gradient-to-b from-[#FDFFEE] to-[#E3EDA9] overflow-hidden flex flex-col items-center">
+            <section className="relative w-full -top-[96px] min-h-[600px] bg-gradient-to-b from-[#FDFFEE] to-[#E3EDA9] overflow-hidden flex flex-col items-center">
 
                 {/* 1. 메인 히어로 텍스트 및 캐릭터 영역 */}
-                <div className="relative z-10 flex flex-col items-center text-center mt-48 px-4 w-full max-w-4xl">
+                <div className="relative z-10 flex flex-col items-center text-center mt-28 px-4 w-full max-w-4xl">
                     
                     {/* 메인 타이틀 (GET /activities mainTitle) */}
                     <h1 className="text-3xl md:text-[42px] font-black text-[#445028] mb-6 tracking-tight break-keep">
@@ -206,7 +215,7 @@ export default function PastActivitiesPage() {
 
                         {/* 캐릭터 이미지 (절대 좌표로 우측에 자연스럽게 배치) */}
                         {/* 실제 프로젝트에 맞게 src 경로를 "/cabbage-character.png" 등으로 수정해주세요 */}
-                        <div className="absolute top-[80%] md:-top-8 md:translate-y-0 right-0 md:-right-8 w-40 md:w-60 z-20 pointer-events-none">
+                        <div className="absolute top-[80%] md:top-24 right-0 md:-right-6 w-40 md:w-44 z-20 pointer-events-none">
                             <img 
                                 src="images/character-left-re.svg" 
                                 alt="양배추 캐릭터" 
@@ -239,7 +248,7 @@ export default function PastActivitiesPage() {
                 {/* =========================================
                     ACTIVITY 01: 정기모임
                 ========================================= */}
-                <div className="w-full max-w-5xl flex flex-col items-center mb-32 px-4 sm:px-6">
+                <div ref={firstSectionRef} className="w-full max-w-5xl flex flex-col items-center mb-32 px-4 sm:px-6 scroll-mt-28">
                     <span className="bg-[#93C54B] text-white px-5 py-1.5 rounded-full text-xs font-black tracking-widest mb-10 shadow-sm">
                         ACTIVITY 01
                     </span>
@@ -254,7 +263,7 @@ export default function PastActivitiesPage() {
                     <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* 화요 운동 카드 (이미지: regularMeeting.imageUrls[0]) */}
                         <div className="bg-white rounded-[32px] p-5 shadow-[0_8px_20px_rgb(0,0,0,0.13)] border border-gray-50 transition-transform hover:-translate-y-1 duration-300">
-                            <div className="w-full h-[200px] bg-gray-50 rounded-[24px] mb-6 overflow-hidden">
+                            <div className="w-full aspect-square bg-gray-50 rounded-[24px] mb-6 overflow-hidden">
                                 {content.regularMeeting.imageUrls[0] && (
                                     <img src={content.regularMeeting.imageUrls[0]} alt="화요 운동" className="w-full h-full object-cover rounded-[24px]" />
                                 )}
@@ -263,10 +272,10 @@ export default function PastActivitiesPage() {
                                 <h3 className="text-lg font-bold text-gray-900 mb-3">화요 운동</h3>
                                 <div className="space-y-2">
                                     <p className="text-[13px] text-gray-500 flex items-center gap-2 font-medium">
-                                        <MapPin className="w-4 h-4 text-gray-400" /> 마포구민체육센터
+                                        <MapPin className="w-4 h-4 text-gray-400" /> 마곡실내배드민턴장
                                     </p>
                                     <p className="text-[13px] text-gray-500 flex items-center gap-2 font-medium">
-                                        <Calendar className="w-4 h-4 text-gray-400" /> 매주 화요일 19:30 - 22:00
+                                        <Calendar className="w-4 h-4 text-gray-400" /> 매주 화요일 16:00 - 19:00
                                     </p>
                                 </div>
                             </div>
@@ -274,7 +283,7 @@ export default function PastActivitiesPage() {
 
                         {/* 토요 운동 카드 (이미지: regularMeeting.imageUrls[1]) */}
                         <div className="bg-white rounded-[32px] p-5 shadow-[0_8px_20px_rgb(0,0,0,0.13)] border border-gray-50 transition-transform hover:-translate-y-1 duration-300">
-                            <div className="w-full h-[200px] bg-gray-50 rounded-[24px] mb-6 overflow-hidden">
+                            <div className="w-full aspect-square bg-gray-50 rounded-[24px] mb-6 overflow-hidden">
                                 {content.regularMeeting.imageUrls[1] && (
                                     <img src={content.regularMeeting.imageUrls[1]} alt="토요 운동" className="w-full h-full object-cover rounded-[24px]" />
                                 )}
@@ -283,10 +292,10 @@ export default function PastActivitiesPage() {
                                 <h3 className="text-lg font-bold text-gray-900 mb-3">토요 운동</h3>
                                 <div className="space-y-2">
                                     <p className="text-[13px] text-gray-500 flex items-center gap-2 font-medium">
-                                        <MapPin className="w-4 h-4 text-gray-400" /> 마곡 실내배드민턴장
+                                        <MapPin className="w-4 h-4 text-gray-400" /> 망원나들목체육관
                                     </p>
                                     <p className="text-[13px] text-gray-500 flex items-center gap-2 font-medium">
-                                        <Calendar className="w-4 h-4 text-gray-400" /> 매주 토요일 14:00 - 18:00
+                                        <Calendar className="w-4 h-4 text-gray-400" /> 매주 토요일 13:30 - 15:30 또는 16:00 - 18:00
                                     </p>
                                 </div>
                             </div>
@@ -304,17 +313,13 @@ export default function PastActivitiesPage() {
                     
                     <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4 sm:gap-0">
                         <h2 className="text-2xl sm:text-[28px] font-black text-gray-900 tracking-tight">이벤트</h2>
-                        <p className="text-left sm:text-right text-[13px] sm:text-sm text-gray-500 font-medium leading-relaxed pt-8">
-                            코트 위 진검승부부터 코트 밖 1박 2일까지.<br />
-                            함께라서 더 특별한 순간들.
-                        </p>
                     </div>
 
                     <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* 이벤트 카드 (events[] → title·description·imageUrl) */}
                         {content.events.map((ev, i) => (
                             <div key={i} className="bg-white rounded-[32px] p-5 shadow-[0_8px_20px_rgb(0,0,0,0.13)] border border-gray-50 transition-transform hover:-translate-y-1 duration-300">
-                                <div className="w-full h-[200px] bg-gray-50 rounded-[24px] mb-6 overflow-hidden">
+                                <div className="w-full aspect-square bg-gray-50 rounded-[24px] mb-6 overflow-hidden">
                                     {ev.imageUrl && (
                                         <img src={ev.imageUrl} alt={ev.title} className="w-full h-full object-cover rounded-[24px]" />
                                     )}
@@ -340,10 +345,6 @@ export default function PastActivitiesPage() {
                     
                     <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-end mb-12 gap-4 sm:gap-0">
                         <h2 className="text-2xl sm:text-[28px] font-black text-gray-900 tracking-tight">뒷풀이</h2>
-                        <p className="text-left sm:text-right text-[13px] sm:text-sm text-gray-500 font-medium leading-relaxed pt-8">
-                            운동이 끝나고 모여요!<br />
-                            땀 흘린 뒤 다 같이 모이는 즐거운 시간.
-                        </p>
                     </div>
 
                     <div className="w-full flex flex-col md:flex-row items-center gap-12 md:gap-20">
@@ -358,7 +359,7 @@ export default function PastActivitiesPage() {
                         </div>
 
                         {/* 우측: 텍스트 및 캐릭터 */}
-                        <div className="flex-1 relative pb-20 md:pb-0">
+                        <div className="flex-1 relative pb-20 md:pb-0 lg:pr-48">
                             <div className="space-y-6">
                                 {/* 뒷풀이 설명 (afterParties.description[]) — 첫 줄은 강조, 이후는 보조 스타일 */}
                                 {content.afterParties.description.map((line, i) => (
@@ -375,8 +376,8 @@ export default function PastActivitiesPage() {
                                 ))}
                             </div>
                             
-                            {/* 캐릭터 이미지 (우측 하단 절대 좌표 배치) */}
-                            <div className="absolute -bottom-8 right-0 md:-bottom-20 md:-right-10 w-28 md:w-60 z-10">
+                            {/* 캐릭터 이미지 (우측 하단 절대 좌표 배치 — 텍스트를 가리지 않도록 lg에서 우측 여백 확보) */}
+                            <div className="absolute -bottom-8 right-0 md:-bottom-20 md:-right-10 w-28 md:w-52 z-10">
                                 {/* 프로젝트 내 캐릭터 경로로 수정 */}
                                 <img 
                                     src="images/character-map.svg" 

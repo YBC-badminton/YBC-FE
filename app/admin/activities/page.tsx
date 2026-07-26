@@ -264,7 +264,7 @@ export default function AdminActivitiesPage() {
                                         value={url}
                                         onChange={(newUrl) => updateMeetingImage(i, newUrl)}
                                         onError={onError}
-                                        heightClass="h-32"
+                                        square
                                     />
                                 ))}
                             </div>
@@ -293,7 +293,7 @@ export default function AdminActivitiesPage() {
                                         value={ev.imageUrl}
                                         onChange={(url) => updateEvent(i, { imageUrl: url })}
                                         onError={onError}
-                                        heightClass="h-36"
+                                        square
                                     />
                                 </div>
                                 <div className="flex-1 space-y-3">
