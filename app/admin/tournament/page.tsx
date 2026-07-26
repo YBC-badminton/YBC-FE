@@ -17,7 +17,7 @@ interface Participant {
 
 interface AdminActivity {
     voteId: number;
-    matchId?: number; // 리스트에서 넘겨받은 matchId
+    matchId?: number;
     title: string;
     activityDay: string;
     activityDate: string;
@@ -26,11 +26,11 @@ interface AdminActivity {
     attendance: { currentAttendees: number; currentGuests: number; totalParticipants: number };
 }
 
-// 백엔드 명세(AdminMatchGameRequest): team1/team2는 {participantType, participantId} 객체 2개씩
 interface MatchParticipantPayload {
     participantType: 'MEMBER' | 'GUEST';
     participantId: number;
 }
+
 interface ServerMatch {
     matchNumber: number;
     team1: MatchParticipantPayload[];
@@ -44,36 +44,24 @@ interface CourtMatchGroup {
 
 type BracketRow = (number | null)[];
 
-// ============================================================================
-// 2. 헬퍼 함수
-// ============================================================================
 const createEmptyRow = (): BracketRow => [null, null, null, null];
 
-// ============================================================================
-// 3. 메인 컴포넌트
-// ============================================================================
 export default function TournamentPage() {
     const { showToast } = useToast();
 
-    // --- 앱 전체 상태 ---
+    // --- 상태 ---
     const [view, setView] = useState<'LIST' | 'EDITOR'>('LIST');
     const [loading, setLoading] = useState(false);
     const [activities, setActivities] = useState<AdminActivity[]>([]);
 
-    // --- 에디터 전용 상태 ---
     const [activeVoteId, setActiveVoteId] = useState<number | null>(null);
-    const [activeMatchId, setActiveMatchId] = useState<number | null>(null); // PATCH 대상 matchId
-    const [isEditMode, setIsEditMode] = useState(false); // 편성 완료 활동 수정 여부 (matchRegistered 기준)
+    const [activeMatchId, setActiveMatchId] = useState<number | null>(null);
+    const [isEditMode, setIsEditMode] = useState(false);
     const [activityTitle, setActivityTitle] = useState('');
     const [activeCourt, setActiveCourt] = useState<number>(1);
     
-    // 전체 참가자 풀
     const [participants, setParticipants] = useState<Participant[]>([]);
-    
-    // 코트별 명단
     const [rosters, setRosters] = useState<Record<number, number[]>>({ 1: [], 2: [], 3: [], 4: [] });
-    
-    // 코트별 대진표
     const [brackets, setBrackets] = useState<Record<number, BracketRow[]>>({
         1: [createEmptyRow(), createEmptyRow()],
         2: [createEmptyRow(), createEmptyRow()],
@@ -81,12 +69,9 @@ export default function TournamentPage() {
         4: [createEmptyRow(), createEmptyRow()]
     });
 
-    // 터치 배치용 ID
     const [selectedId, setSelectedId] = useState<number | null>(null);
 
-    // ============================================================================
-    // 데이터 로드
-    // ============================================================================
+    // 활동 목록 로드
     const fetchActivities = useCallback(async () => {
         setLoading(true);
         try {
@@ -102,7 +87,7 @@ export default function TournamentPage() {
 
     useEffect(() => { fetchActivities(); }, [fetchActivities]);
 
-    // 대진 조회 및 에디터 진입
+    // 대진 조회 및 에디터 진입 (수정완료)
     const handleOpenEditor = async (activity: AdminActivity) => {
         setLoading(true);
         try {
@@ -119,51 +104,58 @@ export default function TournamentPage() {
 
             setActiveVoteId(activity.voteId);
             setActivityTitle(activity.title);
-            // 편성 완료 활동을 여는 것은 곧 "수정"이다 → 목록의 matchRegistered를 신뢰
             setIsEditMode(!!activity.matchRegistered);
 
-            // 1. 응답 데이터 형태 정규화
-            const rawMatchGroups = data.matches || data.matchGroups || data.courtMatches || [];
-
-            // PATCH 대상 matchId를 응답의 여러 위치에서 최대한 찾아본다
-            const firstGroup = Array.isArray(rawMatchGroups) ? rawMatchGroups[0] : undefined;
-            const resolvedMatchId =
-                data.matchId ?? data.id ?? data.match?.matchId ?? data.match?.id ??
-                firstGroup?.matchId ?? firstGroup?.id ?? activity.matchId ?? null;
+            const resolvedMatchId = data.matchId ?? activity.matchId ?? null;
             setActiveMatchId(resolvedMatchId !== null ? Number(resolvedMatchId) : null);
 
-            const allMatches: any[] = [];
+            // 1. 응답 데이터를 코트별로 구조화
+            const rawCourtMatches = data.courtMatches || data.matches || data.matchGroups || [];
+            const allMatchesWithCourt: { courtNumber: number; matchNumber: number; team1: any[]; team2: any[] }[] = [];
 
-            rawMatchGroups.forEach((item: any, index: number) => {
-                if (item.team1 || item.team2) {
-                    let cNum = item.courtNumber;
-                    if (cNum === undefined || cNum === null) {
-                        cNum = Math.floor(index / 2) + 1;
-                    }
-                    allMatches.push({
-                        courtNumber: cNum,
-                        matchNumber: item.matchNumber,
-                        team1: item.team1,
-                        team2: item.team2
-                    });
-                } else if (item.courtMatches || item.matches) {
+            // 💡 백엔드가 courtMatches 1차원 배열로 내려줄 때 (matchNumber가 1로 돌아갈 때마다 코트 번호 증가)
+            let currentCourtNum = 1;
+            
+            rawCourtMatches.forEach((item: any, index: number) => {
+                // 배열 항목 자체가 코트 그룹인 경우 ({ courtNumber: 1, courtMatches: [...] })
+                if (item.courtMatches || item.matches) {
                     const cNum = item.courtNumber || item.courtId || (index + 1);
-                    const nestedMatches = item.courtMatches || item.matches || [];
-                    nestedMatches.forEach((m: any, mIdx: number) => {
-                        allMatches.push({
+                    const nested = item.courtMatches || item.matches || [];
+                    nested.forEach((m: any, mIdx: number) => {
+                        allMatchesWithCourt.push({
                             courtNumber: cNum,
-                            matchNumber: m.matchNumber || mIdx + 1,
-                            team1: m.team1,
-                            team2: m.team2
+                            matchNumber: m.matchNumber || (mIdx + 1),
+                            team1: m.team1 || [],
+                            team2: m.team2 || []
                         });
+                    });
+                } 
+                // 배열 항목이 개별 매치인 경우 ({ matchNumber: 1, team1: [...], team2: [...] })
+                else if (item.team1 || item.team2) {
+                    let cNum = item.courtNumber;
+                    
+                    // courtNumber 필드가 유효하지 않을 때, matchNumber가 1이면 다음 코트로 변경
+                    if (cNum === undefined || cNum === null) {
+                        if (index > 0 && item.matchNumber === 1) {
+                            currentCourtNum++;
+                        }
+                        cNum = currentCourtNum;
+                    }
+                    
+                    allMatchesWithCourt.push({
+                        courtNumber: Number(cNum),
+                        matchNumber: item.matchNumber || 1,
+                        team1: item.team1 || [],
+                        team2: item.team2 || []
                     });
                 }
             });
 
-            // 2. 전체 참가자 추출
+            // 2. 전체 참가자(Participant) 수집
             const uniqueParticipants = new Map<number, Participant>();
             const rawParticipants = data.participants || data.participantList || [];
             
+            // 기존 참가자 명단 저장
             rawParticipants.forEach((p: any) => {
                 const id = p.participantId ?? p.id ?? p.memberId;
                 if (id !== undefined && id !== null) {
@@ -176,19 +168,18 @@ export default function TournamentPage() {
                 }
             });
 
-            let tempId = -1000;
-            allMatches.forEach((match: any) => {
-                const teams = [...(Array.isArray(match.team1) ? match.team1 : []), ...(Array.isArray(match.team2) ? match.team2 : [])];
-                teams.forEach((t: any) => {
-                    if (t && t.name) {
-                        const exists = Array.from(uniqueParticipants.values()).find(p => p.name === t.name);
-                        if (!exists) {
-                            const newId = t.participantId ?? t.id ?? tempId--;
-                            uniqueParticipants.set(Number(newId), {
-                                participantId: Number(newId),
-                                name: t.name,
-                                gender: (t.gender === 'FEMALE' || t.gender === '여') ? 'FEMALE' : 'MALE',
-                                participantType: t.participantType || 'MEMBER'
+            // 매치에 포함된 인원도 수집 (명단에 누락된 경우 대비)
+            allMatchesWithCourt.forEach((match) => {
+                const members = [...match.team1, ...match.team2];
+                members.forEach((m: any) => {
+                    if (m && (m.participantId || m.id)) {
+                        const id = Number(m.participantId ?? m.id);
+                        if (!uniqueParticipants.has(id)) {
+                            uniqueParticipants.set(id, {
+                                participantId: id,
+                                name: m.name || `참가자_${id}`,
+                                gender: (m.gender === 'FEMALE' || m.gender === '여') ? 'FEMALE' : 'MALE',
+                                participantType: m.participantType || 'MEMBER'
                             });
                         }
                     }
@@ -198,49 +189,44 @@ export default function TournamentPage() {
             const finalParticipants = Array.from(uniqueParticipants.values());
             setParticipants(finalParticipants);
 
-            // 3. 대진표 및 로스터 화면 반영
+            // 3. 코트별 로스터 및 대진표 세팅
             const newRosters: Record<number, number[]> = { 1: [], 2: [], 3: [], 4: [] };
             const newBrackets: Record<number, BracketRow[]> = { 1: [], 2: [], 3: [], 4: [] };
 
             const resolveId = (member: any) => {
                 if (!member) return null;
-                // 백엔드가 객체를 줬을 경우
                 if (typeof member === 'object') {
-                    if (member.participantId !== undefined && member.participantId !== null) return Number(member.participantId);
-                    if (member.id !== undefined && member.id !== null) return Number(member.id);
+                    const id = member.participantId ?? member.id;
+                    if (id !== undefined && id !== null) return Number(id);
                     if (member.name) {
                         const found = finalParticipants.find(p => p.name === member.name);
                         if (found) return found.participantId;
                     }
                 } else {
-                    // 백엔드가 그냥 숫자 ID를 줬을 경우
                     return Number(member);
                 }
                 return null;
             };
 
-            allMatches.forEach((match: any) => {
+            allMatchesWithCourt.forEach((match) => {
                 const cNum = match.courtNumber;
-                if (!newBrackets[cNum]) {
-                    newBrackets[cNum] = [];
-                    newRosters[cNum] = [];
-                }
+                if (!newBrackets[cNum]) newBrackets[cNum] = [];
+                if (!newRosters[cNum]) newRosters[cNum] = [];
 
                 const row: BracketRow = createEmptyRow();
-                const t1 = Array.isArray(match.team1) ? match.team1 : [];
-                const t2 = Array.isArray(match.team2) ? match.team2 : [];
+                row[0] = resolveId(match.team1[0]);
+                row[1] = resolveId(match.team1[1]);
+                row[2] = resolveId(match.team2[0]);
+                row[3] = resolveId(match.team2[1]);
 
-                row[0] = resolveId(t1[0]);
-                row[1] = resolveId(t1[1]);
-                row[2] = resolveId(t2[0]);
-                row[3] = resolveId(t2[1]);
-
+                // matchNumber 순서에 맞춰 배치
                 const targetIdx = match.matchNumber ? match.matchNumber - 1 : newBrackets[cNum].length;
                 while (newBrackets[cNum].length <= targetIdx) {
                     newBrackets[cNum].push(createEmptyRow());
                 }
                 newBrackets[cNum][targetIdx] = row;
 
+                // 해당 코트 명단(로스터)에 추가
                 row.forEach(id => {
                     if (id !== null && !newRosters[cNum].includes(id)) {
                         newRosters[cNum].push(id);
@@ -248,6 +234,7 @@ export default function TournamentPage() {
                 });
             });
 
+            // 빈 코트 기본값(2개 빈 행) 채우기
             [1, 2, 3, 4].forEach(cNum => {
                 if (!newBrackets[cNum] || newBrackets[cNum].length === 0) {
                     newBrackets[cNum] = [createEmptyRow(), createEmptyRow()];
@@ -257,9 +244,10 @@ export default function TournamentPage() {
             setRosters(newRosters);
             setBrackets(newBrackets);
             
+            // 인원이 존재하는 첫 번째 코트로 이동
             const firstActive = Object.keys(newRosters).find(k => newRosters[Number(k)].length > 0);
             setActiveCourt(firstActive ? Number(firstActive) : 1);
-            
+
             setView('EDITOR');
             setSelectedId(null);
         } catch (error) {
@@ -270,10 +258,7 @@ export default function TournamentPage() {
         }
     };
 
-    // ============================================================================
-    // 에디터 핵심 제어 로직
-    // ============================================================================
-
+    // --- 에디터 내부 액션 로직 ---
     const unassignedPool = useMemo(() => {
         const assignedIds = new Set(Object.values(rosters).flat());
         return participants.filter(p => !assignedIds.has(p.participantId));
@@ -344,10 +329,7 @@ export default function TournamentPage() {
         setSelectedId(null);
     };
 
-    // 명세(AdminMatchCourtRequest)에 맞춰 payload 생성.
-    // team1/team2는 각각 {participantType, participantId} 2개씩 필수 → 4칸이 모두 찬 매치만 전송한다.
     const handleSave = async () => {
-        // ID → {participantType, participantId} 객체로 변환
         const toPayloadParticipant = (id: number): MatchParticipantPayload => {
             const p = getParticipant(id);
             return {
@@ -360,15 +342,13 @@ export default function TournamentPage() {
 
         Object.entries(brackets).forEach(([courtStr, rows]) => {
             const courtNumber = Number(courtStr);
-
-            // 4칸(팀1 2명 + 팀2 2명)이 모두 채워진 매치만 유효
             const fullRows = rows.filter(
                 (row) => row[0] !== null && row[1] !== null && row[2] !== null && row[3] !== null,
             );
-            if (fullRows.length === 0) return; // 완성된 매치가 없는 코트는 제외 (courtMatches minItems:1)
+            if (fullRows.length === 0) return;
 
             const courtMatches: ServerMatch[] = fullRows.map((row, idx) => ({
-                matchNumber: idx + 1, // 완성된 매치 기준으로 1부터 재부여
+                matchNumber: idx + 1,
                 team1: [toPayloadParticipant(row[0] as number), toPayloadParticipant(row[1] as number)],
                 team2: [toPayloadParticipant(row[2] as number), toPayloadParticipant(row[3] as number)],
             }));
@@ -386,15 +366,12 @@ export default function TournamentPage() {
             console.log("📤 [API 전송 데이터]:", payload);
 
             if (isEditMode && activeMatchId) {
-                // 수정: matchId가 확보된 경우 PATCH
                 await api.patch(`/admin/matches/${activeMatchId}`, payload);
                 showToast('대진표가 성공적으로 수정되었습니다.', 'success');
             } else if (isEditMode) {
-                // 편성 완료 활동이지만 matchId를 못 찾은 경우 → voteId 기준 재편성(업서트)로 저장
                 await api.post(`/admin/votes/${activeVoteId}/matches`, payload);
                 showToast('대진표가 저장되었습니다.', 'success');
             } else {
-                // 신규 편성
                 await api.post(`/admin/votes/${activeVoteId}/matches`, payload);
                 showToast('대진표가 성공적으로 저장되었습니다.', 'success');
             }
@@ -412,7 +389,7 @@ export default function TournamentPage() {
     const getParticipant = (id: number | null) => participants.find(p => p.participantId === id);
 
     // ============================================================================
-    // 렌더링 영역
+    // 렌더링
     // ============================================================================
     return (
         <div className="min-h-screen bg-[#f9fafb] pb-24 sm:pb-12 text-gray-800">
@@ -512,7 +489,7 @@ export default function TournamentPage() {
                         ))}
                     </div>
 
-                    {/* 콘텐츠 영역 (스크롤 가능) */}
+                    {/* 콘텐츠 영역 */}
                     <div className="flex-1 overflow-y-auto bg-gray-50/50 p-4 sm:bg-white sm:rounded-b-3xl sm:border sm:border-t-0 sm:border-gray-100 space-y-6">
                         
                         {/* 1. 미배치 풀 */}
