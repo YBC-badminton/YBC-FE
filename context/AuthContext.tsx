@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import api from '../lib/axios';
+import { MEMBER_ONLY_MESSAGE, NotMemberError, isNotMemberError } from '../lib/authErrors';
 
 type UserRole = 'member' | 'applicant';
 
@@ -129,6 +130,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(newUser);
         } catch (err: unknown) {
             clearAuth();
+
+            // 부원이 아닌 계정 — 별도 안내 문구로 처리
+            if (isNotMemberError(err)) {
+                setError(MEMBER_ONLY_MESSAGE);
+                throw new NotMemberError();
+            }
+
             const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
                 || '로그인 정보를 가져오는 중 오류가 발생했습니다.';
             setError(message);

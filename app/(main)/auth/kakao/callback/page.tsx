@@ -3,12 +3,15 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../../../../context/AuthContext';
+import MemberOnlyModal from '../../../../../components/ui/MemberOnlyModal';
+import { isNotMemberError } from '../../../../../lib/authErrors';
 
 function KakaoCallbackContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const { handleKakaoCallback } = useAuth();
     const [error, setError] = useState<string | null>(null);
+    const [showMemberOnly, setShowMemberOnly] = useState(false);
 
     useEffect(() => {
         const accessToken = searchParams.get('accessToken');
@@ -32,10 +35,26 @@ function KakaoCallbackContent() {
                 const target = stored && stored.startsWith('/') ? stored : '/';
                 router.replace(target);
             })
-            .catch(() => {
+            .catch((err: unknown) => {
+                if (isNotMemberError(err)) {
+                    setShowMemberOnly(true);
+                    return;
+                }
                 setError('로그인 처리 중 오류가 발생했습니다.');
             });
     }, [searchParams, handleKakaoCallback, router]);
+
+    if (showMemberOnly) {
+        return (
+            <MemberOnlyModal
+                isOpen
+                onClose={() => {
+                    sessionStorage.removeItem('postLoginRedirect');
+                    router.replace('/login');
+                }}
+            />
+        );
+    }
 
     if (error) {
         return (
