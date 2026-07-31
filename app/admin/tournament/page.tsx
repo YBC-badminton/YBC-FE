@@ -91,105 +91,88 @@ export default function TournamentPage() {
     const handleOpenEditor = async (activity: AdminActivity) => {
         setLoading(true);
         try {
-            const endpoint = activity.matchId 
-                ? `/admin/matches/${activity.matchId}` 
-                : `/admin/votes/${activity.voteId}/matches`;
-                
-            const res = await api.get(endpoint);
-            const data = res.data?.data || res.data;
+            // 💡 1. 전체 참가자 목록(vote API)과 기존 편성 대진(match API)을 동시에 병렬 조회
+            const baseVoteEndpoint = `/admin/votes/${activity.voteId}/matches`;
+            const savedMatchEndpoint = activity.matchId ? `/admin/matches/${activity.matchId}` : null;
 
-            console.log("🎯 [대진 조회 API 응답 데이터]:", data);
+            const [baseRes, savedRes] = await Promise.all([
+                api.get(baseVoteEndpoint).catch(() => null),
+                savedMatchEndpoint ? api.get(savedMatchEndpoint).catch(() => null) : Promise.resolve(null)
+            ]);
 
-            if (!data) throw new Error('대진 데이터 응답이 없습니다.');
+            const baseData = baseRes?.data?.data || baseRes?.data || {};
+            const savedData = savedRes?.data?.data || savedRes?.data || baseData;
+
+            console.log("🎯 [전체 참가자 응답 데이터]:", baseData);
+            console.log("🎯 [저장된 대진 응답 데이터]:", savedData);
 
             setActiveVoteId(activity.voteId);
             setActivityTitle(activity.title);
             setIsEditMode(!!activity.matchRegistered);
 
-            const resolvedMatchId = data.matchId ?? activity.matchId ?? null;
+            const resolvedMatchId = savedData.matchId ?? baseData.matchId ?? activity.matchId ?? null;
             setActiveMatchId(resolvedMatchId !== null ? Number(resolvedMatchId) : null);
 
-            // 1. 응답 데이터를 코트별로 구조화
-            const rawCourtMatches = data.courtMatches || data.matches || data.matchGroups || [];
+            // 💡 2. 코트별 대진 경기 파싱 (이중 배열 및 평탄화 지원)
+            const rawCourtGroups = savedData.matches || savedData.courtMatches || savedData.matchGroups || [];
             const allMatchesWithCourt: { courtNumber: number; matchNumber: number; team1: any[]; team2: any[] }[] = [];
 
-            // 💡 백엔드가 courtMatches 1차원 배열로 내려줄 때 (matchNumber가 1로 돌아갈 때마다 코트 번호 증가)
-            let currentCourtNum = 1;
-            
-            rawCourtMatches.forEach((item: any, index: number) => {
-                // 배열 항목 자체가 코트 그룹인 경우 ({ courtNumber: 1, courtMatches: [...] })
-                if (item.courtMatches || item.matches) {
-                    const cNum = item.courtNumber || item.courtId || (index + 1);
-                    const nested = item.courtMatches || item.matches || [];
-                    nested.forEach((m: any, mIdx: number) => {
+            rawCourtGroups.forEach((groupItem: any, index: number) => {
+                // 이중 구조인 경우: { courtNumber: 1, matches: [...] }
+                if (Array.isArray(groupItem.matches) || Array.isArray(groupItem.courtMatches)) {
+                    const cNum = Number(groupItem.courtNumber || groupItem.courtId || index + 1);
+                    const innerMatches = groupItem.matches || groupItem.courtMatches || [];
+                    innerMatches.forEach((m: any, mIdx: number) => {
                         allMatchesWithCourt.push({
                             courtNumber: cNum,
-                            matchNumber: m.matchNumber || (mIdx + 1),
+                            matchNumber: Number(m.matchNumber || mIdx + 1),
                             team1: m.team1 || [],
                             team2: m.team2 || []
                         });
                     });
                 } 
-                // 배열 항목이 개별 매치인 경우 ({ matchNumber: 1, team1: [...], team2: [...] })
-                else if (item.team1 || item.team2) {
-                    let cNum = item.courtNumber;
-                    
-                    // courtNumber 필드가 유효하지 않을 때, matchNumber가 1이면 다음 코트로 변경
-                    if (cNum === undefined || cNum === null) {
-                        if (index > 0 && item.matchNumber === 1) {
-                            currentCourtNum++;
-                        }
-                        cNum = currentCourtNum;
-                    }
-                    
+                // 개별 매치 단일 항목 구조인 경우: { courtNumber: 1, matchNumber: 1, team1: [...], team2: [...] }
+                else if (groupItem.team1 || groupItem.team2) {
                     allMatchesWithCourt.push({
-                        courtNumber: Number(cNum),
-                        matchNumber: item.matchNumber || 1,
-                        team1: item.team1 || [],
-                        team2: item.team2 || []
+                        courtNumber: Number(groupItem.courtNumber || 1),
+                        matchNumber: Number(groupItem.matchNumber || 1),
+                        team1: groupItem.team1 || [],
+                        team2: groupItem.team2 || []
                     });
                 }
             });
 
-            // 2. 전체 참가자(Participant) 수집
+            // 💡 3. 전체 참가자(Participant) 수집 (baseData + savedData 병합)
             const uniqueParticipants = new Map<number, Participant>();
-            const rawParticipants = data.participants || data.participantList || [];
-            
-            // 기존 참가자 명단 저장
-            rawParticipants.forEach((p: any) => {
+            const addParticipant = (p: any) => {
+                if (!p) return;
                 const id = p.participantId ?? p.id ?? p.memberId;
                 if (id !== undefined && id !== null) {
-                    uniqueParticipants.set(Number(id), {
-                        participantId: Number(id),
-                        name: p.name,
-                        gender: (p.gender === 'FEMALE' || p.gender === '여') ? 'FEMALE' : 'MALE',
-                        participantType: p.participantType || 'MEMBER'
-                    });
-                }
-            });
-
-            // 매치에 포함된 인원도 수집 (명단에 누락된 경우 대비)
-            allMatchesWithCourt.forEach((match) => {
-                const members = [...match.team1, ...match.team2];
-                members.forEach((m: any) => {
-                    if (m && (m.participantId || m.id)) {
-                        const id = Number(m.participantId ?? m.id);
-                        if (!uniqueParticipants.has(id)) {
-                            uniqueParticipants.set(id, {
-                                participantId: id,
-                                name: m.name || `참가자_${id}`,
-                                gender: (m.gender === 'FEMALE' || m.gender === '여') ? 'FEMALE' : 'MALE',
-                                participantType: m.participantType || 'MEMBER'
-                            });
-                        }
+                    const numId = Number(id);
+                    if (!uniqueParticipants.has(numId)) {
+                        uniqueParticipants.set(numId, {
+                            participantId: numId,
+                            name: p.name || `참가자_${numId}`,
+                            gender: (p.gender === 'FEMALE' || p.gender === '여') ? 'FEMALE' : 'MALE',
+                            participantType: p.participantType || 'MEMBER'
+                        });
                     }
-                });
+                }
+            };
+
+            // baseData 및 savedData의 참가자 목록 등록
+            (baseData.participants || baseData.participantList || baseData.attendees || []).forEach(addParticipant);
+            (savedData.participants || savedData.participantList || savedData.attendees || []).forEach(addParticipant);
+
+            // 대진표 팀 내부에 존재하는 인원도 누락 방지를 위해 등록
+            allMatchesWithCourt.forEach((match) => {
+                [...match.team1, ...match.team2].forEach(addParticipant);
             });
 
             const finalParticipants = Array.from(uniqueParticipants.values());
             setParticipants(finalParticipants);
 
-            // 3. 코트별 로스터 및 대진표 세팅
+            // 💡 4. 코트별 로스터 및 대진표 세팅
             const newRosters: Record<number, number[]> = { 1: [], 2: [], 3: [], 4: [] };
             const newBrackets: Record<number, BracketRow[]> = { 1: [], 2: [], 3: [], 4: [] };
 
@@ -208,6 +191,9 @@ export default function TournamentPage() {
                 return null;
             };
 
+            // matchNumber 기준 오름차순 정렬
+            allMatchesWithCourt.sort((a, b) => a.matchNumber - b.matchNumber);
+
             allMatchesWithCourt.forEach((match) => {
                 const cNum = match.courtNumber;
                 if (!newBrackets[cNum]) newBrackets[cNum] = [];
@@ -219,14 +205,13 @@ export default function TournamentPage() {
                 row[2] = resolveId(match.team2[0]);
                 row[3] = resolveId(match.team2[1]);
 
-                // matchNumber 순서에 맞춰 배치
                 const targetIdx = match.matchNumber ? match.matchNumber - 1 : newBrackets[cNum].length;
                 while (newBrackets[cNum].length <= targetIdx) {
                     newBrackets[cNum].push(createEmptyRow());
                 }
                 newBrackets[cNum][targetIdx] = row;
 
-                // 해당 코트 명단(로스터)에 추가
+                // 코트 명단(로스터)에 식별된 ID 추가
                 row.forEach(id => {
                     if (id !== null && !newRosters[cNum].includes(id)) {
                         newRosters[cNum].push(id);
@@ -234,7 +219,7 @@ export default function TournamentPage() {
                 });
             });
 
-            // 빈 코트 기본값(2개 빈 행) 채우기
+            // 빈 코트에 기본 2행 유지
             [1, 2, 3, 4].forEach(cNum => {
                 if (!newBrackets[cNum] || newBrackets[cNum].length === 0) {
                     newBrackets[cNum] = [createEmptyRow(), createEmptyRow()];
@@ -244,7 +229,7 @@ export default function TournamentPage() {
             setRosters(newRosters);
             setBrackets(newBrackets);
             
-            // 인원이 존재하는 첫 번째 코트로 이동
+            // 인원이 존재하는 첫 번째 코트를 활성화
             const firstActive = Object.keys(newRosters).find(k => newRosters[Number(k)].length > 0);
             setActiveCourt(firstActive ? Number(firstActive) : 1);
 
@@ -258,7 +243,7 @@ export default function TournamentPage() {
         }
     };
 
-    // --- 에디터 내부 액션 로직 ---
+    // 💡 차집합 계산을 통한 대기석(미배치 풀) 유도
     const unassignedPool = useMemo(() => {
         const assignedIds = new Set(Object.values(rosters).flat());
         return participants.filter(p => !assignedIds.has(p.participantId));
@@ -492,7 +477,7 @@ export default function TournamentPage() {
                     {/* 콘텐츠 영역 */}
                     <div className="flex-1 overflow-y-auto bg-gray-50/50 p-4 sm:bg-white sm:rounded-b-3xl sm:border sm:border-t-0 sm:border-gray-100 space-y-6">
                         
-                        {/* 1. 미배치 풀 */}
+                        {/* 1. 미배치 풀 (대기석) */}
                         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
                             <h3 className="text-xs font-black text-gray-800 mb-3 flex items-center gap-1.5">
                                 <UserPlus className="w-4 h-4 text-gray-400" /> 대기석 (미배치 인원)
