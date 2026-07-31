@@ -76,7 +76,6 @@ export default function MembersPage() {
 
     const handleSaveEdit = async (memberId: number) => {
         try {
-            // API 명세에 맞게 모든 필드 전송
             await api.patch(`/admin/members/${memberId}`, editForm);
             setEditingId(null);
             fetchMembers();
@@ -225,7 +224,7 @@ export default function MembersPage() {
                             <th className="p-4">기수</th>
                             <th className="p-4">연락처</th>
                             <th className="p-4">이메일</th>
-                            <th className="p-4">마포구</th>
+                            <th className="p-4 text-center">마포구</th>
                             <th className="p-4 text-center">관리</th>
                         </tr>
                     </thead>
@@ -242,9 +241,11 @@ export default function MembersPage() {
                                         <td className="p-3 w-40"><input className="w-full border p-1 rounded text-sm" value={editForm.phone || ''} onChange={e => setEditForm({...editForm, phone: e.target.value})} /></td>
                                         <td className="p-3 w-44"><input className="w-full border p-1 rounded text-sm" value={editForm.email || ''} onChange={e => setEditForm({...editForm, email: e.target.value})} /></td>
                                         <td className="p-3 w-16 text-center"><input type="checkbox" checked={!!editForm.isMapoResident} onChange={e => setEditForm({...editForm, isMapoResident: e.target.checked})} /></td>
-                                        <td className="p-3 w-24 flex justify-center items-center h-full gap-2">
-                                            <button onClick={() => handleSaveEdit(m.memberId)} className="text-blue-600 font-bold"><Check className="w-5 h-5"/></button>
-                                            <button onClick={() => setEditingId(null)} className="text-gray-500 font-bold"><X className="w-5 h-5"/></button>
+                                        <td className="p-3 text-center align-middle">
+                                            <div className="inline-flex items-center justify-center gap-2">
+                                                <button onClick={() => handleSaveEdit(m.memberId)} className="text-blue-600 font-bold p-1"><Check className="w-5 h-5"/></button>
+                                                <button onClick={() => setEditingId(null)} className="text-gray-500 font-bold p-1"><X className="w-5 h-5"/></button>
+                                            </div>
                                         </td>
                                     </>
                                 ) : (
@@ -257,9 +258,12 @@ export default function MembersPage() {
                                         <td className="p-4 w-40"><p className="p-[1px]">{m.phone}</p></td>
                                         <td className="p-4 w-44 truncate"><p className="p-[1px]">{m.email}</p></td>
                                         <td className="p-4 w-16 text-center"><p className="p-[1px]">{m.isMapoResident ? 'O' : 'X'}</p></td>
-                                        <td className="p-4 w-24 flex justify-center items-center gap-3">
-                                            <button onClick={() => { setEditingId(m.memberId); setEditForm(m); }} className="text-blue-600 hover:text-blue-800"><Edit2 className="w-4 h-4"/></button>
-                                            <button onClick={() => handleDelete(m.memberId, m.name)} className="text-red-500 hover:text-red-700"><Trash2 className="w-4 h-4"/></button>
+                                        {/* 💡 관리 컬럼 아이콘 중앙 정렬 보완 */}
+                                        <td className="p-4 text-center align-middle">
+                                            <div className="inline-flex items-center justify-center gap-3">
+                                                <button onClick={() => { setEditingId(m.memberId); setEditForm(m); }} className="text-blue-600 hover:text-blue-800 transition-colors p-1"><Edit2 className="w-4 h-4"/></button>
+                                                <button onClick={() => handleDelete(m.memberId, m.name)} className="text-red-500 hover:text-red-700 transition-colors p-1"><Trash2 className="w-4 h-4"/></button>
+                                            </div>
                                         </td>
                                     </>
                                 )}
