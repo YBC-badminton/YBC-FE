@@ -200,7 +200,7 @@ export default function PastActivitiesPage() {
             <section className="relative w-full -top-[96px] min-h-[600px] bg-gradient-to-b from-[#FDFFEE] to-[#E3EDA9] overflow-hidden flex flex-col items-center">
 
                 {/* 1. 메인 히어로 텍스트 및 캐릭터 영역 */}
-                <div className="relative z-10 flex flex-col items-center text-center mt-36 px-4 w-full max-w-4xl">
+                <div className="relative z-10 flex flex-col items-center text-center mt-48 px-4 w-full max-w-4xl">
                     
                     {/* 메인 타이틀 (GET /activities mainTitle) */}
                     <h1 className="text-3xl md:text-[42px] font-black text-[#445028] mb-6 tracking-tight break-keep">
