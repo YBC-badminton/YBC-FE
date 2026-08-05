@@ -13,6 +13,7 @@ interface Participant {
     name: string;
     gender: 'MALE' | 'FEMALE';
     participantType: 'MEMBER' | 'GUEST';
+    level?: string | null; // 💡 level 속성 추가
 }
 
 interface AdminActivity {
@@ -91,7 +92,6 @@ export default function TournamentPage() {
     const handleOpenEditor = async (activity: AdminActivity) => {
         setLoading(true);
         try {
-            // 💡 1. 전체 참가자 목록(vote API)과 기존 편성 대진(match API)을 동시에 병렬 조회
             const baseVoteEndpoint = `/admin/votes/${activity.voteId}/matches`;
             const savedMatchEndpoint = activity.matchId ? `/admin/matches/${activity.matchId}` : null;
 
@@ -113,12 +113,11 @@ export default function TournamentPage() {
             const resolvedMatchId = savedData.matchId ?? baseData.matchId ?? activity.matchId ?? null;
             setActiveMatchId(resolvedMatchId !== null ? Number(resolvedMatchId) : null);
 
-            // 💡 2. 코트별 대진 경기 파싱 (이중 배열 및 평탄화 지원)
+            // 1. 코트별 대진 경기 파싱
             const rawCourtGroups = savedData.matches || savedData.courtMatches || savedData.matchGroups || [];
             const allMatchesWithCourt: { courtNumber: number; matchNumber: number; team1: any[]; team2: any[] }[] = [];
 
             rawCourtGroups.forEach((groupItem: any, index: number) => {
-                // 이중 구조인 경우: { courtNumber: 1, matches: [...] }
                 if (Array.isArray(groupItem.matches) || Array.isArray(groupItem.courtMatches)) {
                     const cNum = Number(groupItem.courtNumber || groupItem.courtId || index + 1);
                     const innerMatches = groupItem.matches || groupItem.courtMatches || [];
@@ -130,9 +129,7 @@ export default function TournamentPage() {
                             team2: m.team2 || []
                         });
                     });
-                } 
-                // 개별 매치 단일 항목 구조인 경우: { courtNumber: 1, matchNumber: 1, team1: [...], team2: [...] }
-                else if (groupItem.team1 || groupItem.team2) {
+                } else if (groupItem.team1 || groupItem.team2) {
                     allMatchesWithCourt.push({
                         courtNumber: Number(groupItem.courtNumber || 1),
                         matchNumber: Number(groupItem.matchNumber || 1),
@@ -142,7 +139,7 @@ export default function TournamentPage() {
                 }
             });
 
-            // 💡 3. 전체 참가자(Participant) 수집 (baseData + savedData 병합)
+            // 💡 2. 전체 참가자(Participant) 수집 (level 파싱 포함)
             const uniqueParticipants = new Map<number, Participant>();
             const addParticipant = (p: any) => {
                 if (!p) return;
@@ -154,17 +151,16 @@ export default function TournamentPage() {
                             participantId: numId,
                             name: p.name || `참가자_${numId}`,
                             gender: (p.gender === 'FEMALE' || p.gender === '여') ? 'FEMALE' : 'MALE',
-                            participantType: p.participantType || 'MEMBER'
+                            participantType: p.participantType || 'MEMBER',
+                            level: p.level || null, // 💡 level 수집
                         });
                     }
                 }
             };
 
-            // baseData 및 savedData의 참가자 목록 등록
             (baseData.participants || baseData.participantList || baseData.attendees || []).forEach(addParticipant);
             (savedData.participants || savedData.participantList || savedData.attendees || []).forEach(addParticipant);
 
-            // 대진표 팀 내부에 존재하는 인원도 누락 방지를 위해 등록
             allMatchesWithCourt.forEach((match) => {
                 [...match.team1, ...match.team2].forEach(addParticipant);
             });
@@ -172,7 +168,7 @@ export default function TournamentPage() {
             const finalParticipants = Array.from(uniqueParticipants.values());
             setParticipants(finalParticipants);
 
-            // 💡 4. 코트별 로스터 및 대진표 세팅
+            // 3. 코트별 로스터 및 대진표 세팅
             const newRosters: Record<number, number[]> = { 1: [], 2: [], 3: [], 4: [] };
             const newBrackets: Record<number, BracketRow[]> = { 1: [], 2: [], 3: [], 4: [] };
 
@@ -191,7 +187,6 @@ export default function TournamentPage() {
                 return null;
             };
 
-            // matchNumber 기준 오름차순 정렬
             allMatchesWithCourt.sort((a, b) => a.matchNumber - b.matchNumber);
 
             allMatchesWithCourt.forEach((match) => {
@@ -211,7 +206,6 @@ export default function TournamentPage() {
                 }
                 newBrackets[cNum][targetIdx] = row;
 
-                // 코트 명단(로스터)에 식별된 ID 추가
                 row.forEach(id => {
                     if (id !== null && !newRosters[cNum].includes(id)) {
                         newRosters[cNum].push(id);
@@ -219,7 +213,6 @@ export default function TournamentPage() {
                 });
             });
 
-            // 빈 코트에 기본 2행 유지
             [1, 2, 3, 4].forEach(cNum => {
                 if (!newBrackets[cNum] || newBrackets[cNum].length === 0) {
                     newBrackets[cNum] = [createEmptyRow(), createEmptyRow()];
@@ -229,7 +222,6 @@ export default function TournamentPage() {
             setRosters(newRosters);
             setBrackets(newBrackets);
             
-            // 인원이 존재하는 첫 번째 코트를 활성화
             const firstActive = Object.keys(newRosters).find(k => newRosters[Number(k)].length > 0);
             setActiveCourt(firstActive ? Number(firstActive) : 1);
 
@@ -243,7 +235,6 @@ export default function TournamentPage() {
         }
     };
 
-    // 💡 차집합 계산을 통한 대기석(미배치 풀) 유도
     const unassignedPool = useMemo(() => {
         const assignedIds = new Set(Object.values(rosters).flat());
         return participants.filter(p => !assignedIds.has(p.participantId));
@@ -492,7 +483,14 @@ export default function TournamentPage() {
                                             onClick={() => moveToCourt(p.participantId)}
                                             className="bg-white border border-gray-200 hover:border-[#93C54B] hover:text-[#93C54B] px-3 py-1.5 rounded-lg text-xs font-bold text-gray-600 transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
                                         >
-                                            {p.name} <span className={p.gender === 'MALE' ? 'text-blue-500' : 'text-red-400'}>{p.gender === 'MALE' ? 'M' : 'W'}</span>
+                                            <span>{p.name}</span>
+                                            <span className={p.gender === 'MALE' ? 'text-blue-500' : 'text-red-400'}>
+                                                {p.gender === 'MALE' ? 'M' : 'W'}
+                                            </span>
+                                            {/* 💡 level 표시 */}
+                                            {p.level && (
+                                                <span className="text-[10px] text-gray-400 font-normal">· {p.level}</span>
+                                            )}
                                         </button>
                                     ))}
                                 </div>
@@ -516,7 +514,7 @@ export default function TournamentPage() {
                                         <div 
                                             key={pId}
                                             onClick={() => setSelectedId(isSelected ? null : pId)}
-                                            className={`cursor-pointer px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all active:scale-95 shadow-sm border-2 ${
+                                            className={`cursor-pointer px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 shadow-sm border-2 ${
                                                 isSelected 
                                                 ? 'bg-[#93C54B] text-white border-[#93C54B] scale-105 shadow-md' 
                                                 : 'bg-white border-white text-gray-700 hover:border-[#93C54B]/30'
@@ -526,6 +524,12 @@ export default function TournamentPage() {
                                             <span className={`text-[10px] ${isSelected ? 'text-white/80' : (p.gender === 'MALE' ? 'text-blue-500' : 'text-red-400')}`}>
                                                 {p.gender === 'MALE' ? 'M' : 'W'}
                                             </span>
+                                            {/* 💡 level 표시 */}
+                                            {p.level && (
+                                                <span className={`text-[10px] font-normal ${isSelected ? 'text-white/80' : 'text-gray-400'}`}>
+                                                    ({p.level})
+                                                </span>
+                                            )}
                                             <button 
                                                 onClick={(e) => { e.stopPropagation(); removeFromCourt(pId); }} 
                                                 className={`ml-1 w-4 h-4 flex items-center justify-center rounded-full ${isSelected ? 'bg-black/20 hover:bg-black/40' : 'bg-gray-100 hover:bg-red-100 hover:text-red-500'} transition-colors`}
@@ -574,7 +578,10 @@ export default function TournamentPage() {
                                                         {p ? (
                                                             <>
                                                                 <span>{p.name}</span>
-                                                                <span className="text-[9px] opacity-60 font-medium">{p.participantType === 'GUEST' ? '게스트' : '회원'}</span>
+                                                                {/* 💡 회원/게스트 구분과 함께 level 정보 함께 표시 */}
+                                                                <span className="text-[9px] opacity-60 font-medium">
+                                                                    {p.participantType === 'GUEST' ? '게스트' : '회원'}{p.level ? ` · ${p.level}` : ''}
+                                                                </span>
                                                             </>
                                                         ) : (selectedId ? '여기에 놓기' : '빈 자리')}
                                                     </div>
@@ -602,7 +609,10 @@ export default function TournamentPage() {
                                                         {p ? (
                                                             <>
                                                                 <span>{p.name}</span>
-                                                                <span className="text-[9px] opacity-60 font-medium">{p.participantType === 'GUEST' ? '게스트' : '회원'}</span>
+                                                                {/* 💡 회원/게스트 구분과 함께 level 정보 함께 표시 */}
+                                                                <span className="text-[9px] opacity-60 font-medium">
+                                                                    {p.participantType === 'GUEST' ? '게스트' : '회원'}{p.level ? ` · ${p.level}` : ''}
+                                                                </span>
                                                             </>
                                                         ) : (selectedId ? '여기에 놓기' : '빈 자리')}
                                                     </div>
