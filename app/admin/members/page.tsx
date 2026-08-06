@@ -10,7 +10,7 @@ const GENDER_LABEL: Record<string, string> = {
     FEMALE: '여',
 };
 
-const COURT_OPTIONS = ['왕초심', '초심', 'D', 'C', 'B', 'A'];
+const COURT_OPTIONS = ['C', 'B', 'A', 'S'];
 
 interface MemberSummary {
     totalMembers: number;
