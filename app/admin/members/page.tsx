@@ -10,6 +10,8 @@ const GENDER_LABEL: Record<string, string> = {
     FEMALE: '여',
 };
 
+const LEVEL_OPTIONS = ['왕초심', '초심', 'D', 'C', 'B', 'A'];
+
 interface MemberSummary {
     totalMembers: number;
     mapoResidentCount: number;
@@ -25,6 +27,7 @@ interface Member {
     age: string;
     term: string;
     isMapoResident: boolean;
+    level?: string; // 💡 실력(급수) 필드 추가
 }
 
 interface MembersResponse {
@@ -35,7 +38,7 @@ interface MembersResponse {
 type MemberForm = Omit<Member, 'memberId'>;
 
 const EMPTY_FORM: MemberForm = {
-    name: '', university: '', phone: '', email: '', gender: 'MALE', age: '', term: '', isMapoResident: false,
+    name: '', university: '', phone: '', email: '', gender: 'MALE', age: '', term: '', isMapoResident: false, level: '',
 };
 
 export default function MembersPage() {
@@ -186,6 +189,7 @@ export default function MembersPage() {
                     </button>
                 </div>
 
+                {/* 새 부원 추가 폼 */}
                 {showAddForm && (
                     <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
                         <h3 className="font-black text-gray-800 mb-4">새 부원 추가</h3>
@@ -198,9 +202,16 @@ export default function MembersPage() {
                                 <option value="MALE">남</option>
                                 <option value="FEMALE">여</option>
                             </select>
+                            {/* 💡 추가 폼에 실력(level) 필드 추가 */}
+                            <select value={addForm.level || ''} onChange={(e) => setAddForm({ ...addForm, level: e.target.value })} className="p-2.5 border rounded-lg text-sm bg-white">
+                                <option value="">실력 (선택 안 함)</option>
+                                {LEVEL_OPTIONS.map(lvl => (
+                                    <option key={lvl} value={lvl}>{lvl}</option>
+                                ))}
+                            </select>
                             <input placeholder="나이 (예: 01)" value={addForm.age} onChange={(e) => setAddForm({ ...addForm, age: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
                             <input placeholder="기수 (예: 10)" value={addForm.term} onChange={(e) => setAddForm({ ...addForm, term: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
-                            <label className="flex items-center gap-2 px-3 py-2.5 border rounded-lg text-sm bg-white cursor-pointer">
+                            <label className="flex items-center gap-2 px-3 py-2.5 border rounded-lg text-sm bg-white cursor-pointer col-span-1 sm:col-span-2 lg:col-span-4">
                                 <input type="checkbox" checked={addForm.isMapoResident} onChange={(e) => setAddForm({ ...addForm, isMapoResident: e.target.checked })} className="w-4 h-4 text-blue-600 rounded" />
                                 <span className="font-bold text-gray-700">마포구 거주</span>
                             </label>
@@ -219,6 +230,8 @@ export default function MembersPage() {
                         <tr>
                             <th className="p-4">이름</th>
                             <th className="p-4">성별</th>
+                            {/* 💡 실력(level) 헤더 추가 */}
+                            <th className="p-4">실력</th>
                             <th className="p-4">나이</th>
                             <th className="p-4">학교</th>
                             <th className="p-4">기수</th>
@@ -235,6 +248,15 @@ export default function MembersPage() {
                                     <>
                                         <td className="p-3 w-24"><input className="w-full border p-1 rounded text-sm" value={editForm.name || ''} onChange={e => setEditForm({...editForm, name: e.target.value})} /></td>
                                         <td className="p-3 w-16"><select className="w-full border p-1 rounded text-sm" value={editForm.gender} onChange={e => setEditForm({...editForm, gender: e.target.value as 'MALE' | 'FEMALE'})}><option value="MALE">남</option><option value="FEMALE">여</option></select></td>
+                                        {/* 💡 수정 모드 셀: 실력(level) 드롭다운 */}
+                                        <td className="p-3 w-24">
+                                            <select className="w-full border p-1 rounded text-sm bg-white" value={editForm.level || ''} onChange={e => setEditForm({...editForm, level: e.target.value})}>
+                                                <option value="">-</option>
+                                                {LEVEL_OPTIONS.map(lvl => (
+                                                    <option key={lvl} value={lvl}>{lvl}</option>
+                                                ))}
+                                            </select>
+                                        </td>
                                         <td className="p-3 w-20"><input className="w-full border p-1 rounded text-sm" value={editForm.age || ''} onChange={e => setEditForm({...editForm, age: e.target.value})} /></td>
                                         <td className="p-3 w-32"><input className="w-full border p-1 rounded text-sm" value={editForm.university || ''} onChange={e => setEditForm({...editForm, university: e.target.value})} /></td>
                                         <td className="p-3 w-20"><input className="w-full border p-1 rounded text-sm" value={editForm.term || ''} onChange={e => setEditForm({...editForm, term: e.target.value})} /></td>
@@ -252,13 +274,14 @@ export default function MembersPage() {
                                     <>
                                         <td className="p-4 font-bold w-24"><p className="p-[1px]">{m.name}</p></td>
                                         <td className="p-4 w-16"><p className="p-[1px]">{GENDER_LABEL[m.gender]}</p></td>
+                                        {/* 💡 조회 모드 셀: 실력(level) 표시 */}
+                                        <td className="p-4 w-20"><p className="p-[1px] font-semibold text-gray-700">{m.level || '-'}</p></td>
                                         <td className="p-4 w-20"><p className="p-[1px]">{m.age}년생</p></td>
                                         <td className="p-4 w-32"><p className="p-[1px]">{m.university}</p></td>
                                         <td className="p-4 w-20"><p className="p-[1px]">{m.term}</p></td>
                                         <td className="p-4 w-40"><p className="p-[1px]">{m.phone}</p></td>
                                         <td className="p-4 w-44 truncate"><p className="p-[1px]">{m.email}</p></td>
                                         <td className="p-4 w-16 text-center"><p className="p-[1px]">{m.isMapoResident ? 'O' : 'X'}</p></td>
-                                        {/* 💡 관리 컬럼 아이콘 중앙 정렬 보완 */}
                                         <td className="p-4 text-center align-middle">
                                             <div className="inline-flex items-center justify-center gap-3">
                                                 <button onClick={() => { setEditingId(m.memberId); setEditForm(m); }} className="text-blue-600 hover:text-blue-800 transition-colors p-1"><Edit2 className="w-4 h-4"/></button>
@@ -284,6 +307,13 @@ export default function MembersPage() {
                                             <option value="MALE">남</option>
                                             <option value="FEMALE">여</option>
                                         </select>
+                                        {/* 💡 모바일 수정 시 실력 선택 */}
+                                        <select className="border p-2 rounded text-sm bg-white" value={editForm.level || ''} onChange={e => setEditForm({ ...editForm, level: e.target.value })}>
+                                            <option value="">실력 (-)</option>
+                                            {LEVEL_OPTIONS.map(lvl => (
+                                                <option key={lvl} value={lvl}>{lvl}</option>
+                                            ))}
+                                        </select>
                                         <input className="border p-2 rounded text-sm" value={editForm.age || ''} onChange={e => setEditForm({ ...editForm, age: e.target.value })} placeholder="나이" />
                                         <input className="border p-2 rounded text-sm" value={editForm.term || ''} onChange={e => setEditForm({ ...editForm, term: e.target.value })} placeholder="기수" />
                                         <input className="border p-2 rounded text-sm col-span-2" value={editForm.university || ''} onChange={e => setEditForm({ ...editForm, university: e.target.value })} placeholder="학교" />
@@ -305,7 +335,9 @@ export default function MembersPage() {
                                         <div>
                                             <div className="font-black text-lg text-gray-800">
                                                 {m.name}
-                                                <span className="ml-2 text-sm font-bold text-gray-400">{m.term}기 · {GENDER_LABEL[m.gender]} · {m.age}년생</span>
+                                                <span className="ml-2 text-sm font-bold text-gray-400">
+                                                    {m.term}기 · {GENDER_LABEL[m.gender]} · {m.level ? `${m.level} · ` : ''}{m.age}년생
+                                                </span>
                                             </div>
                                             <div className="text-sm font-bold text-gray-500 mt-0.5">{m.university}</div>
                                         </div>
