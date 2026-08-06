@@ -10,7 +10,7 @@ const GENDER_LABEL: Record<string, string> = {
     FEMALE: '여',
 };
 
-const LEVEL_OPTIONS = ['왕초심', '초심', 'D', 'C', 'B', 'A'];
+const COURT_OPTIONS = ['왕초심', '초심', 'D', 'C', 'B', 'A'];
 
 interface MemberSummary {
     totalMembers: number;
@@ -27,7 +27,7 @@ interface Member {
     age: string;
     term: string;
     isMapoResident: boolean;
-    level?: string; // 💡 실력(급수) 필드 추가
+    court?: string; // 💡 백엔드 키값 court 적용
 }
 
 interface MembersResponse {
@@ -38,7 +38,7 @@ interface MembersResponse {
 type MemberForm = Omit<Member, 'memberId'>;
 
 const EMPTY_FORM: MemberForm = {
-    name: '', university: '', phone: '', email: '', gender: 'MALE', age: '', term: '', isMapoResident: false, level: '',
+    name: '', university: '', phone: '', email: '', gender: 'MALE', age: '', term: '', isMapoResident: false, court: '',
 };
 
 export default function MembersPage() {
@@ -202,11 +202,11 @@ export default function MembersPage() {
                                 <option value="MALE">남</option>
                                 <option value="FEMALE">여</option>
                             </select>
-                            {/* 💡 추가 폼에 실력(level) 필드 추가 */}
-                            <select value={addForm.level || ''} onChange={(e) => setAddForm({ ...addForm, level: e.target.value })} className="p-2.5 border rounded-lg text-sm bg-white">
+                            {/* 💡 추가 폼 court 키값 사용 */}
+                            <select value={addForm.court || ''} onChange={(e) => setAddForm({ ...addForm, court: e.target.value })} className="p-2.5 border rounded-lg text-sm bg-white">
                                 <option value="">실력 (선택 안 함)</option>
-                                {LEVEL_OPTIONS.map(lvl => (
-                                    <option key={lvl} value={lvl}>{lvl}</option>
+                                {COURT_OPTIONS.map(crt => (
+                                    <option key={crt} value={crt}>{crt}</option>
                                 ))}
                             </select>
                             <input placeholder="나이 (예: 01)" value={addForm.age} onChange={(e) => setAddForm({ ...addForm, age: e.target.value })} className="p-2.5 border rounded-lg text-sm" />
@@ -230,7 +230,6 @@ export default function MembersPage() {
                         <tr>
                             <th className="p-4">이름</th>
                             <th className="p-4">성별</th>
-                            {/* 💡 실력(level) 헤더 추가 */}
                             <th className="p-4">실력</th>
                             <th className="p-4">나이</th>
                             <th className="p-4">학교</th>
@@ -248,12 +247,12 @@ export default function MembersPage() {
                                     <>
                                         <td className="p-3 w-24"><input className="w-full border p-1 rounded text-sm" value={editForm.name || ''} onChange={e => setEditForm({...editForm, name: e.target.value})} /></td>
                                         <td className="p-3 w-16"><select className="w-full border p-1 rounded text-sm" value={editForm.gender} onChange={e => setEditForm({...editForm, gender: e.target.value as 'MALE' | 'FEMALE'})}><option value="MALE">남</option><option value="FEMALE">여</option></select></td>
-                                        {/* 💡 수정 모드 셀: 실력(level) 드롭다운 */}
+                                        {/* 💡 수정 셀 court 드롭다운 */}
                                         <td className="p-3 w-24">
-                                            <select className="w-full border p-1 rounded text-sm bg-white" value={editForm.level || ''} onChange={e => setEditForm({...editForm, level: e.target.value})}>
+                                            <select className="w-full border p-1 rounded text-sm bg-white" value={editForm.court || ''} onChange={e => setEditForm({...editForm, court: e.target.value})}>
                                                 <option value="">-</option>
-                                                {LEVEL_OPTIONS.map(lvl => (
-                                                    <option key={lvl} value={lvl}>{lvl}</option>
+                                                {COURT_OPTIONS.map(crt => (
+                                                    <option key={crt} value={crt}>{crt}</option>
                                                 ))}
                                             </select>
                                         </td>
@@ -274,8 +273,8 @@ export default function MembersPage() {
                                     <>
                                         <td className="p-4 font-bold w-24"><p className="p-[1px]">{m.name}</p></td>
                                         <td className="p-4 w-16"><p className="p-[1px]">{GENDER_LABEL[m.gender]}</p></td>
-                                        {/* 💡 조회 모드 셀: 실력(level) 표시 */}
-                                        <td className="p-4 w-20"><p className="p-[1px] font-semibold text-gray-700">{m.level || '-'}</p></td>
+                                        {/* 💡 조회 셀 court값 출력 */}
+                                        <td className="p-4 w-20"><p className="p-[1px] font-semibold text-gray-700">{m.court || '-'}</p></td>
                                         <td className="p-4 w-20"><p className="p-[1px]">{m.age}년생</p></td>
                                         <td className="p-4 w-32"><p className="p-[1px]">{m.university}</p></td>
                                         <td className="p-4 w-20"><p className="p-[1px]">{m.term}</p></td>
@@ -307,11 +306,10 @@ export default function MembersPage() {
                                             <option value="MALE">남</option>
                                             <option value="FEMALE">여</option>
                                         </select>
-                                        {/* 💡 모바일 수정 시 실력 선택 */}
-                                        <select className="border p-2 rounded text-sm bg-white" value={editForm.level || ''} onChange={e => setEditForm({ ...editForm, level: e.target.value })}>
+                                        <select className="border p-2 rounded text-sm bg-white" value={editForm.court || ''} onChange={e => setEditForm({ ...editForm, court: e.target.value })}>
                                             <option value="">실력 (-)</option>
-                                            {LEVEL_OPTIONS.map(lvl => (
-                                                <option key={lvl} value={lvl}>{lvl}</option>
+                                            {COURT_OPTIONS.map(crt => (
+                                                <option key={crt} value={crt}>{crt}</option>
                                             ))}
                                         </select>
                                         <input className="border p-2 rounded text-sm" value={editForm.age || ''} onChange={e => setEditForm({ ...editForm, age: e.target.value })} placeholder="나이" />
@@ -336,7 +334,7 @@ export default function MembersPage() {
                                             <div className="font-black text-lg text-gray-800">
                                                 {m.name}
                                                 <span className="ml-2 text-sm font-bold text-gray-400">
-                                                    {m.term}기 · {GENDER_LABEL[m.gender]} · {m.level ? `${m.level} · ` : ''}{m.age}년생
+                                                    {m.term}기 · {GENDER_LABEL[m.gender]} · {m.court ? `${m.court} · ` : ''}{m.age}년생
                                                 </span>
                                             </div>
                                             <div className="text-sm font-bold text-gray-500 mt-0.5">{m.university}</div>
