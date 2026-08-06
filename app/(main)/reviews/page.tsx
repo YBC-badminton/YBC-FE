@@ -38,7 +38,7 @@ const REVERSE_CATEGORY_MAP: Record<string, string> = {
 const CATEGORY_STYLES: Record<string, string> = {
     'RACKET': 'bg-green-50 text-green-600',
     'CLOTHES': 'bg-blue-50 text-blue-500',
-    'SHOES': 'bg-[#eee8fa] text-[#8b5cf6]', // 신발 뱃지 색상
+    'SHOES': 'bg-[#eee8fa] text-[#8b5cf6]',
     'BAG': 'bg-orange-50 text-orange-500',
     'SHUTTLECOCK': 'bg-teal-50 text-teal-500',
     'ACCESSORY': 'bg-pink-50 text-pink-500',
@@ -72,7 +72,6 @@ function formatUsageMonth(months: number): string {
     return `${y}년 ${m}개월`;
 }
 
-// 작성자 이름 가운데를 *로 마스킹
 function maskName(name: string): string {
     if (!name) return '';
     if (name.length <= 1) return name;
@@ -118,11 +117,10 @@ export default function ReviewPage() {
     }, [fetchReviews]);
 
     return (
-        /* 모바일 배경색: #f7f9f5 / 데스크탑 배경색: white */
         <div className="min-h-screen bg-[#f7f9f5] sm:bg-white py-6 sm:py-12 px-4 sm:px-6 lg:px-24 font-sans text-left">
             <div className="max-w-screen-xl mx-auto flex flex-col min-h-[calc(100vh-3rem)]">
                 
-                {/* 데스크탑에서만 보이는 헤더 섹션 */}
+                {/* 데스크탑 헤더 */}
                 <div className="hidden sm:block space-y-2 mb-8">
                     <h1 className="text-4xl font-black text-slate-800">장비 후기</h1>
                     <p className="text-sm text-slate-400 font-bold">클럽원들의 배드민턴 장비 사용 후기를 확인하고 공유해보세요</p>
@@ -154,7 +152,7 @@ export default function ReviewPage() {
                     </button>
                 </div>
 
-                {/* 모바일 전용 카테고리별 유동 타이틀 */}
+                {/* 모바일 카테고리 타이틀 */}
                 <h2 className="text-[20px] font-extrabold text-[#1a1a1a] sm:hidden mt-6 mb-4 tracking-tight">
                     {activeTab} 후기
                 </h2>
@@ -180,7 +178,6 @@ export default function ReviewPage() {
                                         className={`bg-white ${CATEGORY_BG_STYLES[review.category] || ''} p-5 sm:p-7 rounded-[20px] border border-gray-100 flex flex-col justify-between shadow-sm cursor-pointer hover:shadow-md transition-all h-full`}
                                     >
                                         <div>
-                                            {/* 모바일: 양끝 정렬 / 데스크탑: 좌측 정렬 */}
                                             <div className="flex justify-between sm:justify-start items-center gap-3 mb-3 sm:mb-4">
                                                 <span className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-md sm:rounded-lg text-[12px] sm:text-[13px] font-bold ${CATEGORY_STYLES[review.category] || 'bg-gray-50 text-gray-500'}`}>
                                                     {REVERSE_CATEGORY_MAP[review.category]}
@@ -197,26 +194,21 @@ export default function ReviewPage() {
                                                 </div>
                                             </div>
                                             
-                                            {/* 제품명 */}
                                             <h3 className="font-extrabold text-[18px] sm:text-[24px] text-[#1a1a1a] sm:text-slate-800 mb-1.5 sm:mb-2 line-clamp-1">
                                                 {review.brandName} - {review.productName}
                                             </h3>
                                             
-                                            {/* 사용 기간 */}
                                             <p className="text-[13px] sm:text-[15px] text-[#8b95a1] sm:text-slate-500 mb-4 sm:mb-6 font-medium">
                                                 사용 기간: {formatUsageMonth(review.usageMonth)}
                                             </p>
 
-                                            {/* 데스크탑 전용 구분선 */}
                                             <div className="hidden sm:block w-full h-[1px] bg-gray-200/70 mb-6" />
                                             
-                                            {/* 내용 */}
                                             <p className="text-[14px] sm:text-[16px] text-[#4e5968] sm:text-[#475569] leading-[1.6] sm:leading-[1.7] mb-6 sm:mb-8 line-clamp-3 break-keep">
                                                 {review.content}
                                             </p>
                                         </div>
                                         
-                                        {/* 푸터 정보 (작성자 & 날짜) */}
                                         <div className="flex justify-between items-center mt-auto text-[13px] sm:text-[15px] text-[#8b95a1] sm:text-slate-500 font-medium">
                                             <span>{maskName(review.memberNickname)}</span>
                                             <span>{formatDate(review.createdAt)}</span>
@@ -231,9 +223,9 @@ export default function ReviewPage() {
                         </div>
                     )}
                 </div>
-                {/* 모바일 전용 푸터 섹션 (sm:hidden 속성으로 데스크탑에서는 숨김 처리) */}
+
+                {/* 모바일 전용 푸터 */}
                 <div className="sm:hidden p-4">
-                    {/* 로고 이미지 경로는 실제 프로젝트 환경에 맞게 수정해 주세요 */}
                     <img 
                         src="/images/logo.png"
                         alt="YBC BADMINTON CLUB" 
@@ -264,7 +256,7 @@ export default function ReviewPage() {
     );
 }
 
-// 상세보기 모달 컴포넌트
+// 💡 상세보기 모달 (iPhone SE 등 모바일 높이 대응 최적화 적용)
 function ReviewDetailModal({ review, onClose, isAuthor, onChanged, showToast }: any) {
     const [isEditing, setIsEditing] = useState(false);
     const [editContent, setEditContent] = useState(review.content);
@@ -296,22 +288,23 @@ function ReviewDetailModal({ review, onClose, isAuthor, onChanged, showToast }: 
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-            <div className="bg-white w-full max-w-2xl p-6 sm:p-12 rounded-[28px] sm:rounded-[40px] relative shadow-2xl max-h-[90vh] overflow-y-auto animate-in zoom-in duration-200">
-                <button onClick={onClose} className="absolute top-6 right-6 sm:top-8 sm:right-8 text-slate-400 text-2xl hover:text-slate-600">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+            
+            {/* 💡 my-auto 및 max-h-[85vh] 설정으로 작은 화면에서도 가운데 정렬 및 스크롤 매끄럽게 처리 */}
+            <div className="bg-white w-full max-w-2xl p-5 sm:p-12 rounded-[24px] sm:rounded-[40px] relative shadow-2xl max-h-[85vh] overflow-y-auto animate-in zoom-in duration-200 my-auto z-10">
+                <button onClick={onClose} className="absolute top-5 right-5 sm:top-8 sm:right-8 text-slate-400 text-xl sm:text-2xl hover:text-slate-600">
                     <X />
                 </button>
 
-                <div className="mb-8 sm:mb-10 space-y-2">
-                    {/* 💡 모달 카테고리 태그 색상 연동 */}
-                    <span className={`inline-block px-3 py-1.5 rounded-lg text-sm font-black uppercase tracking-wider ${CATEGORY_STYLES[review.category] || 'bg-gray-50 text-gray-500'}`}>
+                <div className="mb-6 sm:mb-10 space-y-2">
+                    <span className={`inline-block px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs sm:text-sm font-black uppercase tracking-wider ${CATEGORY_STYLES[review.category] || 'bg-gray-50 text-gray-500'}`}>
                         {REVERSE_CATEGORY_MAP[review.category]}
                     </span>
-                    <h2 className="text-xl sm:text-4xl font-black text-slate-800 break-keep pr-8 mt-3">
+                    <h2 className="text-lg sm:text-4xl font-black text-slate-800 break-keep pr-6 mt-2 sm:mt-3">
                         {review.brandName} - {review.productName}
                     </h2>
-                    <div className="flex justify-between items-center text-sm font-bold text-slate-400 pt-2">
+                    <div className="flex justify-between items-center text-xs sm:text-sm font-bold text-slate-400 pt-1 sm:pt-2">
                         <span>작성자: {maskName(review.memberNickname)}</span>
                         <span>
                             {review.updatedAt && review.updatedAt !== review.createdAt
@@ -324,8 +317,8 @@ function ReviewDetailModal({ review, onClose, isAuthor, onChanged, showToast }: 
                 {isEditing ? (
                     <div className="space-y-4 mb-6">
                         <div className="space-y-1.5">
-                            <label className="text-sm font-black text-slate-500">별점</label>
-                            <div className="flex gap-1.5 text-3xl">
+                            <label className="text-xs sm:text-sm font-black text-slate-500">별점</label>
+                            <div className="flex gap-1.5 text-2xl sm:text-3xl">
                                 {[1, 2, 3, 4, 5].map((star) => (
                                     <button
                                         key={star}
@@ -339,40 +332,40 @@ function ReviewDetailModal({ review, onClose, isAuthor, onChanged, showToast }: 
                             </div>
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-sm font-black text-slate-500">사용 개월</label>
+                            <label className="text-xs sm:text-sm font-black text-slate-500">사용 개월</label>
                             <div className="flex items-center gap-2">
                                 <input
                                     type="number"
                                     min={0}
                                     value={editUsageMonth}
                                     onChange={(e) => setEditUsageMonth(e.target.value)}
-                                    className="w-28 p-2.5 border border-gray-200 rounded-xl text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-[#5b6b0f]/20"
+                                    className="w-24 sm:w-28 p-2 sm:p-2.5 border border-gray-200 rounded-xl text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-[#5b6b0f]/20 text-sm"
                                 />
-                                <span className="text-sm font-bold text-slate-500">개월</span>
+                                <span className="text-xs sm:text-sm font-bold text-slate-500">개월</span>
                             </div>
                         </div>
                     </div>
                 ) : (
-                    <div className="flex items-center gap-3 mb-8">
-                        <div className="flex text-amber-400 text-2xl">
+                    <div className="flex items-center gap-2 sm:gap-3 mb-6 sm:mb-8">
+                        <div className="flex text-amber-400 text-xl sm:text-2xl">
                             {[...Array(5)].map((_, index) => (
                                 <span key={index} className={index < review.rating ? "text-amber-400" : "text-gray-200"}>★</span>
                             ))}
                         </div>
-                        <span className="text-sm font-bold text-slate-400">· 사용 {review.usageMonth}개월</span>
+                        <span className="text-xs sm:text-sm font-bold text-slate-400">· 사용 {review.usageMonth}개월</span>
                     </div>
                 )}
 
-                <div className="py-8 border-y border-slate-100 min-h-[250px]">
+                <div className="py-5 sm:py-8 border-y border-slate-100 min-h-[160px] sm:min-h-[250px]">
                     {isEditing ? (
                         <textarea 
                             value={editContent} 
                             onChange={(e) => setEditContent(e.target.value)} 
-                            rows={5} 
-                            className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#5b6b0f] outline-none" 
+                            rows={4} 
+                            className="w-full p-3 sm:p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#5b6b0f] outline-none text-sm sm:text-base" 
                         />
                     ) : (
-                        <p className="text-lg text-slate-600 leading-relaxed whitespace-pre-wrap break-all">
+                        <p className="text-sm sm:text-lg text-slate-600 leading-relaxed whitespace-pre-wrap break-all">
                             {review.content}
                         </p>
                     )}
@@ -380,18 +373,18 @@ function ReviewDetailModal({ review, onClose, isAuthor, onChanged, showToast }: 
 
                 {/* 수정/삭제 버튼 */}
                 {isAuthor && (
-                    <div className="flex gap-4 justify-end pt-8">
+                    <div className="flex gap-2 sm:gap-4 justify-end pt-5 sm:pt-8">
                         {isEditing ? (
-                            <button onClick={saveEdit} disabled={busy} className="flex items-center gap-2 px-6 py-3 bg-[#5b6b0f] text-white rounded-full font-bold hover:bg-[#46530c]">
-                                <Check className="w-5 h-5" /> 저장
+                            <button onClick={saveEdit} disabled={busy} className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-[#5b6b0f] text-white rounded-full font-bold hover:bg-[#46530c] text-xs sm:text-base">
+                                <Check className="w-4 h-4 sm:w-5 sm:h-5" /> 저장
                             </button>
                         ) : (
                             <>
-                                <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-6 py-3 bg-gray-100 text-slate-600 rounded-full font-bold hover:bg-gray-200">
-                                    <Pencil className="w-5 h-5" /> 수정
+                                <button onClick={() => setIsEditing(true)} className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gray-100 text-slate-600 rounded-full font-bold hover:bg-gray-200 text-xs sm:text-base">
+                                    <Pencil className="w-4 h-4 sm:w-5 sm:h-5" /> 수정
                                 </button>
-                                <button onClick={handleDelete} className="flex items-center gap-2 px-6 py-3 bg-red-50 text-red-600 rounded-full font-bold hover:bg-red-100">
-                                    <Trash2 className="w-5 h-5" /> 삭제
+                                <button onClick={handleDelete} className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-red-50 text-red-600 rounded-full font-bold hover:bg-red-100 text-xs sm:text-base">
+                                    <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" /> 삭제
                                 </button>
                             </>
                         )}
