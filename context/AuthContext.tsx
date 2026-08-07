@@ -10,10 +10,12 @@ interface User {
     id?: number;
     role: UserRole;
     name: string;
+    nickname?: string;
     email?: string;
     phone?: string;
     provider?: string;
     isAdmin?: boolean;
+    term?: string; // 💡 기수(term) 필드 추가
 }
 
 interface AuthContextType {
@@ -81,10 +83,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return {
             id: data.id,
             role: 'member',
-            name: data.nickname,
+            name: data.nickname || data.name || '부원',
+            nickname: data.nickname,
             email: data.email,
             provider: data.provider,
             isAdmin: data.isAdmin === true,
+            term: data.term, // 💡 API 응답의 term 매핑 추가
         };
     }, []);
 
