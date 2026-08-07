@@ -28,6 +28,38 @@ function LoginIcon({ className = "" }: { className?: string }) {
   );
 }
 
+// 💡 운영진 양배추 아이콘 컴포넌트
+function CabbageIcon({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <span
+      className={`inline-flex items-center justify-center bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full font-bold leading-none ${className}`}
+      title="운영진"
+    >
+      🌱
+    </span>
+  );
+}
+
+// 💡 기수(term) 텍스트 포맷팅 헬퍼 (숫자는 크게, "기"는 작게)
+function RenderTermBadge({ term, size = "normal" }: { term?: string; size?: "normal" | "small" }) {
+  if (!term) return <span>-</span>;
+  // "10기", "10" 등에서 숫자만 추출
+  const numericTerm = String(term).replace(/[^0-9]/g, "");
+  const textClass = size === "small" ? "text-[12px]" : "text-[14px]";
+  const subTextClass = size === "small" ? "text-[9px]" : "text-[10px]";
+
+  if (!numericTerm) {
+    return <span className={textClass}>{term}</span>;
+  }
+
+  return (
+    <span className="inline-flex items-baseline justify-center font-black leading-none">
+      <span className={textClass}>{numericTerm}</span>
+      <span className={`${subTextClass} font-bold ml-0.5 opacity-90`}>기</span>
+    </span>
+  );
+}
+
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -35,6 +67,12 @@ export default function Header() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+
+  // 유저 객체 정보 단언 처리
+  const authUser = user as any;
+  const userName = authUser?.name || authUser?.nickname || "부원";
+  const userTerm = authUser?.term;
+  const isAdmin = Boolean(authUser?.isAdmin);
 
   // 비로그인 시 authOnly 메뉴(미니게임) 숨김
   const visibleLinks = NAV_LINKS.filter((l) => !l.authOnly || !!user);
@@ -46,7 +84,6 @@ export default function Header() {
     router.push("/");
   };
 
-  const initial = user?.name?.trim().charAt(0).toUpperCase() ?? "?";
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
@@ -96,7 +133,7 @@ export default function Header() {
                 </Link>
               </li>
             ))}
-            {user?.isAdmin && (
+            {isAdmin && (
               <li>
                 <Link
                   href="/admin"
@@ -113,22 +150,28 @@ export default function Header() {
         <div className="hidden lg:flex items-center shrink-0">
           {user ? (
             <div className="relative" ref={profileRef}>
+              {/* 💡 프로필 이미지 동그라미 안에 기수(term) 표시 */}
               <button
                 onClick={() => setIsProfileOpen((v) => !v)}
                 aria-label="프로필 메뉴"
-                className="w-10 h-10 rounded-full bg-brand text-white font-bold text-[15px] flex items-center justify-center hover:brightness-110 active:scale-95 transition-all"
+                className="w-10 h-10 rounded-full bg-brand text-white flex items-center justify-center hover:brightness-110 active:scale-95 transition-all shadow-sm"
               >
-                {initial}
+                <RenderTermBadge term={userTerm} size="normal" />
               </button>
+
               {isProfileOpen && (
-                <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl border border-gray-100 shadow-xl overflow-hidden">
+                <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl border border-gray-100 shadow-xl overflow-hidden animate-in fade-in zoom-in duration-150">
                   <div className="px-5 py-4 bg-brand-soft border-b border-gray-100">
-                    <p className="text-[15px] font-bold text-ink truncate">
-                      {user.name}
-                    </p>
-                    {user.email && (
+                    {/* 💡 운영진일 경우 이름 옆에 양배추 아이콘 추가 */}
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-[15px] font-bold text-ink truncate">
+                        {userName}
+                      </p>
+                      {isAdmin && <CabbageIcon />}
+                    </div>
+                    {authUser?.email && (
                       <p className="text-xs font-medium text-subtle truncate mt-0.5">
-                        {user.email}
+                        {authUser.email}
                       </p>
                     )}
                   </div>
@@ -164,18 +207,23 @@ export default function Header() {
         </button>
       </div>
 
-      {/* 모바일 전체화면 메뉴 (Figma node 196:107) */}
+      {/* 모바일 전체화면 메뉴 */}
       {isMenuOpen && (
         <div className="lg:hidden fixed inset-0 z-50 bg-white flex flex-col">
           <div className="flex items-center justify-between px-5 h-[72px] border-b border-gray-100">
             {user ? (
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-full bg-brand text-white font-bold text-sm flex items-center justify-center">
-                  {initial}
+                {/* 💡 모바일 프로필 이미지 동그라미 안에 기수(term) 표시 */}
+                <div className="w-9 h-9 rounded-full bg-brand text-white flex items-center justify-center shadow-sm">
+                  <RenderTermBadge term={userTerm} size="small" />
                 </div>
-                <span className="text-[15px] font-bold text-ink truncate max-w-[160px]">
-                  {user.name}
-                </span>
+                {/* 💡 모바일 상단 프로필에도 이름 + 운영진 양배추 아이콘 표시 */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[15px] font-bold text-ink truncate max-w-[140px]">
+                    {userName}
+                  </span>
+                  {isAdmin && <CabbageIcon />}
+                </div>
               </div>
             ) : (
               <Link
@@ -213,7 +261,7 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
-            {user?.isAdmin && (
+            {isAdmin && (
               <Link
                 href="/admin"
                 onClick={() => setIsMenuOpen(false)}
