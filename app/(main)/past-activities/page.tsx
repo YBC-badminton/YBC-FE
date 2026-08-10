@@ -21,7 +21,7 @@ interface ActivitiesContent {
 const DEFAULT_ACTIVITIES: ActivitiesContent = {
     mainTitle: "양배추의 지난 활동을 소개합니다!",
     subDescription:
-        "매주 만나는 정기운동부터, 함께 겨루고 즐거움을 나누는 이벤트,\n그리고 운동 뒤의 뒷풀이까지.\n양배추의 모든 활동을 한눈에 담았어요.",
+        "매주 만나는 정기운동부터, 함께 겨루고 즐거움을 나누는 이벤트,\n그리고 운동 뒤의 뒤풀이까지.\n양배추의 모든 활동을 한눈에 담았어요.",
     regularMeeting: {
         description:
             "매주 두 번, 화요일과 토요일에 만나요\n꾸준함이 실력이 되는 양배추의 기본 루틴이에요.",
@@ -336,7 +336,7 @@ export default function PastActivitiesPage() {
                 </div>
 
                 {/* =========================================
-                    ACTIVITY 03: 뒷풀이
+                    ACTIVITY 03: 뒤풀이
                 ========================================= */}
                 <div className="w-full max-w-5xl flex flex-col items-center px-4 sm:px-6 relative">
                     <span className="bg-[#93C54B] text-white px-5 py-1.5 rounded-full text-xs font-black tracking-widest mb-10 shadow-sm">
@@ -344,16 +344,16 @@ export default function PastActivitiesPage() {
                     </span>
                     
                     <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-end mb-12 gap-4 sm:gap-0">
-                        <h2 className="text-2xl sm:text-[28px] font-black text-gray-900 tracking-tight">뒷풀이</h2>
+                        <h2 className="text-2xl sm:text-[28px] font-black text-gray-900 tracking-tight">뒤풀이</h2>
                     </div>
 
                     <div className="w-full flex flex-col md:flex-row items-center gap-12 md:gap-20">
                         {/* 좌측: 비정형 이미지 도형 (Blob) */}
                         <div className="w-full md:w-[500px] flex justify-center">
                             <div className="w-full max-w-[400px] max-h-[300px] aspect-square bg-[#F8FAF3] rounded-[77%_23%_70%_30%/22%_28%_72%_78%] overflow-hidden flex items-center justify-center shadow-inner">
-                                {/* 뒷풀이 이미지 (afterParties.imageUrl) */}
+                                {/* 뒤풀이 이미지 (afterParties.imageUrl) */}
                                 {content.afterParties.imageUrl && (
-                                    <img src={content.afterParties.imageUrl} alt="뒷풀이 사진" className="w-full h-full object-cover" />
+                                    <img src={content.afterParties.imageUrl} alt="뒤풀이 사진" className="w-full h-full object-cover" />
                                 )}
                             </div>
                         </div>
@@ -361,7 +361,7 @@ export default function PastActivitiesPage() {
                         {/* 우측: 텍스트 및 캐릭터 */}
                         <div className="flex-1 relative pb-20 md:pb-0 lg:pr-48">
                             <div className="space-y-6">
-                                {/* 뒷풀이 설명 (afterParties.description[]) — 첫 줄은 강조, 이후는 보조 스타일 */}
+                                {/* 뒤풀이 설명 (afterParties.description[]) — 첫 줄은 강조, 이후는 보조 스타일 */}
                                 {content.afterParties.description.map((line, i) => (
                                     <p
                                         key={i}
