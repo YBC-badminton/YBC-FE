@@ -7,9 +7,9 @@ import api from '../../../lib/axios';
 import { useAuth } from '../../../context/AuthContext';
 import CreateLightningModal from '../../../components/ui/CreateLightningModal';
 import LoginRequiredModal from '../../../components/ui/LoginRequiredModal';
-import { MapPin, Calendar as CalendarIcon } from 'lucide-react'; // 💡 아이콘 임포트
+import { MapPin, Calendar as CalendarIcon } from 'lucide-react';
 
-// API 응답 타입
+// API 응답 타입 (activityDate 추가)
 interface VoteItem {
     voteId: number;
     name: string;
@@ -17,7 +17,8 @@ interface VoteItem {
     location: string;
     voteStartAt: string;
     voteEndAt: string;
-    activityTime: string;
+    activityDate: string; // 💡 실제 활동 날짜 필드
+    activityTime: string; // 💡 실제 활동 시간 필드
     capacity: number;
     currentParticipantCount: number;
 }
@@ -48,9 +49,11 @@ const TYPE_BADGE: Record<string, string> = {
     'EVENT': 'bg-purple-50 text-purple-600',
 };
 
-// 날짜 포맷: "2026-04-03T18:00:00" → "26.04.03 (목)"
+// 날짜 포맷: "2026-08-15" 또는 "2026-08-15T00:00:00" → "26.08.15 (토)"
 function formatDate(dateStr: string): string {
+    if (!dateStr) return '';
     const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
     const days = ['일', '월', '화', '수', '목', '금', '토'];
     const yy = String(d.getFullYear()).slice(2);
     const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -66,8 +69,6 @@ export default function ActivitiesPage() {
     const { user } = useAuth();
     const router = useRouter();
 
-    // 정기 모임 페이지는 로그인 필수 — 비로그인 사용자는 로그인 페이지로 유도.
-    // localStorage 토큰을 직접 확인해 마운트 시 하이드레이션 깜빡임을 방지.
     useEffect(() => {
         if (typeof window === 'undefined') return;
         const token = localStorage.getItem('accessToken');
@@ -126,7 +127,6 @@ export default function ActivitiesPage() {
     const filteredAvailable = filterByTab(availableActivities);
     const filteredPast = filterByTab(pastActivities);
 
-    // 로그인 확인 전(또는 비로그인 리다이렉트 중)에는 콘텐츠를 감춘다.
     if (isVerifying) {
         return (
             <div className="min-h-screen bg-white flex items-center justify-center text-slate-400 text-sm font-bold">
@@ -227,9 +227,6 @@ function ActivityCard({ data, isPast }: { data: VoteItem; isPast: boolean }) {
     const router = useRouter();
     const percentage = data.capacity > 0 ? (data.currentParticipantCount / data.capacity) * 100 : 0;
     const typeLabel = TYPE_LABEL[data.type] || data.type;
-
-    // 💡 data에 matchRegistered 속성이 없다면 VoteItem 인터페이스에 추가해 주세요.
-    // 만약 API 응답에 이 값이 포함되어 있다면 아래처럼 조건부 렌더링이 가능합니다.
     const isMatchRegistered = (data as any).matchRegistered;
 
     return (
@@ -245,7 +242,6 @@ function ActivityCard({ data, isPast }: { data: VoteItem; isPast: boolean }) {
                         </span>
                         <h3 className="text-base sm:text-lg font-black text-slate-800 truncate">{data.name}</h3>
 
-                        {/* 💡 matchRegistered가 true일 때만 대진 확인 버튼 노출 */}
                         {isMatchRegistered && (
                             <Link
                                 href={`/activities/${data.voteId}/tournament`}
@@ -259,14 +255,16 @@ function ActivityCard({ data, isPast }: { data: VoteItem; isPast: boolean }) {
                     
                     <div className="flex flex-col gap-1 text-xs font-bold text-slate-400">
                         <p className="flex items-center gap-1 truncate"><MapPin className="w-3 h-3" /> {data.location}</p>
-                        <p className="flex items-center gap-1 truncate"><CalendarIcon className="w-3 h-3" /> {formatDate(data.voteEndAt)} {data.activityTime}</p>
+                        {/* 💡 voteEndAt 대신 activityDate를 사용하도록 수정 */}
+                        <p className="flex items-center gap-1 truncate">
+                            <CalendarIcon className="w-3 h-3" /> {formatDate(data.activityDate)} {data.activityTime}
+                        </p>
                     </div>
                 </div>
 
                 <div className="w-full sm:w-48 sm:text-right space-y-2 sm:space-y-3 pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-50 flex-shrink-0">
                     <div className="text-xs font-black text-slate-400 uppercase tracking-tighter">참여 인원</div>
                     {data.type === 'FLASH' ? (
-                        // 번개 모임은 정원이 없어 참가 인원만 표시
                         <div className="text-xl sm:text-2xl font-black text-slate-800">
                             {data.currentParticipantCount}<span className="text-base font-bold text-slate-400 ml-1">명 참가</span>
                         </div>
