@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import Script from "next/script";
 import api from "../../lib/axios";
 import { useAuth } from "../../context/AuthContext";
@@ -136,7 +137,6 @@ interface HomeContent {
   memberCount: number;
 }
 
-// API(GET /) 응답이 없을 때 사용할 기본값 (기존 하드코딩 문구를 폴백으로 유지)
 const DEFAULT_HOME: HomeContent = {
   clubIntroduction:
     "양질의 배드민턴을 추구하는 사람들이 모인 동아리, 양배추입니다.\n매주 화요일·토요일, 실력보다 열정을 가진 분들과 함께합니다.\n처음이어도 괜찮아요. 함께 즐기며 성장하는 배드민턴을 경험하세요.",
@@ -149,12 +149,10 @@ export default function YBCMainPage() {
   const [recentVotes, setRecentVotes] = useState<VoteData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [recruiting, setRecruiting] = useState<boolean | null>(null);
-  // 셔틀콕 데코가 따라갈 카드 인덱스 (마우스 오버 카드, 없으면 첫 카드)
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [home, setHome] = useState<HomeContent>(DEFAULT_HOME);
   const { user } = useAuth();
 
-  // 메인페이지 콘텐츠 조회 (GET /) — 동아리 소개글·활동 사진·정기활동 횟수·부원 수
   useEffect(() => {
     api
       .get<HomeContent>("/")
@@ -188,7 +186,6 @@ export default function YBCMainPage() {
           data = response.data.data;
         }
 
-        // 활동 날짜순 오름차순 정렬 (가까운 날짜부터)
         data.sort((a: VoteData, b: VoteData) =>
           (a.activityDate ?? "").localeCompare(b.activityDate ?? ""),
         );
@@ -204,7 +201,6 @@ export default function YBCMainPage() {
     fetchActiveVotes();
   }, []);
 
-  // 모집 여부 조회 (recruiting=true 일 때만 '지원하기' 버튼 노출)
   useEffect(() => {
     api
       .get("/recruitments/message")
@@ -216,28 +212,34 @@ export default function YBCMainPage() {
     <div className="min-h-screen flex flex-col font-sans select-none bg-white overflow-x-clip">
       {/* ── 히어로 ───────────────────────────────────────── */}
       <section className="relative w-full overflow-hidden -mt-[100px] pt-[120px] pb-10 sm:pb-14 min-h-[500px] sm:min-h-[650px] lg:min-h-[800px] flex flex-col bg-gradient-to-b from-brand-soft via-brand-wash to-white">
-        {/* 1. 배경 및 캐릭터 이미지 영역 (z-0) */}
-        <div className="absolute inset-0 z-0 flex items-end justify-center pointer-events-none">
-          <img
+        {/* 1. 배경 이미지 영역 (Next.js Image fill & priority 최적화) */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <Image
             src="/images/background.png"
             alt="양배추 배드민턴 배경"
-            className="w-full h-full object-cover object-bottom"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-bottom"
           />
         </div>
 
-        {/* 2. 콘텐츠 및 버튼 영역 (z-10으로 이미지 위로 띄움) */}
+        {/* 2. 콘텐츠 및 버튼 영역 */}
         <div className="relative z-10 w-full max-w-5xl mx-auto px-4 flex flex-col items-center text-center mt-10 sm:mt-16">
           <div className="mb-8 sm:mb-10">
-            <img
+            <Image
               src="/images/text-title.svg"
               alt="양배추 양질의 배드민턴 추구"
+              width={250}
+              height={100}
+              priority
+              unoptimized
               className="w-[150px] sm:w-[250px] h-auto object-contain drop-shadow-sm"
             />
           </div>
 
           {/* 3. 액션 버튼 그룹 */}
           <div className="flex flex-row items-center justify-center gap-3 sm:gap-4 w-full max-w-[320px] sm:max-w-[350px] mx-auto">
-            {/* 지원하기 버튼 (브랜드 라임 그라데이션) — 모집중일 때만 노출 */}
             {recruiting === true && (
               <Link
                 href="/apply"
@@ -248,7 +250,6 @@ export default function YBCMainPage() {
               </Link>
             )}
 
-            {/* 정기모임 보기 버튼 (흰 바탕 + 브랜드 테두리) */}
             <Link
               href="/activities"
               className="flex-1 flex items-center justify-center gap-1.5 bg-white/90 backdrop-blur-sm border border-[#c3dd93] text-[#5b6b0f] py-3 sm:py-3.5 rounded-full font-body font-semibold text-[17px] shadow-[0_4px_14px_rgba(0,0,0,0.06)] hover:bg-[#f6fbf0] hover:border-[#93C54B] active:scale-95 transition-all duration-200"
@@ -259,31 +260,37 @@ export default function YBCMainPage() {
           </div>
         </div>
 
-        {/* 2. 캐릭터 하단 배치 영역 (z-5) */}
+        {/* 2. 캐릭터 하단 배치 영역 */}
         <div className="relative z-[5] mt-auto w-full max-w-screen-2xl mx-auto px-3 sm:px-8 lg:px-12 flex items-end justify-between gap-2 sm:gap-3 pointer-events-none">
-          {/* [왼쪽 캐릭터] 서서 라켓 들고 손 흔드는 양배추 */}
           <div className="shrink-0 w-[clamp(84px,24vw,250px)] transition-all duration-300">
-            <img
+            <Image
               src="/images/character-left.svg"
               alt="손 흔드는 양배추 캐릭터"
+              width={250}
+              height={250}
+              unoptimized
               className="w-full h-auto object-contain drop-shadow-sm"
             />
           </div>
 
-          {/* [가운데 캐릭터] 코트에 슬라이딩하며 리시브하는 양배추 */}
           <div className="shrink-0 w-[clamp(84px,23vw,280px)] transition-all duration-300">
-            <img
+            <Image
               src="/images/character-center.svg"
               alt="슬라이딩하는 양배추 캐릭터"
+              width={280}
+              height={280}
+              unoptimized
               className="w-full h-auto object-contain drop-shadow-sm"
             />
           </div>
 
-          {/* [오른쪽 캐릭터 + 셔틀콕] 점프하며 스매싱 시도하는 양배추 (살짝 흔들리는 모션) */}
           <div className="shrink-0 w-[clamp(88px,25vw,320px)] transition-all duration-300">
-            <img
+            <Image
               src="/images/character-right.svg"
               alt="스매싱하는 양배추 캐릭터"
+              width={320}
+              height={320}
+              unoptimized
               className="w-full h-auto object-contain drop-shadow-sm animate-sway origin-bottom"
             />
           </div>
@@ -304,17 +311,18 @@ export default function YBCMainPage() {
           </div>
 
           <div className="grid grid-cols-2 sm:flex sm:flex-row items-center justify-center gap-4 sm:gap-6 mt-10 w-full max-w-4xl">
-            {/* 1. 동아리 실제 활동 사진 블롭 카드 */}
+            {/* 1. 동아리 실제 활동 사진 블롭 카드 (Next.js Image 최적화) */}
             <div
               className="relative col-span-2 place-self-center w-full sm:flex-[1.3] max-w-[380px] sm:max-w-none min-h-[180px] sm:min-h-[220px] bg-[#93C54B] flex items-center justify-center text-white/90 font-bold text-sm sm:text-base px-8 text-center shadow-md overflow-hidden transition-transform hover:scale-[1.02]"
               style={{ borderRadius: "28% 72% 38% 62% / 45% 36% 64% 55%" }}
             >
               {home.activityImageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
                   src={home.activityImageUrl}
                   alt="동아리 실제 활동 사진"
-                  className="absolute inset-0 w-full h-full object-cover"
+                  fill
+                  sizes="(max-width: 768px) 380px, 450px"
+                  className="object-cover"
                 />
               ) : (
                 <span>동아리 실제 활동 사진 삽입</span>
@@ -375,11 +383,16 @@ export default function YBCMainPage() {
         </div>
 
         <div className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-          <img
-            src="/images/mascot-peek.svg"
-            alt=""
-            className="hidden lg:block pointer-events-none select-none absolute -top-[200px] right-[72px] w-[246px] h-[282px]"
-          />
+          <div className="hidden lg:block pointer-events-none select-none absolute -top-[200px] right-[72px] w-[246px] h-[282px]">
+            <Image
+              src="/images/mascot-peek.svg"
+              alt=""
+              width={246}
+              height={282}
+              unoptimized
+              className="w-full h-full object-contain"
+            />
+          </div>
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
               <div
@@ -437,12 +450,17 @@ export default function YBCMainPage() {
           </svg>
         </div>
 
+        {/* 코트 배경 이미지 */}
         <div className="absolute inset-0 z-0 pointer-events-none flex justify-end">
-          <img
-            src="/images/court-bg.svg"
-            alt="배드민턴 코트 배경"
-            className="w-full md:w-[60%] object-contain object-right-top opacity-30 md:opacity-90"
-          />
+          <div className="relative w-full md:w-[60%] h-full opacity-30 md:opacity-90">
+            <Image
+              src="/images/court-bg.svg"
+              alt="배드민턴 코트 배경"
+              fill
+              unoptimized
+              className="object-contain object-right-top"
+            />
+          </div>
         </div>
 
         <div className="relative z-10 max-w-screen-xl mx-auto px-6 sm:px-16 flex flex-col justify-start min-h-[200px] md:min-h-[300px] mt-4">
@@ -464,10 +482,12 @@ export default function YBCMainPage() {
           <div className="bg-[#F8FAF3]/85 backdrop-blur-md rounded-[28px] sm:rounded-[36px] p-7 sm:p-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-8 md:gap-10 shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-white/50">
             <div className="flex flex-col gap-6 w-full md:w-auto">
               <div className="flex justify-between items-center w-full">
-                <img
+                <Image
                   src="/images/logo.png"
                   alt="YBC Logo"
-                  className="h-6 sm:h-7 object-contain"
+                  width={100}
+                  height={28}
+                  className="h-6 sm:h-7 w-auto object-contain"
                 />
 
                 <a
@@ -520,23 +540,31 @@ export default function YBCMainPage() {
           </div>
         </div>
 
+        {/* 뒷모습 캐릭터 */}
         <div className="absolute left-[50%] sm:left-[45%] bottom-[160px] sm:bottom-[180px] w-[160px] sm:w-[350px] z-30 pointer-events-none transform -translate-x-1/2 drop-shadow-lg hidden md:block">
-          <img
+          <Image
             src="/images/character-back.svg"
             alt="코트를 바라보는 캐릭터"
+            width={350}
+            height={350}
+            unoptimized
             className="w-full h-auto object-contain"
           />
         </div>
 
+        {/* 플로팅 지원하기 버튼 */}
         <div className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-50 block">
           <Link
             href="/apply"
             className="relative group flex flex-col items-center"
           >
             <div className="absolute -top-6 right-2 w-10 h-10 pointer-events-none drop-shadow-sm group-hover:-translate-y-1.5 transition-transform duration-300">
-              <img
+              <Image
                 src="/images/shuttlecock2.svg"
                 alt="셔틀콕 데코레이션"
+                width={40}
+                height={40}
+                unoptimized
                 className="w-full h-full object-contain"
               />
             </div>
@@ -622,7 +650,6 @@ function MeetingCard({
   const dDayLabel = getDDayLabel(vote.activityDate);
 
   return (
-    /* 💡 수정된 부분: 바로 상세 투표 페이지로 이동하도록 URL 연결 (/activities/{voteId}) */
     <Link
       href={`/activities/${vote.voteId}`}
       onMouseEnter={() => onHoverChange(true)}
@@ -634,12 +661,19 @@ function MeetingCard({
       }`}
     >
       {focused && (
-        <img
-          src="/images/shuttlecock.svg"
-          alt=""
+        <div 
           style={{ transform: "rotate(103.35deg)" }}
           className="absolute -top-12 -right-6 w-[75.713px] h-[73.41px] pointer-events-none drop-shadow-sm transition-opacity duration-300"
-        />
+        >
+          <Image
+            src="/images/shuttlecock.svg"
+            alt=""
+            width={76}
+            height={74}
+            unoptimized
+            className="w-full h-full object-contain"
+          />
+        </div>
       )}
 
       <div className="flex items-center justify-between">
@@ -914,9 +948,12 @@ function GymLocationSection() {
           </div>
 
           <div className="hidden lg:block absolute -bottom-8 -right-2 sm:-bottom-12 sm:-right-8 lg:-right-14 w-[160px] sm:w-[240px] lg:w-[280px] z-10 pointer-events-none drop-shadow-md transition-all">
-            <img
+            <Image
               src="/images/character-map.svg"
               alt="양배추 캐릭터"
+              width={280}
+              height={280}
+              unoptimized
               className="w-full h-auto object-contain"
             />
           </div>
