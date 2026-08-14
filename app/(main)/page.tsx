@@ -153,26 +153,51 @@ export default function YBCMainPage() {
   const [home, setHome] = useState<HomeContent>(DEFAULT_HOME);
   const { user } = useAuth();
 
+  // 💡 1. 메인페이지 콘텐츠 조회 + sessionStorage 캐싱 (GET /)
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const cached = sessionStorage.getItem("cached_home_content");
+      if (cached) {
+        try {
+          setHome(JSON.parse(cached));
+        } catch {}
+      }
+    }
+
     api
       .get<HomeContent>("/")
       .then((res) => {
         const d = res.data;
         if (!d) return;
-        setHome({
+        const newHome: HomeContent = {
           clubIntroduction: d.clubIntroduction || DEFAULT_HOME.clubIntroduction,
           activityImageUrl: d.activityImageUrl || "",
           regularMeetingCount:
             d.regularMeetingCount ?? DEFAULT_HOME.regularMeetingCount,
           memberCount: d.memberCount ?? DEFAULT_HOME.memberCount,
-        });
+        };
+        setHome(newHome);
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("cached_home_content", JSON.stringify(newHome));
+        }
       })
       .catch((error) =>
         console.warn("메인페이지 콘텐츠를 불러오지 못했습니다.", error),
       );
   }, []);
 
+  // 💡 2. 최근 투표 목록 조회 + sessionStorage 캐싱 (GET /votes/recent)
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const cachedVotes = sessionStorage.getItem("cached_recent_votes");
+      if (cachedVotes) {
+        try {
+          setRecentVotes(JSON.parse(cachedVotes));
+          setIsLoading(false);
+        } catch {}
+      }
+    }
+
     const fetchActiveVotes = async () => {
       try {
         const response = await api.get("/votes/recent");
@@ -189,10 +214,15 @@ export default function YBCMainPage() {
         data.sort((a: VoteData, b: VoteData) =>
           (a.activityDate ?? "").localeCompare(b.activityDate ?? ""),
         );
-        setRecentVotes(data.slice(0, 3));
+        const slicedVotes = data.slice(0, 3);
+        setRecentVotes(slicedVotes);
+
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("cached_recent_votes", JSON.stringify(slicedVotes));
+        }
       } catch (error) {
         console.warn("진행 중인 투표를 불러오지 못했습니다.", error);
-        setRecentVotes([]);
+        if (recentVotes.length === 0) setRecentVotes([]);
       } finally {
         setIsLoading(false);
       }
@@ -201,18 +231,34 @@ export default function YBCMainPage() {
     fetchActiveVotes();
   }, []);
 
+  // 💡 3. 모집 여부 조회 + sessionStorage 캐싱
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const cachedRecruiting = sessionStorage.getItem("cached_recruiting_status");
+      if (cachedRecruiting !== null) {
+        setRecruiting(cachedRecruiting === "true");
+      }
+    }
+
     api
       .get("/recruitments/message")
-      .then((res) => setRecruiting(!!res.data?.recruiting))
-      .catch(() => setRecruiting(false));
+      .then((res) => {
+        const isRecruiting = !!res.data?.recruiting;
+        setRecruiting(isRecruiting);
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("cached_recruiting_status", String(isRecruiting));
+        }
+      })
+      .catch(() => {
+        if (recruiting === null) setRecruiting(false);
+      });
   }, []);
 
   return (
     <div className="min-h-screen flex flex-col font-sans select-none bg-white overflow-x-clip">
       {/* ── 히어로 ───────────────────────────────────────── */}
       <section className="relative w-full overflow-hidden -mt-[100px] pt-[120px] pb-10 sm:pb-14 min-h-[500px] sm:min-h-[650px] lg:min-h-[800px] flex flex-col bg-gradient-to-b from-brand-soft via-brand-wash to-white">
-        {/* 1. 배경 이미지 영역 (Next.js Image fill & priority 최적화) */}
+        {/* 1. 배경 이미지 영역 */}
         <div className="absolute inset-0 z-0 pointer-events-none">
           <Image
             src="/images/background.png"
@@ -311,7 +357,7 @@ export default function YBCMainPage() {
           </div>
 
           <div className="grid grid-cols-2 sm:flex sm:flex-row items-center justify-center gap-4 sm:gap-6 mt-10 w-full max-w-4xl">
-            {/* 1. 동아리 실제 활동 사진 블롭 카드 (Next.js Image 최적화) */}
+            {/* 1. 동아리 실제 활동 사진 블롭 카드 */}
             <div
               className="relative col-span-2 place-self-center w-full sm:flex-[1.3] max-w-[380px] sm:max-w-none min-h-[180px] sm:min-h-[220px] bg-[#93C54B] flex items-center justify-center text-white/90 font-bold text-sm sm:text-base px-8 text-center shadow-md overflow-hidden transition-transform hover:scale-[1.02]"
               style={{ borderRadius: "28% 72% 38% 62% / 45% 36% 64% 55%" }}
@@ -903,7 +949,7 @@ function GymLocationSection() {
       {KAKAO_MAP_API_KEY && (
         <Script
           src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&libraries=services&autoload=false`}
-          strategy="afterInteractive"
+          strategy="lazyOnload"
           onLoad={initKakaoSdk}
         />
       )}
