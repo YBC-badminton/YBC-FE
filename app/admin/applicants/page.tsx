@@ -271,7 +271,10 @@ export default function ApplicantsPage() {
                                     )}
                                     <span className="text-xs font-normal text-gray-400 ml-1">{applicant.gender} / {applicant.age}세</span>
                                 </h3>
-                                <p className="text-xs text-gray-500 mt-1">{applicant.university} · {applicant.term}</p>
+                                {/* 💡 학교 옆에 학과 정보(applicant.major) 추가 */}
+                                <p className="text-xs text-gray-500 mt-1">
+                                    {applicant.university}{applicant.major ? ` ${applicant.major}` : ''} · {applicant.term}
+                                </p>
                             </div>
                             <button onClick={() => fetchDetail(applicant.applicationId)} className="p-1 text-gray-400">
                                 <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className={`transition-transform ${expandedId === applicant.applicationId ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6" /></svg>
