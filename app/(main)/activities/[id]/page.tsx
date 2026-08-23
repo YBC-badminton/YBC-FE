@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation';
 import api from '../../../../lib/axios';
 import { useToast } from '../../../../components/ui/Toast';
 import { useAuth } from '../../../../context/AuthContext';
-import { MapPin, Clock, Calendar as CalendarIcon, Users, Trash2, X } from 'lucide-react';
+import { MapPin, Clock, Calendar as CalendarIcon, Users, Trash2, X, Pencil, Check } from 'lucide-react';
 
 // API 응답 타입
 interface VoteDetail {
@@ -21,8 +21,8 @@ interface VoteDetail {
     voteEndAt: string;
     capacity: number;
     currentParticipantCount: number;
-    openedByMemberId?: number;   // 번개 모임 개설자
-    openedByNickname?: string;
+    openedByMemberId?: number;   // 번개 모임 개설자 ID
+    openedByNickname?: string;   // 번개 모임 개설자 닉네임
 }
 
 interface AttendanceStatusResponse {
@@ -117,20 +117,23 @@ export default function ActivityVotePage() {
     const [totalGuestCount, setTotalGuestCount] = useState(0);
     const [hasMatches, setHasMatches] = useState<boolean>(false);
 
+    // 💡 번개 모임 수정 모달 상태
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
     // 게스트 폼 상태
     const [guestName, setGuestName] = useState('');
     const [guestGender, setGuestGender] = useState('');
     const [guestLevel, setGuestLevel] = useState('');
     const [guestSubmitting, setGuestSubmitting] = useState(false);
 
-    // 게스트 등록 확인 모달 (등록 후 수정 불가 정책 안내)
+    // 게스트 등록 확인 모달
     const [showGuestConfirm, setShowGuestConfirm] = useState(false);
 
     // 명단 토글
     const [showAttending, setShowAttending] = useState(false);
     const [showAbsent, setShowAbsent] = useState(false);
 
-    // 투표 상태: 시작 전(BEFORE) / 진행 중(ONGOING) / 마감(ENDED)
+    // 투표 상태
     const voteStatus: 'BEFORE' | 'ONGOING' | 'ENDED' = (() => {
         if (!activity) return 'ENDED';
         const now = new Date();
@@ -138,7 +141,6 @@ export default function ActivityVotePage() {
         if (now > new Date(activity.voteEndAt)) return 'ENDED';
         return 'ONGOING';
     })();
-    // 실제 투표(참석/불참·게스트)는 진행 중일 때만 가능
     const isVoteActive = voteStatus === 'ONGOING';
 
     // 진행률 계산
@@ -210,7 +212,6 @@ export default function ActivityVotePage() {
         }
     }, [voteId]);
 
-    // 대진표 데이터 존재 여부 확인 API 호출
     const fetchMatchesExist = useCallback(async () => {
         try {
             await api.get(`/votes/${voteId}/matches`);
@@ -305,6 +306,12 @@ export default function ActivityVotePage() {
         }
     };
 
+    // 💡 번개 모임 개설자 본인 확인 (ID 또는 닉네임 비교)
+    const isFlashAuthor = !!user && activity?.type === 'FLASH' && (
+        (activity.openedByMemberId && (user as any).id === activity.openedByMemberId) ||
+        (activity.openedByNickname && (user.name === activity.openedByNickname || (user as any).nickname === activity.openedByNickname))
+    );
+
     if (loading) {
         return (
             <div className="min-h-screen bg-white py-10 px-6 lg:px-24 font-sans select-none flex items-center justify-center">
@@ -339,11 +346,23 @@ export default function ActivityVotePage() {
 
             {/* --- [1] 활동 요약 카드 --- */}
             <section className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6 sm:p-8 space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                <span className="bg-[#A1C852] text-white text-[11px] font-black px-2.5 py-1 rounded w-fit uppercase">
-                {TYPE_LABEL[activity.type] || activity.type}
-                </span>
-                <h1 className="text-2xl sm:text-3xl font-black text-slate-800 break-keep">{activity.name}</h1>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                <div className="flex items-center gap-3">
+                    <span className="bg-[#A1C852] text-white text-[11px] font-black px-2.5 py-1 rounded w-fit uppercase">
+                    {TYPE_LABEL[activity.type] || activity.type}
+                    </span>
+                    <h1 className="text-2xl sm:text-3xl font-black text-slate-800 break-keep">{activity.name}</h1>
+                </div>
+
+                {/* 💡 번개 모임 개설자 본인인 경우 수정 버튼 노출 */}
+                {isFlashAuthor && (
+                    <button
+                        onClick={() => setIsEditModalOpen(true)}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold text-xs transition active:scale-95 w-fit"
+                    >
+                        <Pencil className="w-3.5 h-3.5" /> 수정
+                    </button>
+                )}
             </div>
 
             <div className="bg-[#F2F8E1] p-5 sm:p-6 rounded-2xl grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-y-6 sm:gap-x-8">
@@ -423,7 +442,6 @@ export default function ActivityVotePage() {
                     </span>
                 </div>
 
-                {/* 💡 FLASH(번개모임)가 아닐 때(REGULAR 등)에만 참가 % 게이지 표시 */}
                 {activity.type !== 'FLASH' && (
                     <div className="w-full h-8 bg-slate-100 rounded-lg overflow-hidden relative shadow-inner">
                         <div className="h-full bg-[#A1C852] transition-all duration-700" style={{ width: `${attendanceRate}%` }} />
@@ -475,8 +493,6 @@ export default function ActivityVotePage() {
                     {absentees.length}명
                     </span>
                 </div>
-
-                {/* 💡 불참 % 게이지는 항상 숨김 처리 */}
 
                 {showAbsent && (
                     <div className="bg-slate-50 rounded-2xl border border-gray-100 p-4 sm:p-6 mt-6 space-y-2">
@@ -641,7 +657,7 @@ export default function ActivityVotePage() {
                 </section>
             )}
 
-            {/* 게스트 등록 확인 모달 (등록 후 수정 불가 안내) */}
+            {/* 게스트 등록 확인 모달 */}
             {showGuestConfirm && (
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div
@@ -688,7 +704,195 @@ export default function ActivityVotePage() {
               </div>
             )}
 
+            {/* 💡 번개 모임 수정 모달 */}
+            {isEditModalOpen && activity && (
+                <EditFlashModal
+                    activity={activity}
+                    onClose={() => setIsEditModalOpen(false)}
+                    onUpdated={() => {
+                        setIsEditModalOpen(false);
+                        fetchDetail();
+                    }}
+                    showToast={showToast}
+                />
+            )}
+
         </div>
+        </div>
+    );
+}
+
+// 💡 번개 모임 수정 전용 모달 컴포넌트
+function EditFlashModal({
+    activity,
+    onClose,
+    onUpdated,
+    showToast,
+}: {
+    activity: VoteDetail;
+    onClose: () => void;
+    onUpdated: () => void;
+    showToast: (msg: string, type?: 'success' | 'error') => void;
+}) {
+    const [title, setTitle] = useState(activity.name);
+    const [activityDate, setActivityDate] = useState(activity.activityDate);
+    const [activityTime, setActivityTime] = useState(activity.activityTime);
+    const [location, setLocation] = useState(activity.location);
+    const [memo, setMemo] = useState(activity.memo || '');
+    
+    // datetime-local input용 포맷팅 (YYYY-MM-DDTHH:mm)
+    const formatForInput = (isoString?: string) => {
+        if (!isoString) return '';
+        try {
+            const d = new Date(isoString);
+            const pad = (n: number) => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        } catch {
+            return '';
+        }
+    };
+
+    const [voteEndAt, setVoteEndAt] = useState(formatForInput(activity.voteEndAt));
+    const [submitting, setSubmitting] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!title.trim() || !activityDate || !activityTime.trim() || !location.trim() || !voteEndAt) {
+            showToast('필수 정보를 모두 입력해 주세요.', 'error');
+            return;
+        }
+
+        setSubmitting(true);
+        try {
+            // ISO-8601 형식 변환
+            const formattedVoteEndAt = new Date(voteEndAt).toISOString();
+
+            await api.patch(`/votes/flash/${activity.voteId}`, {
+                title: title.trim(),
+                activityDate,
+                activityTime: activityTime.trim(),
+                location: location.trim(),
+                memo: memo.trim(),
+                voteEndAt: formattedVoteEndAt,
+            });
+
+            showToast('번개 모임 정보가 수정되었습니다.', 'success');
+            onUpdated();
+        } catch (err: unknown) {
+            const message = (err as { response?: { data?: { message?: string } } })
+                ?.response?.data?.message || '번개 모임 수정 중 오류가 발생했습니다.';
+            showToast(message, 'error');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+            <div className="relative bg-white w-full max-w-lg rounded-[28px] shadow-2xl p-6 sm:p-8 my-auto max-h-[90vh] overflow-y-auto text-left z-10 animate-in zoom-in duration-150">
+                <button
+                    onClick={onClose}
+                    className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 p-1"
+                    aria-label="닫기"
+                >
+                    <X className="w-5 h-5" />
+                </button>
+
+                <h2 className="text-xl font-black text-slate-800 mb-6">번개 모임 수정</h2>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-1">
+                        <label className="text-xs font-black text-slate-500">활동명 <span className="text-red-500">*</span></label>
+                        <input
+                            type="text"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            placeholder="예) 금요일 저녁 번개"
+                            className="w-full px-3.5 py-3 border border-gray-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#A1C852]"
+                            disabled={submitting}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                            <label className="text-xs font-black text-slate-500">활동 날짜 <span className="text-red-500">*</span></label>
+                            <input
+                                type="date"
+                                value={activityDate}
+                                onChange={(e) => setActivityDate(e.target.value)}
+                                className="w-full px-3.5 py-3 border border-gray-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#A1C852]"
+                                disabled={submitting}
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs font-black text-slate-500">활동 시간 <span className="text-red-500">*</span></label>
+                            <input
+                                type="text"
+                                value={activityTime}
+                                onChange={(e) => setActivityTime(e.target.value)}
+                                placeholder="예) 19:00 ~ 21:00"
+                                className="w-full px-3.5 py-3 border border-gray-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#A1C852]"
+                                disabled={submitting}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="text-xs font-black text-slate-500">장소 <span className="text-red-500">*</span></label>
+                        <input
+                            type="text"
+                            value={location}
+                            onChange={(e) => setLocation(e.target.value)}
+                            placeholder="예) 망원나들목체육관"
+                            className="w-full px-3.5 py-3 border border-gray-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#A1C852]"
+                            disabled={submitting}
+                        />
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="text-xs font-black text-slate-500">투표 마감 일시 <span className="text-red-500">*</span></label>
+                        <input
+                            type="datetime-local"
+                            value={voteEndAt}
+                            onChange={(e) => setVoteEndAt(e.target.value)}
+                            className="w-full px-3.5 py-3 border border-gray-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#A1C852]"
+                            disabled={submitting}
+                        />
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="text-xs font-black text-slate-500">메모</label>
+                        <textarea
+                            rows={3}
+                            value={memo}
+                            onChange={(e) => setMemo(e.target.value)}
+                            placeholder="참가자들에게 전달할 메모가 있다면 작성해 주세요."
+                            className="w-full p-3.5 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#A1C852] resize-none"
+                            disabled={submitting}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 pt-4">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            disabled={submitting}
+                            className="py-3.5 font-bold rounded-2xl bg-gray-100 text-slate-600 hover:bg-gray-200 text-sm transition"
+                        >
+                            취소
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={submitting}
+                            className="flex items-center justify-center gap-1.5 py-3.5 font-black rounded-2xl bg-[#A1C852] text-white hover:bg-[#93bd41] text-sm shadow-md transition disabled:opacity-50"
+                        >
+                            <Check className="w-4 h-4" /> {submitting ? '수정 중...' : '수정 완료'}
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     );
 }
