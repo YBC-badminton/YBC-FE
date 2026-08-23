@@ -145,6 +145,25 @@ const DEFAULT_HOME: HomeContent = {
   memberCount: 50,
 };
 
+// 💡 3번 수정사항: 구글 검색엔진 최적화를 위한 SportsClub JSON-LD 구조화 데이터
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SportsClub",
+  name: "YBC 양배추 배드민턴 클럽",
+  alternateName: ["양배추 배드민턴", "양배추", "YBC", "YBC Badminton Club"],
+  url: "https://ybcbadminton.co.kr",
+  logo: "https://ybcbadminton.co.kr/images/logo.png",
+  image: "https://ybcbadminton.co.kr/images/background.png",
+  description:
+    "양질의 배드민턴을 추구하는 모임, 2030 대학생·청년 배드민턴 클럽 양배추입니다. 마곡실내배드민턴장, 망원나들목체육관 정기 모임 및 신입 부원 모집.",
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Seoul",
+    addressCountry: "KR",
+  },
+  sameAs: ["https://www.instagram.com/ybc_badmintonclub/"],
+};
+
 export default function YBCMainPage() {
   const [recentVotes, setRecentVotes] = useState<VoteData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -153,7 +172,7 @@ export default function YBCMainPage() {
   const [home, setHome] = useState<HomeContent>(DEFAULT_HOME);
   const { user } = useAuth();
 
-  // 💡 1. 메인페이지 콘텐츠 조회 + sessionStorage 캐싱 (GET /)
+  // 1. 메인페이지 콘텐츠 조회 + sessionStorage 캐싱 (GET /)
   useEffect(() => {
     if (typeof window !== "undefined") {
       const cached = sessionStorage.getItem("cached_home_content");
@@ -186,7 +205,7 @@ export default function YBCMainPage() {
       );
   }, []);
 
-  // 💡 2. 최근 투표 목록 조회 + sessionStorage 캐싱 (GET /votes/recent)
+  // 2. 최근 투표 목록 조회 + sessionStorage 캐싱 (GET /votes/recent)
   useEffect(() => {
     if (typeof window !== "undefined") {
       const cachedVotes = sessionStorage.getItem("cached_recent_votes");
@@ -231,7 +250,7 @@ export default function YBCMainPage() {
     fetchActiveVotes();
   }, []);
 
-  // 💡 3. 모집 여부 조회 + sessionStorage 캐싱
+  // 3. 모집 여부 조회 + sessionStorage 캐싱
   useEffect(() => {
     if (typeof window !== "undefined") {
       const cachedRecruiting = sessionStorage.getItem("cached_recruiting_status");
@@ -256,6 +275,12 @@ export default function YBCMainPage() {
 
   return (
     <div className="min-h-screen flex flex-col font-sans select-none bg-white overflow-x-clip">
+      {/* 💡 3번 수정사항: 구글 검색 봇 전용 구조화 데이터 스크립트 주입 */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       {/* ── 히어로 ───────────────────────────────────────── */}
       <section className="relative w-full overflow-hidden -mt-[100px] pt-[120px] pb-10 sm:pb-14 min-h-[500px] sm:min-h-[650px] lg:min-h-[800px] flex flex-col bg-gradient-to-b from-brand-soft via-brand-wash to-white">
         {/* 1. 배경 이미지 영역 */}
