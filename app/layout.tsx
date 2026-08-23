@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     '마곡실내배드민턴장',
   ],
   verification: {
-    google: 'google-site-verification=CLxAFkSsFejlcwF1xpJJO-YIO674Ot2zrti-eD1oX_U',
+  google: 'CLxAFkSsFejlcwF1xpJJO-YIO674Ot2zrti-eD1oX_U',
   },
   authors: [{ name: 'YBC Badminton Club' }],
   creator: 'YBC Badminton Club',
