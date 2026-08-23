@@ -41,6 +41,9 @@ export const metadata: Metadata = {
   ],
   verification: {
   google: 'CLxAFkSsFejlcwF1xpJJO-YIO674Ot2zrti-eD1oX_U',
+  other: {
+    'naver-site-verification': '26eeface6ccb148505dd56807afc08a393f4ccc1',
+  }
   },
   authors: [{ name: 'YBC Badminton Club' }],
   creator: 'YBC Badminton Club',
