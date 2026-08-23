@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import api from '../../../../lib/axios';
 import { useToast } from '../../../../components/ui/Toast';
 import { useAuth } from '../../../../context/AuthContext';
@@ -101,6 +101,7 @@ function formatVoteTime(dateStr: string): string {
 
 export default function ActivityVotePage() {
     const params = useParams();
+    const router = useRouter();
     const voteId = params.id;
     const { showToast } = useToast();
     const { user } = useAuth();
@@ -117,8 +118,9 @@ export default function ActivityVotePage() {
     const [totalGuestCount, setTotalGuestCount] = useState(0);
     const [hasMatches, setHasMatches] = useState<boolean>(false);
 
-    // 💡 번개 모임 수정 모달 상태
+    // 번개 모임 수정 모달 상태
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isDeletingFlash, setIsDeletingFlash] = useState(false);
 
     // 게스트 폼 상태
     const [guestName, setGuestName] = useState('');
@@ -306,7 +308,23 @@ export default function ActivityVotePage() {
         }
     };
 
-    // 💡 번개 모임 개설자 본인 확인 (ID 또는 닉네임 비교)
+    // 💡 번개 모임 삭제 핸들러 (DELETE /votes/flash/{voteId})
+    const handleDeleteFlash = async () => {
+        if (!confirm('정말 이 번개 모임을 삭제하시겠습니까?\n삭제 후에는 복구할 수 없습니다.')) return;
+        setIsDeletingFlash(true);
+        try {
+            await api.delete(`/votes/flash/${voteId}`);
+            showToast('번개 모임이 삭제되었습니다.', 'success');
+            router.replace('/activities');
+        } catch (err: unknown) {
+            const message = (err as { response?: { data?: { message?: string } } })
+                ?.response?.data?.message || '번개 모임 삭제 중 오류가 발생했습니다.';
+            showToast(message, 'error');
+            setIsDeletingFlash(false);
+        }
+    };
+
+    // 번개 모임 개설자 본인 확인 (ID 또는 닉네임 비교)
     const isFlashAuthor = !!user && activity?.type === 'FLASH' && (
         (activity.openedByMemberId && (user as any).id === activity.openedByMemberId) ||
         (activity.openedByNickname && (user.name === activity.openedByNickname || (user as any).nickname === activity.openedByNickname))
@@ -354,14 +372,24 @@ export default function ActivityVotePage() {
                     <h1 className="text-2xl sm:text-3xl font-black text-slate-800 break-keep">{activity.name}</h1>
                 </div>
 
-                {/* 💡 번개 모임 개설자 본인인 경우 수정 버튼 노출 */}
+                {/* 💡 번개 모임 개설자 본인인 경우 수정/삭제 버튼 노출 */}
                 {isFlashAuthor && (
-                    <button
-                        onClick={() => setIsEditModalOpen(true)}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold text-xs transition active:scale-95 w-fit"
-                    >
-                        <Pencil className="w-3.5 h-3.5" /> 수정
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setIsEditModalOpen(true)}
+                            disabled={isDeletingFlash}
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold text-xs transition active:scale-95 disabled:opacity-50"
+                        >
+                            <Pencil className="w-3.5 h-3.5" /> 수정
+                        </button>
+                        <button
+                            onClick={handleDeleteFlash}
+                            disabled={isDeletingFlash}
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100 font-bold text-xs transition active:scale-95 disabled:opacity-50"
+                        >
+                            <Trash2 className="w-3.5 h-3.5" /> {isDeletingFlash ? '삭제 중...' : '삭제'}
+                        </button>
+                    </div>
                 )}
             </div>
 
@@ -704,7 +732,7 @@ export default function ActivityVotePage() {
               </div>
             )}
 
-            {/* 💡 번개 모임 수정 모달 */}
+            {/* 번개 모임 수정 모달 */}
             {isEditModalOpen && activity && (
                 <EditFlashModal
                     activity={activity}
@@ -722,7 +750,7 @@ export default function ActivityVotePage() {
     );
 }
 
-// 💡 번개 모임 수정 전용 모달 컴포넌트
+// 번개 모임 수정 전용 모달 컴포넌트
 function EditFlashModal({
     activity,
     onClose,
@@ -765,7 +793,6 @@ function EditFlashModal({
 
         setSubmitting(true);
         try {
-            // ISO-8601 형식 변환
             const formattedVoteEndAt = new Date(voteEndAt).toISOString();
 
             await api.patch(`/votes/flash/${activity.voteId}`, {
