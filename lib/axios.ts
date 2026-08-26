@@ -88,12 +88,15 @@ api.interceptors.response.use(
                 onRefreshed(newAccessToken);
 
                 return api(originalRequest);
-            } catch {
-                // refresh 실패 → 로그아웃
-                localStorage.removeItem('accessToken');
-                localStorage.removeItem('refreshToken');
-                localStorage.removeItem('user');
-                window.location.href = '/login';
+            } catch (refreshError) {
+                // 서버가 refresh token 자체를 거부한 경우(401)에만 로그아웃 처리.
+                // 네트워크 에러/타임아웃 등은 토큰이 여전히 유효할 수 있으므로 로그아웃시키지 않는다.
+                if (axios.isAxiosError(refreshError) && refreshError.response?.status === 401) {
+                    localStorage.removeItem('accessToken');
+                    localStorage.removeItem('refreshToken');
+                    localStorage.removeItem('user');
+                    window.location.href = '/login';
+                }
                 return Promise.reject(error);
             } finally {
                 isRefreshing = false;
