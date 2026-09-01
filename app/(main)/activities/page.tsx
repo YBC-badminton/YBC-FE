@@ -21,6 +21,7 @@ interface VoteItem {
     activityTime: string; // 💡 실제 활동 시간 필드
     capacity: number;
     currentParticipantCount: number;
+    status: 'UPCOMING' | 'IN_PROGRESS' | 'ACTIVE' | 'COMPLETED';
 }
 
 interface VotesResponse {
@@ -88,6 +89,7 @@ export default function ActivitiesPage() {
     };
 
     const [availableActivities, setAvailableActivities] = useState<VoteItem[]>([]);
+    const [scheduledActivities, setScheduledActivities] = useState<VoteItem[]>([]);
     const [pastActivities, setPastActivities] = useState<VoteItem[]>([]);
     const [history, setHistory] = useState<VotesHistory | null>(null);
     const [loading, setLoading] = useState(true);
@@ -97,13 +99,15 @@ export default function ActivitiesPage() {
         setLoading(true);
         setError(null);
         try {
-            const [openRes, pastRes, historyRes] = await Promise.all([
+            const [openRes, closedRes, historyRes] = await Promise.all([
                 api.get<VotesResponse>('/votes', { params: { open: true, page: 0, size: 50 } }),
                 api.get<VotesResponse>('/votes', { params: { open: false, page: 0, size: 50 } }),
                 api.get<VotesHistory>('/votes/history'),
             ]);
             setAvailableActivities(openRes.data.votes);
-            setPastActivities(pastRes.data.votes);
+            // 투표는 마감됐지만 활동이 아직 끝나지 않은 항목(ACTIVE)과, 활동까지 종료된 항목(COMPLETED)을 분리
+            setScheduledActivities(closedRes.data.votes.filter(vote => vote.status === 'ACTIVE'));
+            setPastActivities(closedRes.data.votes.filter(vote => vote.status !== 'ACTIVE'));
             setHistory(historyRes.data);
         } catch (err: unknown) {
             const message = (err as { response?: { data?: { message?: string } } })
@@ -125,6 +129,7 @@ export default function ActivitiesPage() {
     };
 
     const filteredAvailable = filterByTab(availableActivities);
+    const filteredScheduled = filterByTab(scheduledActivities);
     const filteredPast = filterByTab(pastActivities);
 
     if (isVerifying) {
@@ -191,6 +196,22 @@ export default function ActivitiesPage() {
                                 )}
                             </div>
                         </section>
+
+                        {filteredScheduled.length > 0 && (
+                            <section className="space-y-6">
+                                <div className="flex justify-between items-end">
+                                    <h2 className="text-2xl font-black text-slate-800 tracking-tight">활동 예정</h2>
+                                    <span className="bg-blue-50 text-blue-500 px-4 py-1.5 rounded-full text-xs font-black border border-blue-100">
+                                        {filteredScheduled.length}개 활동 예정
+                                    </span>
+                                </div>
+                                <div className="grid grid-cols-1 gap-4">
+                                    {filteredScheduled.map(vote => (
+                                        <ActivityCard key={vote.voteId} data={vote} isPast={false} />
+                                    ))}
+                                </div>
+                            </section>
+                        )}
 
                         <section className="space-y-6">
                             <div className="flex justify-between items-end">
