@@ -623,30 +623,32 @@ export default function YBCMainPage() {
           />
         </div>
 
-        {/* 플로팅 지원하기 버튼 */}
-        <div className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-50 block">
-          <Link
-            href="/apply"
-            className="relative group flex flex-col items-center"
-          >
-            <div className="absolute -top-6 right-2 w-10 h-10 pointer-events-none drop-shadow-sm group-hover:-translate-y-1.5 transition-transform duration-300">
-              <Image
-                src="/images/shuttlecock2.svg"
-                alt="셔틀콕 데코레이션"
-                width={40}
-                height={40}
-                unoptimized
-                className="w-full h-full object-contain"
-              />
-            </div>
-            <button
-              style={{ borderRadius: "70% 31% 60% 50% / 35% 30% 60% 70%" }}
-              className="bg-[#93C54B] text-white text-[13px] font-black w-[68px] h-[68px] rounded-full shadow-lg border-[3px] border-white flex items-center justify-center hover:bg-[#81b23c] active:scale-95 transition-all"
+        {/* 플로팅 지원하기 버튼 (로그인한 회원에게는 불필요하므로 숨김) */}
+        {!user && (
+          <div className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-50 block">
+            <Link
+              href="/apply"
+              className="relative group flex flex-col items-center"
             >
-              지원하기
-            </button>
-          </Link>
-        </div>
+              <div className="absolute -top-6 right-2 w-10 h-10 pointer-events-none drop-shadow-sm group-hover:-translate-y-1.5 transition-transform duration-300">
+                <Image
+                  src="/images/shuttlecock2.svg"
+                  alt="셔틀콕 데코레이션"
+                  width={40}
+                  height={40}
+                  unoptimized
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <button
+                style={{ borderRadius: "70% 31% 60% 50% / 35% 30% 60% 70%" }}
+                className="bg-[#93C54B] text-white text-[13px] font-black w-[68px] h-[68px] rounded-full shadow-lg border-[3px] border-white flex items-center justify-center hover:bg-[#81b23c] active:scale-95 transition-all"
+              >
+                지원하기
+              </button>
+            </Link>
+          </div>
+        )}
       </section>
     </div>
   );
