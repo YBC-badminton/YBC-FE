@@ -311,7 +311,7 @@ export default function Header() {
               </button>
 
               {isMobileNotifOpen && (
-                <div className="absolute right-0 top-full mt-3 w-72 max-w-[calc(100vw-2rem)] z-50 origin-top-right animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200 ease-out">
+                <div className="absolute right-0 top-full mt-5 w-72 max-w-[calc(100vw-2rem)] z-50 origin-top-right animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200 ease-out">
                   {/* 말풍선 꼬리 (카드 밖에 둬서 잘리지 않게) */}
                   <span className="absolute -top-1.75 right-5 w-3.5 h-3.5 bg-white border-l border-t border-gray-100 rotate-45 rounded-xs" />
                   <div className="relative bg-white rounded-2xl border border-gray-100 shadow-[0_12px_32px_rgba(0,0,0,0.12)] overflow-hidden">
