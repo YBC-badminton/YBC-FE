@@ -5,6 +5,24 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 
+const SEEN_ACTIVE_VOTE_IDS_KEY = "seenActiveVoteIds";
+
+function loadSeenActiveVoteIds(): number[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const stored = localStorage.getItem(SEEN_ACTIVE_VOTE_IDS_KEY);
+    const parsed = stored ? JSON.parse(stored) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveSeenActiveVoteIds(ids: number[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(SEEN_ACTIVE_VOTE_IDS_KEY, JSON.stringify(ids));
+}
+
 const NAV_LINKS: { href: string; label: string; authOnly?: boolean }[] = [
   { href: "/activities", label: "정기 모임", authOnly: true },
   { href: "/reviews", label: "장비 후기" },
@@ -63,6 +81,7 @@ function RenderTermBadge({ term, size = "normal" }: { term?: string; size?: "nor
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [seenActiveVoteIds, setSeenActiveVoteIds] = useState<number[]>([]);
   const profileRef = useRef<HTMLDivElement>(null);
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -76,6 +95,26 @@ export default function Header() {
 
   // 비로그인 시 authOnly 메뉴(미니게임) 숨김
   const visibleLinks = NAV_LINKS.filter((l) => !l.authOnly || !!user);
+
+  // 내가 참여한 ACTIVE 상태 투표 = 프로필 알림 목록
+  const activeVotes: { voteId: number; name: string }[] = authUser?.activeVotes || [];
+  const hasUnreadActiveVote = activeVotes.some(
+    (v) => !seenActiveVoteIds.includes(v.voteId),
+  );
+
+  useEffect(() => {
+    setSeenActiveVoteIds(loadSeenActiveVoteIds());
+  }, []);
+
+  // 알림을 확인하면(프로필 메뉴/모바일 메뉴를 열면) 빨간 점 제거
+  const markActiveVotesAsSeen = () => {
+    if (activeVotes.length === 0) return;
+    const merged = Array.from(
+      new Set([...seenActiveVoteIds, ...activeVotes.map((v) => v.voteId)]),
+    );
+    setSeenActiveVoteIds(merged);
+    saveSeenActiveVoteIds(merged);
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -152,11 +191,20 @@ export default function Header() {
             <div className="relative" ref={profileRef}>
               {/* 💡 프로필 이미지 동그라미 안에 기수(term) 표시 */}
               <button
-                onClick={() => setIsProfileOpen((v) => !v)}
+                onClick={() =>
+                  setIsProfileOpen((v) => {
+                    const next = !v;
+                    if (next) markActiveVotesAsSeen();
+                    return next;
+                  })
+                }
                 aria-label="프로필 메뉴"
-                className="w-10 h-10 rounded-full bg-brand text-white flex items-center justify-center hover:brightness-110 active:scale-95 transition-all shadow-sm"
+                className="relative w-10 h-10 rounded-full bg-brand text-white flex items-center justify-center hover:brightness-110 active:scale-95 transition-all shadow-sm"
               >
                 <RenderTermBadge term={userTerm} size="normal" />
+                {hasUnreadActiveVote && (
+                  <span className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-white" />
+                )}
               </button>
 
               {isProfileOpen && (
@@ -175,6 +223,21 @@ export default function Header() {
                       </p>
                     )}
                   </div>
+                  {activeVotes.length > 0 && (
+                    <ul className="max-h-52 overflow-y-auto border-b border-gray-100 py-1">
+                      {activeVotes.map((vote) => (
+                        <li key={vote.voteId}>
+                          <Link
+                            href={`/activities/${vote.voteId}`}
+                            onClick={() => setIsProfileOpen(false)}
+                            className="block px-5 py-2.5 text-sm text-ink hover:bg-brand-soft transition-colors"
+                          >
+                            {vote.name} 참여가 확정됐어요!
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                   <button
                     onClick={handleLogout}
                     className="w-full text-left px-5 py-3 text-sm font-semibold text-muted hover:bg-brand-soft transition-colors"
@@ -197,13 +260,19 @@ export default function Header() {
 
         {/* [우측] 모바일 햄버거 */}
         <button
-          onClick={() => setIsMenuOpen(true)}
+          onClick={() => {
+            setIsMenuOpen(true);
+            markActiveVotesAsSeen();
+          }}
           aria-label="메뉴 열기"
-          className="lg:hidden p-1.5 text-brand-dark"
+          className="relative lg:hidden p-1.5 text-brand-dark"
         >
           <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 7h16M4 12h16M4 17h16" />
           </svg>
+          {hasUnreadActiveVote && (
+            <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-white" />
+          )}
         </button>
       </div>
 
@@ -214,8 +283,11 @@ export default function Header() {
             {user ? (
               <div className="flex items-center gap-2.5">
                 {/* 💡 모바일 프로필 이미지 동그라미 안에 기수(term) 표시 */}
-                <div className="w-9 h-9 rounded-full bg-brand text-white flex items-center justify-center shadow-sm">
+                <div className="relative w-9 h-9 rounded-full bg-brand text-white flex items-center justify-center shadow-sm">
                   <RenderTermBadge term={userTerm} size="small" />
+                  {hasUnreadActiveVote && (
+                    <span className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-white" />
+                  )}
                 </div>
                 {/* 💡 모바일 상단 프로필에도 이름 + 운영진 양배추 아이콘 표시 */}
                 <div className="flex items-center gap-1.5">
@@ -269,6 +341,21 @@ export default function Header() {
               >
                 관리자 페이지
               </Link>
+            )}
+            {user && activeVotes.length > 0 && (
+              <div className="w-full flex flex-col items-start gap-3 pt-2 border-t border-gray-100">
+                <p className="text-xs font-semibold text-subtle">알림</p>
+                {activeVotes.map((vote) => (
+                  <Link
+                    key={vote.voteId}
+                    href={`/activities/${vote.voteId}`}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="text-base font-semibold text-ink tracking-tight"
+                  >
+                    {vote.name} 참여가 확정됐어요!
+                  </Link>
+                ))}
+              </div>
             )}
             {user && (
               <button
