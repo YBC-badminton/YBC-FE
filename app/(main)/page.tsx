@@ -32,7 +32,7 @@ interface VoteData {
   };
 }
 
-interface ActiveRegularVote {
+interface ActiveVote {
   voteId: number;
   name: string;
 }
@@ -221,15 +221,15 @@ export default function YBCMainPage() {
   const [recruiting, setRecruiting] = useState<boolean | null>(null);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [home, setHome] = useState<HomeContent>(DEFAULT_HOME);
-  const [activeRegularVote, setActiveRegularVote] =
-    useState<ActiveRegularVote | null>(null);
+  const [activeVote, setActiveVote] =
+    useState<ActiveVote | null>(null);
   const [showActiveVoteNotice, setShowActiveVoteNotice] = useState(false);
   const { user } = useAuth();
 
-  // 4. 로그인 상태일 때, 투표는 마감됐지만 아직 활동이 끝나지 않은(ACTIVE) 정기모임이 있으면 확정 인원 확인 알림 노출
+  // 4. 로그인 상태일 때, 투표는 마감됐지만 아직 활동이 끝나지 않은(ACTIVE) 활동이 있으면 확정 인원 확인 알림 노출
   useEffect(() => {
     if (!user) {
-      setActiveRegularVote(null);
+      setActiveVote(null);
       setShowActiveVoteNotice(false);
       return;
     }
@@ -240,11 +240,11 @@ export default function YBCMainPage() {
       })
       .then((res) => {
         const active = res.data.votes.find(
-          (vote) => vote.type === "REGULAR" && vote.status === "ACTIVE",
+          (vote) => vote.status === "ACTIVE",
         );
         if (!active) return;
 
-        setActiveRegularVote({ voteId: active.voteId, name: active.name });
+        setActiveVote({ voteId: active.voteId, name: active.name });
         const dismissedId =
           typeof window !== "undefined"
             ? localStorage.getItem(DISMISSED_ACTIVE_VOTE_NOTICE_KEY)
@@ -257,10 +257,10 @@ export default function YBCMainPage() {
   }, [user]);
 
   const dismissActiveVoteNotice = () => {
-    if (activeRegularVote && typeof window !== "undefined") {
+    if (activeVote && typeof window !== "undefined") {
       localStorage.setItem(
         DISMISSED_ACTIVE_VOTE_NOTICE_KEY,
-        String(activeRegularVote.voteId),
+        String(activeVote.voteId),
       );
     }
     setShowActiveVoteNotice(false);
@@ -717,8 +717,8 @@ export default function YBCMainPage() {
           />
         </div>
 
-        {/* 정기 운동 확정 인원 알림 */}
-        {showActiveVoteNotice && activeRegularVote && (
+        {/* 활동 확정 인원 알림 */}
+        {showActiveVoteNotice && activeVote && (
           <div className="fixed bottom-6 left-6 z-50 max-w-[calc(100vw-3rem)] sm:max-w-sm">
             <div className="relative bg-white rounded-3xl shadow-[0_8px_28px_rgba(0,0,0,0.12)] border border-[#e2ebc8] p-5 pr-10 flex items-start gap-3">
               <button
@@ -733,14 +733,14 @@ export default function YBCMainPage() {
               </span>
               <div className="flex flex-col gap-2">
                 <p className="text-sm font-bold text-slate-800 leading-snug">
-                  {activeRegularVote.name} 참여가 확정됐어요!
+                  {activeVote.name} 참여가 확정됐어요!
                 </p>
                 <Link
-                  href={`/activities/${activeRegularVote.voteId}`}
+                  href={`/activities/${activeVote.voteId}`}
                   onClick={dismissActiveVoteNotice}
                   className="inline-flex items-center gap-1 text-sm font-semibold text-[#5b6b0f] hover:text-[#93C54B] transition-colors"
                 >
-                  정기 운동 확정인원 확인하러가기
+                  확정인원 확인하러가기
                   <ArrowUpRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
