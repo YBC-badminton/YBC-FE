@@ -32,6 +32,24 @@ const NAV_LINKS: { href: string; label: string; authOnly?: boolean }[] = [
   { href: "/minigame", label: "미니게임", authOnly: true },
 ];
 
+function BellIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+  );
+}
+
 function LoginIcon({ className = "" }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -258,22 +276,36 @@ export default function Header() {
           )}
         </div>
 
-        {/* [우측] 모바일 햄버거 */}
-        <button
-          onClick={() => {
-            setIsMenuOpen(true);
-            markActiveVotesAsSeen();
-          }}
-          aria-label="메뉴 열기"
-          className="relative lg:hidden p-1.5 text-brand-dark"
-        >
-          <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 7h16M4 12h16M4 17h16" />
-          </svg>
-          {hasUnreadActiveVote && (
-            <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-white" />
+        {/* [우측] 모바일 알림 + 햄버거 */}
+        <div className="flex items-center gap-1 lg:hidden">
+          {user && (
+            <button
+              onClick={() => {
+                setIsMenuOpen(true);
+                markActiveVotesAsSeen();
+              }}
+              aria-label="알림"
+              className="relative p-1.5 text-brand-dark"
+            >
+              <BellIcon className="w-6 h-6" />
+              {hasUnreadActiveVote && (
+                <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-white" />
+              )}
+            </button>
           )}
-        </button>
+          <button
+            onClick={() => {
+              setIsMenuOpen(true);
+              markActiveVotesAsSeen();
+            }}
+            aria-label="메뉴 열기"
+            className="p-1.5 text-brand-dark"
+          >
+            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* 모바일 전체화면 메뉴 */}
