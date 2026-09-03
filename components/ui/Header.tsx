@@ -311,29 +311,30 @@ export default function Header() {
               </button>
 
               {isMobileNotifOpen && (
-                <div className="absolute right-0 top-full mt-3 w-72 max-w-[calc(100vw-2rem)] z-50 animate-in fade-in zoom-in duration-150">
-                  <div className="relative bg-white rounded-2xl border border-gray-100 shadow-xl overflow-hidden">
-                    {/* 말풍선 꼬리 */}
-                    <span className="absolute -top-1.5 right-4 w-3 h-3 bg-white border-l border-t border-gray-100 rotate-45" />
-                    <p className="px-4 pt-3 pb-1.5 text-xs font-semibold text-subtle">
+                <div className="absolute right-0 top-full mt-3 w-72 max-w-[calc(100vw-2rem)] z-50 origin-top-right animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200 ease-out">
+                  {/* 말풍선 꼬리 (카드 밖에 둬서 잘리지 않게) */}
+                  <span className="absolute -top-1.75 right-5 w-3.5 h-3.5 bg-white border-l border-t border-gray-100 rotate-45 rounded-xs" />
+                  <div className="relative bg-white rounded-2xl border border-gray-100 shadow-[0_12px_32px_rgba(0,0,0,0.12)] overflow-hidden">
+                    <p className="px-4 pt-3.5 pb-2 text-xs font-semibold text-subtle border-b border-gray-50">
                       알림
                     </p>
                     {activeVotes.length > 0 ? (
-                      <ul className="max-h-64 overflow-y-auto pb-1">
+                      <ul className="max-h-64 overflow-y-auto py-1.5">
                         {activeVotes.map((vote) => (
-                          <li key={vote.voteId}>
+                          <li key={vote.voteId} className="px-1.5">
                             <Link
                               href={`/activities/${vote.voteId}`}
                               onClick={() => setIsMobileNotifOpen(false)}
-                              className="block px-4 py-2.5 text-sm text-ink hover:bg-brand-soft transition-colors"
+                              className="flex items-start gap-2.5 px-2.5 py-2.5 rounded-xl text-sm text-ink hover:bg-brand-soft active:bg-brand-soft transition-colors"
                             >
-                              {vote.name} 참여가 확정됐어요!
+                              <span className="shrink-0 mt-1 w-1.5 h-1.5 rounded-full bg-brand" />
+                              <span>{vote.name} 참여가 확정됐어요!</span>
                             </Link>
                           </li>
                         ))}
                       </ul>
                     ) : (
-                      <p className="px-4 pb-4 text-sm text-subtle">
+                      <p className="px-4 py-5 text-sm text-subtle text-center">
                         새로운 알림이 없어요
                       </p>
                     )}
