@@ -32,20 +32,6 @@ interface VoteData {
   };
 }
 
-interface ActiveVote {
-  voteId: number;
-  name: string;
-}
-
-interface VotesListResponse {
-  votes: {
-    voteId: number;
-    name: string;
-    type: "REGULAR" | "FLASH" | "EVENT";
-    status: "UPCOMING" | "IN_PROGRESS" | "ACTIVE" | "COMPLETED";
-  }[];
-}
-
 /* ── 공용 아이콘 (Figma: tabler / solar 세트) ─────────────── */
 function PinIcon({ className = "" }: { className?: string }) {
   return (
@@ -105,41 +91,6 @@ function ArrowUpRight({ className = "" }: { className?: string }) {
       aria-hidden="true"
     >
       <path d="M7 17 17 7M9 7h8v8" />
-    </svg>
-  );
-}
-
-function BellIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-    </svg>
-  );
-}
-
-function CloseIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M18 6 6 18M6 6l12 12" />
     </svg>
   );
 }
@@ -219,38 +170,7 @@ export default function YBCMainPage() {
   const [recruiting, setRecruiting] = useState<boolean | null>(null);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [home, setHome] = useState<HomeContent>(DEFAULT_HOME);
-  const [activeVote, setActiveVote] =
-    useState<ActiveVote | null>(null);
-  const [showActiveVoteNotice, setShowActiveVoteNotice] = useState(false);
   const { user } = useAuth();
-
-  // 4. 로그인 상태일 때, 투표는 마감됐지만 아직 활동이 끝나지 않은(ACTIVE) 활동이 있으면 확정 인원 확인 알림 노출
-  useEffect(() => {
-    if (!user) {
-      setActiveVote(null);
-      setShowActiveVoteNotice(false);
-      return;
-    }
-
-    api
-      .get<VotesListResponse>("/votes", {
-        params: { open: false, page: 0, size: 50 },
-      })
-      .then((res) => {
-        const active = res.data.votes.find(
-          (vote) => vote.status === "ACTIVE",
-        );
-        if (!active) return;
-
-        setActiveVote({ voteId: active.voteId, name: active.name });
-        setShowActiveVoteNotice(true);
-      })
-      .catch(() => {});
-  }, [user]);
-
-  const dismissActiveVoteNotice = () => {
-    setShowActiveVoteNotice(false);
-  };
 
   // 1. 메인페이지 콘텐츠 조회 + sessionStorage 캐싱 (GET /)
   useEffect(() => {
@@ -702,37 +622,6 @@ export default function YBCMainPage() {
             className="w-full h-auto object-contain"
           />
         </div>
-
-        {/* 활동 확정 인원 알림 */}
-        {showActiveVoteNotice && activeVote && (
-          <div className="fixed bottom-6 left-6 z-50 max-w-[calc(100vw-8rem)] sm:max-w-sm">
-            <div className="relative bg-white rounded-3xl shadow-[0_8px_28px_rgba(0,0,0,0.12)] border border-[#e2ebc8] p-5 pr-10 flex items-start gap-3">
-              <button
-                onClick={dismissActiveVoteNotice}
-                aria-label="알림 닫기"
-                className="absolute top-3 right-3 text-gray-300 hover:text-gray-500 transition-colors"
-              >
-                <CloseIcon className="w-4 h-4" />
-              </button>
-              <span className="shrink-0 w-9 h-9 rounded-full bg-[#F2F8E1] text-[#5b6b0f] flex items-center justify-center">
-                <BellIcon className="w-4.5 h-4.5" />
-              </span>
-              <div className="flex flex-col gap-2">
-                <p className="text-sm font-bold text-slate-800 leading-snug">
-                  {activeVote.name} 참여가 확정됐어요!
-                </p>
-                <Link
-                  href={`/activities/${activeVote.voteId}`}
-                  onClick={dismissActiveVoteNotice}
-                  className="inline-flex items-center gap-1 text-sm font-semibold text-[#5b6b0f] hover:text-[#93C54B] transition-colors"
-                >
-                  확정인원 확인하러가기
-                  <ArrowUpRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* 플로팅 지원하기 버튼 */}
         <div className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-50 block">
