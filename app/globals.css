@@ -45,6 +45,13 @@
     /* Signature soft shadows */
     --shadow-pill: 0 4px 40px 0 rgba(0, 0, 0, 0.1);
     --shadow-card: 0 4px 17px 0 rgba(172, 172, 172, 0.25);
+    /* 팝오버/드롭다운을 얇은 링 + 근접 그림자 + 원경 그림자 3겹으로 띄우는 elevation */
+    --shadow-popover:
+        0 0 0 1px rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.06),
+        0 2px 4px rgba(0, 0, 0, 0.04), 0 16px 32px -8px rgba(0, 0, 0, 0.16);
+
+    /* 강한 ease-out — 트리거에서 튀어나오는 팝오버/드롭다운 전용 */
+    --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
 
     /* 메인 히어로 우측 캐릭터가 살짝 흔들리는 스매싱 모션 */
     --animate-sway: sway 3.5s ease-in-out infinite;

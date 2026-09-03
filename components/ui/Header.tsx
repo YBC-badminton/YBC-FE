@@ -302,7 +302,8 @@ export default function Header() {
                   })
                 }
                 aria-label="알림"
-                className="relative p-1.5 text-brand-dark"
+                aria-expanded={isMobileNotifOpen}
+                className="relative p-1.5 text-brand-dark active:scale-[0.96] transition-transform duration-100"
               >
                 <BellIcon className="w-6 h-6" />
                 {hasUnreadActiveVote && (
@@ -310,37 +311,44 @@ export default function Header() {
                 )}
               </button>
 
-              {isMobileNotifOpen && (
-                <div className="absolute right-0 top-full mt-5 w-72 max-w-[calc(100vw-2rem)] z-50 origin-top-right animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200 ease-out">
-                  {/* 말풍선 꼬리 (카드 밖에 둬서 잘리지 않게) */}
-                  <span className="absolute -top-1.75 right-5 w-3.5 h-3.5 bg-white border-l border-t border-gray-100 rotate-45 rounded-xs" />
-                  <div className="relative bg-white rounded-2xl border border-gray-100 shadow-[0_12px_32px_rgba(0,0,0,0.12)] overflow-hidden">
-                    <p className="px-4 pt-3.5 pb-2 text-xs font-semibold text-subtle border-b border-gray-50">
-                      알림
+              {/* 항상 마운트해두고 상태만 전환 — 열릴 때와 같은 경로로 부드럽게 닫힘 */}
+              <div
+                aria-hidden={!isMobileNotifOpen}
+                inert={!isMobileNotifOpen}
+                className={`absolute right-0 top-full mt-5 w-72 max-w-[calc(100vw-2rem)] z-50 origin-top-right transition-[opacity,transform] duration-200 ease-out-strong motion-reduce:scale-100 motion-reduce:translate-y-0 ${
+                  isMobileNotifOpen
+                    ? "opacity-100 scale-100 translate-y-0"
+                    : "opacity-0 scale-95 -translate-y-1"
+                }`}
+              >
+                {/* 말풍선 꼬리 (카드 밖에 둬서 잘리지 않게) */}
+                <span className="absolute -top-1.75 right-5 w-3.5 h-3.5 bg-white rotate-45 rounded-xs shadow-(--shadow-popover)" />
+                <div className="relative bg-white rounded-2xl shadow-(--shadow-popover) overflow-hidden">
+                  <p className="px-4 pt-3.5 pb-2 text-xs font-semibold text-subtle border-b border-gray-50">
+                    알림
+                  </p>
+                  {activeVotes.length > 0 ? (
+                    <ul className="max-h-64 overflow-y-auto p-1">
+                      {activeVotes.map((vote) => (
+                        <li key={vote.voteId}>
+                          <Link
+                            href={`/activities/${vote.voteId}`}
+                            onClick={() => setIsMobileNotifOpen(false)}
+                            className="flex items-start gap-2.5 px-2.5 py-2.5 rounded-xl text-sm text-ink hover:bg-brand-soft active:bg-brand-soft transition-colors"
+                          >
+                            <span className="shrink-0 mt-1 w-1.5 h-1.5 rounded-full bg-brand" />
+                            <span>{vote.name} 참여가 확정됐어요!</span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="px-4 py-5 text-sm text-subtle text-center">
+                      새로운 알림이 없어요
                     </p>
-                    {activeVotes.length > 0 ? (
-                      <ul className="max-h-64 overflow-y-auto py-1.5">
-                        {activeVotes.map((vote) => (
-                          <li key={vote.voteId} className="px-1.5">
-                            <Link
-                              href={`/activities/${vote.voteId}`}
-                              onClick={() => setIsMobileNotifOpen(false)}
-                              className="flex items-start gap-2.5 px-2.5 py-2.5 rounded-xl text-sm text-ink hover:bg-brand-soft active:bg-brand-soft transition-colors"
-                            >
-                              <span className="shrink-0 mt-1 w-1.5 h-1.5 rounded-full bg-brand" />
-                              <span>{vote.name} 참여가 확정됐어요!</span>
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="px-4 py-5 text-sm text-subtle text-center">
-                        새로운 알림이 없어요
-                      </p>
-                    )}
-                  </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           )}
           <button
