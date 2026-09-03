@@ -99,8 +99,10 @@ function RenderTermBadge({ term, size = "normal" }: { term?: string; size?: "nor
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isMobileNotifOpen, setIsMobileNotifOpen] = useState(false);
   const [seenActiveVoteIds, setSeenActiveVoteIds] = useState<number[]>([]);
   const profileRef = useRef<HTMLDivElement>(null);
+  const mobileNotifRef = useRef<HTMLDivElement>(null);
   const { user, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -154,6 +156,17 @@ export default function Header() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isProfileOpen]);
+
+  useEffect(() => {
+    if (!isMobileNotifOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (mobileNotifRef.current && !mobileNotifRef.current.contains(e.target as Node)) {
+        setIsMobileNotifOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isMobileNotifOpen]);
 
   // 모바일 메뉴 열렸을 때 배경 스크롤 잠금
   useEffect(() => {
@@ -279,19 +292,55 @@ export default function Header() {
         {/* [우측] 모바일 알림 + 햄버거 */}
         <div className="flex items-center gap-1 lg:hidden">
           {user && (
-            <button
-              onClick={() => {
-                setIsMenuOpen(true);
-                markActiveVotesAsSeen();
-              }}
-              aria-label="알림"
-              className="relative p-1.5 text-brand-dark"
-            >
-              <BellIcon className="w-6 h-6" />
-              {hasUnreadActiveVote && (
-                <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-white" />
+            <div className="relative" ref={mobileNotifRef}>
+              <button
+                onClick={() =>
+                  setIsMobileNotifOpen((v) => {
+                    const next = !v;
+                    if (next) markActiveVotesAsSeen();
+                    return next;
+                  })
+                }
+                aria-label="알림"
+                className="relative p-1.5 text-brand-dark"
+              >
+                <BellIcon className="w-6 h-6" />
+                {hasUnreadActiveVote && (
+                  <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-white" />
+                )}
+              </button>
+
+              {isMobileNotifOpen && (
+                <div className="absolute right-0 top-full mt-3 w-72 max-w-[calc(100vw-2rem)] z-50 animate-in fade-in zoom-in duration-150">
+                  <div className="relative bg-white rounded-2xl border border-gray-100 shadow-xl overflow-hidden">
+                    {/* 말풍선 꼬리 */}
+                    <span className="absolute -top-1.5 right-4 w-3 h-3 bg-white border-l border-t border-gray-100 rotate-45" />
+                    <p className="px-4 pt-3 pb-1.5 text-xs font-semibold text-subtle">
+                      알림
+                    </p>
+                    {activeVotes.length > 0 ? (
+                      <ul className="max-h-64 overflow-y-auto pb-1">
+                        {activeVotes.map((vote) => (
+                          <li key={vote.voteId}>
+                            <Link
+                              href={`/activities/${vote.voteId}`}
+                              onClick={() => setIsMobileNotifOpen(false)}
+                              className="block px-4 py-2.5 text-sm text-ink hover:bg-brand-soft transition-colors"
+                            >
+                              {vote.name} 참여가 확정됐어요!
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="px-4 pb-4 text-sm text-subtle">
+                        새로운 알림이 없어요
+                      </p>
+                    )}
+                  </div>
+                </div>
               )}
-            </button>
+            </div>
           )}
           <button
             onClick={() => {
