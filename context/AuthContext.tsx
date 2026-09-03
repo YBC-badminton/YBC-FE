@@ -6,6 +6,11 @@ import { MEMBER_ONLY_MESSAGE, NotMemberError, isNotMemberError } from '../lib/au
 
 type UserRole = 'member' | 'applicant';
 
+interface ActiveVote {
+    voteId: number;
+    name: string;
+}
+
 interface User {
     id?: number;
     role: UserRole;
@@ -16,6 +21,7 @@ interface User {
     provider?: string;
     isAdmin?: boolean;
     term?: string; // 💡 기수(term) 필드 추가
+    activeVotes?: ActiveVote[]; // 내가 참여한 ACTIVE 상태 투표 목록
 }
 
 interface AuthContextType {
@@ -89,6 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             provider: data.provider,
             isAdmin: data.isAdmin === true,
             term: data.term, // 💡 API 응답의 term 매핑 추가
+            activeVotes: Array.isArray(data.activeVotes) ? data.activeVotes : [],
         };
     }, []);
 
