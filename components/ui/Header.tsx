@@ -352,10 +352,7 @@ export default function Header() {
             </div>
           )}
           <button
-            onClick={() => {
-              setIsMenuOpen(true);
-              markActiveVotesAsSeen();
-            }}
+            onClick={() => setIsMenuOpen(true)}
             aria-label="메뉴 열기"
             className="p-1.5 text-brand-dark"
           >
@@ -373,11 +370,8 @@ export default function Header() {
             {user ? (
               <div className="flex items-center gap-2.5">
                 {/* 💡 모바일 프로필 이미지 동그라미 안에 기수(term) 표시 */}
-                <div className="relative w-9 h-9 rounded-full bg-brand text-white flex items-center justify-center shadow-sm">
+                <div className="w-9 h-9 rounded-full bg-brand text-white flex items-center justify-center shadow-sm">
                   <RenderTermBadge term={userTerm} size="small" />
-                  {hasUnreadActiveVote && (
-                    <span className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-white" />
-                  )}
                 </div>
                 {/* 💡 모바일 상단 프로필에도 이름 + 운영진 양배추 아이콘 표시 */}
                 <div className="flex items-center gap-1.5">
@@ -431,21 +425,6 @@ export default function Header() {
               >
                 관리자 페이지
               </Link>
-            )}
-            {user && activeVotes.length > 0 && (
-              <div className="w-full flex flex-col items-start gap-3 pt-2 border-t border-gray-100">
-                <p className="text-xs font-semibold text-subtle">알림</p>
-                {activeVotes.map((vote) => (
-                  <Link
-                    key={vote.voteId}
-                    href={`/activities/${vote.voteId}`}
-                    onClick={() => setIsMenuOpen(false)}
-                    className="text-base font-semibold text-ink tracking-tight"
-                  >
-                    {vote.name} 참여가 확정됐어요!
-                  </Link>
-                ))}
-              </div>
             )}
             {user && (
               <button
