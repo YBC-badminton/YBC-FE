@@ -46,8 +46,6 @@ interface VotesListResponse {
   }[];
 }
 
-const DISMISSED_ACTIVE_VOTE_NOTICE_KEY = "dismissedActiveVoteNoticeId";
-
 /* ── 공용 아이콘 (Figma: tabler / solar 세트) ─────────────── */
 function PinIcon({ className = "" }: { className?: string }) {
   return (
@@ -245,24 +243,12 @@ export default function YBCMainPage() {
         if (!active) return;
 
         setActiveVote({ voteId: active.voteId, name: active.name });
-        const dismissedId =
-          typeof window !== "undefined"
-            ? localStorage.getItem(DISMISSED_ACTIVE_VOTE_NOTICE_KEY)
-            : null;
-        if (dismissedId !== String(active.voteId)) {
-          setShowActiveVoteNotice(true);
-        }
+        setShowActiveVoteNotice(true);
       })
       .catch(() => {});
   }, [user]);
 
   const dismissActiveVoteNotice = () => {
-    if (activeVote && typeof window !== "undefined") {
-      localStorage.setItem(
-        DISMISSED_ACTIVE_VOTE_NOTICE_KEY,
-        String(activeVote.voteId),
-      );
-    }
     setShowActiveVoteNotice(false);
   };
 
@@ -719,7 +705,7 @@ export default function YBCMainPage() {
 
         {/* 활동 확정 인원 알림 */}
         {showActiveVoteNotice && activeVote && (
-          <div className="fixed bottom-6 left-6 z-50 max-w-[calc(100vw-3rem)] sm:max-w-sm">
+          <div className="fixed bottom-6 left-6 z-50 max-w-[calc(100vw-8rem)] sm:max-w-sm">
             <div className="relative bg-white rounded-3xl shadow-[0_8px_28px_rgba(0,0,0,0.12)] border border-[#e2ebc8] p-5 pr-10 flex items-start gap-3">
               <button
                 onClick={dismissActiveVoteNotice}
