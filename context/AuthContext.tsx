@@ -72,14 +72,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // 마운트 시 localStorage에서 유저 정보 복원
-    useEffect(() => {
-        const stored = loadUser();
-        if (stored) {
-            setUser(stored);
-        }
-    }, []);
-
     const clearError = useCallback(() => setError(null), []);
 
     // 내 정보 조회 (카카오 로그인 후 유저 정보 가져오기)
@@ -99,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
     }, []);
 
-    // /me 재조회 — 관리자 권한 등 최신 상태로 동기화
+    // /me 재조회 — 관리자 권한, activeVotes 등 최신 상태로 동기화
     const refreshMe = useCallback(async (): Promise<User | null> => {
         try {
             const fetched = await fetchMe();
@@ -112,6 +104,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return null;
         }
     }, [fetchMe]);
+
+    // 마운트 시 localStorage에서 유저 정보 복원 + activeVotes 등 최신 상태로 재조회
+    useEffect(() => {
+        const stored = loadUser();
+        if (stored) {
+            setUser(stored);
+            refreshMe();
+        }
+    }, [refreshMe]);
 
     // 카카오 로그인 — 1단계: loginUrl 받아서 리다이렉트
     const loginKakao = useCallback(async () => {
