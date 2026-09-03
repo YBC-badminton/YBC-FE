@@ -315,7 +315,7 @@ export default function Header() {
               <div
                 aria-hidden={!isMobileNotifOpen}
                 inert={!isMobileNotifOpen}
-                className={`absolute right-0 top-full mt-5 w-72 max-w-[calc(100vw-2rem)] z-50 origin-top-right transition-[opacity,transform] duration-200 ease-out-strong motion-reduce:scale-100 motion-reduce:translate-y-0 ${
+                className={`absolute right-0 top-full mt-5 w-72 max-w-[calc(100vw-2rem)] z-50 origin-top-right transition-[opacity,scale,translate] will-change-[opacity,scale,translate] duration-200 ease-out-strong motion-reduce:scale-100 motion-reduce:translate-y-0 ${
                   isMobileNotifOpen
                     ? "opacity-100 scale-100 translate-y-0"
                     : "opacity-0 scale-95 -translate-y-1"
