@@ -5,7 +5,7 @@ import api from '@/lib/axios';
 import { useToast } from '@/components/ui/Toast';
 
 type ActivityType = 'REGULAR' | 'FLASH' | 'EVENT';
-type VoteStatusType = 'UPCOMING' | 'IN_PROGRESS' | 'COMPLETED';
+type VoteStatusType = 'UPCOMING' | 'IN_PROGRESS' | 'ACTIVE' | 'COMPLETED';
 
 const ACTIVITY_TYPE_LABEL: Record<ActivityType, string> = {
     REGULAR: '정기',
@@ -16,6 +16,7 @@ const ACTIVITY_TYPE_LABEL: Record<ActivityType, string> = {
 const STATUS_CONFIG: Record<VoteStatusType, { text: string; color: string }> = {
     UPCOMING: { text: '대기중', color: 'bg-orange-50 text-orange-500' },
     IN_PROGRESS: { text: '진행중', color: 'bg-green-50 text-green-500' },
+    ACTIVE: { text: '활동 예정', color: 'bg-blue-50 text-blue-500' },
     COMPLETED: { text: '완료', color: 'bg-gray-100 text-gray-400' },
 };
 
@@ -23,6 +24,7 @@ interface VoteSummary {
     totalCount: number;
     upcomingCount: number;
     inProgressCount: number;
+    activeCount: number;
     completedCount: number;
 }
 
@@ -52,7 +54,7 @@ interface VotesResponse {
     data: VoteItem[];
 }
 
-type FilterType = 'all' | 'UPCOMING' | 'IN_PROGRESS' | 'COMPLETED';
+type FilterType = 'all' | 'UPCOMING' | 'IN_PROGRESS' | 'ACTIVE' | 'COMPLETED';
 
 export default function VoteStatusPage() {
     const { showToast } = useToast();
@@ -104,6 +106,7 @@ export default function VoteStatusPage() {
         { key: 'all', label: '전체' },
         { key: 'UPCOMING', label: '대기중' },
         { key: 'IN_PROGRESS', label: '진행 중' },
+        { key: 'ACTIVE', label: '활동 예정' },
         { key: 'COMPLETED', label: '종료됨' },
     ];
 
@@ -115,13 +118,14 @@ export default function VoteStatusPage() {
             </div>
 
             {/* 통계 카드 */}
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-4 mb-8">
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-4 mb-8">
                 <div className="col-span-3 sm:col-span-1">
                     <StatCard label="전체 투표" count={summary?.totalCount ?? 0} color="text-gray-800" />
                 </div>
                 <StatCard label="대기중" count={summary?.upcomingCount ?? 0} color="text-orange-500" bgColor="bg-orange-50" />
                 <StatCard label="진행중" count={summary?.inProgressCount ?? 0} color="text-green-500" bgColor="bg-green-50" />
-                <StatCard label="완료" count={summary?.completedCount ?? 0} color="text-blue-500" bgColor="bg-blue-50" />
+                <StatCard label="활동 예정" count={summary?.activeCount ?? 0} color="text-blue-500" bgColor="bg-blue-50" />
+                <StatCard label="완료" count={summary?.completedCount ?? 0} color="text-gray-500" bgColor="bg-gray-100" />
             </div>
 
             {/* 필터 탭 */}
