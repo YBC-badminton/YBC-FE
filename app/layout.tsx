@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     siteName: 'YBC 배드민턴',
     images: [
       {
-        url: '../public/images/logo.png', // 카카오톡/SNS 공유 시 노출될 대표 썸네일
+        url: '/images/logo.png', // 카카오톡/SNS 공유 시 노출될 대표 썸네일
         width: 1200,
         height: 630,
         alt: 'YBC 양배추 배드민턴 클럽',
