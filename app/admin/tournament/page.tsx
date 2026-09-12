@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Calendar, MapPin, CheckCircle2, UserPlus, Users, X, RefreshCw, Save, ArrowLeft, Edit3 } from 'lucide-react';
+import { Calendar, MapPin, CheckCircle2, UserPlus, Users, X, RefreshCw, Save, ArrowLeft, Edit3, Trash2 } from 'lucide-react';
 import api from '../../../lib/axios';
 import { useToast } from '../../../components/ui/Toast';
 
@@ -87,6 +87,20 @@ export default function TournamentPage() {
     }, [showToast]);
 
     useEffect(() => { fetchActivities(); }, [fetchActivities]);
+
+    // 대진 편성 취소 (DELETE /admin/matches/{matchId})
+    const handleDeleteMatch = async (matchId: number) => {
+        if (!confirm('정말 이 대진 편성을 취소하시겠습니까?')) return;
+
+        try {
+            await api.delete(`/admin/matches/${matchId}`);
+            showToast('대진 편성이 취소되었습니다.', 'success');
+            fetchActivities();
+        } catch (error: any) {
+            const message = error?.response?.data?.message || '대진 편성 취소 중 오류가 발생했습니다.';
+            showToast(message, 'error');
+        }
+    };
 
     // 대진 조회 및 에디터 진입 (수정완료)
     const handleOpenEditor = async (activity: AdminActivity) => {
@@ -404,16 +418,30 @@ export default function TournamentPage() {
                                     <p className="flex items-center gap-2"><MapPin className="w-4 h-4 text-gray-400" /> {act.location}</p>
                                     <p className="flex items-center gap-2 mt-2"><Users className="w-4 h-4 text-[#93C54B]" /> 총 {act.attendance.totalParticipants}명 참석</p>
                                 </div>
-                                <button
-                                    onClick={() => handleOpenEditor(act)}
-                                    className={`w-full mt-6 py-3.5 rounded-xl text-sm font-bold transition-all active:scale-95 ${
-                                        act.matchRegistered 
-                                        ? 'bg-gray-900 text-white hover:bg-gray-800' 
-                                        : 'bg-[#93C54B] text-white hover:bg-[#81b23c] shadow-lg shadow-[#93C54B]/20'
-                                    }`}
-                                >
-                                    {act.matchRegistered ? '대진표 수정하기' : '새 대진표 작성하기'}
-                                </button>
+                                {act.matchRegistered ? (
+                                    <div className="flex gap-2 mt-6">
+                                        <button
+                                            onClick={() => handleOpenEditor(act)}
+                                            className="flex-2 py-3.5 rounded-xl text-sm font-bold transition-all active:scale-95 bg-gray-900 text-white hover:bg-gray-800"
+                                        >
+                                            대진표 수정하기
+                                        </button>
+                                        <button
+                                            onClick={() => act.matchId && handleDeleteMatch(act.matchId)}
+                                            className="flex-1 flex items-center justify-center gap-1 py-3.5 rounded-xl text-sm font-bold transition-all active:scale-95 text-red-500 bg-red-50/50 hover:bg-red-50 border border-red-100"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                            삭제
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => handleOpenEditor(act)}
+                                        className="w-full mt-6 py-3.5 rounded-xl text-sm font-bold transition-all active:scale-95 bg-[#93C54B] text-white hover:bg-[#81b23c] shadow-lg shadow-[#93C54B]/20"
+                                    >
+                                        새 대진표 작성하기
+                                    </button>
+                                )}
                             </div>
                         ))}
                     </div>
